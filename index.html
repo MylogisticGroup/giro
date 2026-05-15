@@ -45,7 +45,7 @@
     const targetUrl = WEBAPP_URL + '?driver=' + encodeURIComponent(driverId);
     const btn = document.getElementById('btnManuale');
     btn.href = targetUrl;
-    setTimeout(function() { window.location.href = targetUrl; }, 800);
+    setTimeout(function() { window.location.replace(targetUrl); }, 800);
     setTimeout(function() {
       btn.style.display = 'inline-block';
       document.querySelector('p').textContent = 'Se la pagina non si apre automaticamente:';
