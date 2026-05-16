@@ -23,12 +23,11 @@
           margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.05em}
     select{width:100%;padding:.8rem 1rem;border:2px solid #e0e0e0;
            border-radius:10px;font-size:1rem;color:#0d1b2a;background:#fafafa;
-           margin-bottom:1.1rem;transition:border-color .2s;
-           appearance:none;-webkit-appearance:none}
+           margin-bottom:1.1rem;appearance:none;-webkit-appearance:none}
     select:focus{outline:none;border-color:#1565c0;background:#fff}
     input[type=number]{width:100%;padding:.8rem 1rem;border:2px solid #e0e0e0;
            border-radius:10px;font-size:1rem;color:#0d1b2a;background:#fafafa;
-           margin-bottom:.4rem;transition:border-color .2s}
+           margin-bottom:.4rem}
     input[type=number]:focus{outline:none;border-color:#e65100;background:#fff}
     .veicolo-detail{background:#f0f4f8;border-radius:8px;padding:.6rem .9rem;
           font-size:.88rem;color:#333;margin-top:-0.6rem;margin-bottom:1.1rem;
@@ -42,20 +41,16 @@
     .row span:first-child{color:#777;font-weight:500}
     .row span:last-child{color:#0d1b2a;font-weight:700}
     .preview{min-height:1.3rem;font-size:.85rem;color:#555;margin-bottom:1.1rem}
-    .preview .ok{color:#2e7d32;font-weight:700}
-    .preview .ko{color:#c62828;font-weight:600}
+    .ok-km{color:#2e7d32;font-weight:700}
+    .ko-km{color:#c62828;font-weight:600}
     .btn-apri{display:block;width:100%;padding:.95rem;background:#1565c0;
          color:#fff;border:none;border-radius:12px;font-size:1rem;
-         font-weight:700;cursor:pointer;transition:background .2s,transform .1s}
-    .btn-apri:active{transform:scale(.98)}
+         font-weight:700;cursor:pointer}
     .btn-apri:disabled{background:#b0bec5;cursor:not-allowed}
-    .btn-apri:hover:not(:disabled){background:#0d47a1}
     .btn-chiudi{display:block;width:100%;padding:.95rem;background:#e65100;
          color:#fff;border:none;border-radius:12px;font-size:1rem;
-         font-weight:700;cursor:pointer;transition:background .2s,transform .1s}
-    .btn-chiudi:active{transform:scale(.98)}
+         font-weight:700;cursor:pointer}
     .btn-chiudi:disabled{background:#b0bec5;cursor:not-allowed}
-    .btn-chiudi:hover:not(:disabled){background:#bf360c}
     .spinner-wrap{text-align:center;padding:2rem}
     .spinner{width:44px;height:44px;border:4px solid #e0e0e0;
              border-top:4px solid #1565c0;border-radius:50%;
@@ -68,24 +63,22 @@
              padding:.9rem;text-align:center;font-size:.88rem;
              display:none;margin-top:1rem}
     .loading-v{text-align:center;color:#888;padding:.8rem 0;font-size:.9rem}
-    #pageLoading{text-align:center;padding:3rem 1rem;color:#888}
   </style>
 </head>
 <body>
 <div class="card">
 
-  <!-- CARICAMENTO INIZIALE -->
-  <div id="pageLoading">
+  <!-- CARICAMENTO -->
+  <div id="pageLoading" class="spinner-wrap">
     <div class="spinner"></div>
-    <p>Caricamento…</p>
+    <p style="color:#888">Caricamento…</p>
   </div>
 
-  <!-- PAGINA APRI GIRO -->
+  <!-- APRI GIRO -->
   <div id="pageApri" style="display:none">
     <div class="badge badge-apri">🚚 Nuovo Giro</div>
     <h1>Buongiorno!</h1>
     <p class="sub" id="nomeApri"></p>
-
     <div id="formApri">
       <label>Veicolo disponibile</label>
       <p class="loading-v" id="loadingV">Caricamento veicoli…</p>
@@ -97,154 +90,139 @@
         📍 Km ultimo giro: <b id="detKm"></b>
       </div>
       <input type="number" id="kmInizio" style="display:none" min="0">
-      <button class="btn-apri" id="btnApri" onclick="submitApri()" disabled>
-        ✅ &nbsp;Apri Giro
-      </button>
+      <button class="btn-apri" id="btnApri" onclick="submitApri()" disabled>✅ &nbsp;Apri Giro</button>
     </div>
-
-    <div class="spinner-wrap" id="spinnerApri" style="display:none">
-      <div class="spinner"></div>
-    </div>
+    <div class="spinner-wrap" id="spinnerApri" style="display:none"><div class="spinner"></div></div>
     <div class="msg-ok"  id="msgOkApri"></div>
     <div class="msg-err" id="msgErrApri"></div>
   </div>
 
-  <!-- PAGINA CHIUDI GIRO -->
+  <!-- CHIUDI GIRO -->
   <div id="pageChiudi" style="display:none">
     <div class="badge badge-chiudi">🏁 Chiudi Giro</div>
     <h1>Rientro</h1>
     <p class="sub" id="nomeChiudi"></p>
-
     <div class="riepilogo" id="riepilogo"></div>
-
     <div id="formChiudi">
       <label for="kmFine">Km attuali del veicolo</label>
-      <input type="number" id="kmFine" placeholder="es. 125 650"
-             min="0" inputmode="numeric" oninput="aggiornaPreview()">
+      <input type="number" id="kmFine" placeholder="es. 125 650" min="0" inputmode="numeric" oninput="aggiornaPreview()">
       <div class="preview" id="preview"></div>
-      <button class="btn-chiudi" id="btnChiudi" onclick="submitChiudi()" disabled>
-        🏁 &nbsp;Chiudi Giro
-      </button>
+      <button class="btn-chiudi" id="btnChiudi" onclick="submitChiudi()" disabled>🏁 &nbsp;Chiudi Giro</button>
     </div>
-
-    <div class="spinner-wrap" id="spinnerChiudi" style="display:none">
-      <div class="spinner"></div>
-    </div>
+    <div class="spinner-wrap" id="spinnerChiudi" style="display:none"><div class="spinner"></div></div>
     <div class="msg-ok"  id="msgOkChiudi"></div>
     <div class="msg-err" id="msgErrChiudi"></div>
   </div>
 
-  <!-- ERRORE GENERICO -->
-  <div id="pageErrore" style="display:none">
-    <div style="text-align:center;padding:1rem">
-      <div style="font-size:2.5rem">⚠️</div>
-      <h2 style="color:#c62828;margin:.5rem 0">Errore</h2>
-      <p id="testoErrore" style="color:#555;font-size:.95rem"></p>
-    </div>
+  <!-- ERRORE -->
+  <div id="pageErrore" style="display:none;text-align:center;padding:1rem">
+    <div style="font-size:2.5rem">⚠️</div>
+    <h2 style="color:#c62828;margin:.5rem 0">Errore</h2>
+    <p id="testoErrore" style="color:#555;font-size:.95rem"></p>
   </div>
 
 </div>
-
 <script>
-const WEBAPP = 'https://script.google.com/macros/s/AKfycbxJuk67YBaoxOd_ZsEAporMcAENJ5dZBlwuQ2jjymTCBWs-axBcgP_GCTv48JhrJFPs/exec';
-const params   = new URLSearchParams(window.location.search);
+const WEBAPP    = 'https://script.google.com/macros/s/AKfycbxJuk67YBaoxOd_ZsEAporMcAENJ5dZBlwuQ2jjymTCBWs-axBcgP_GCTv48JhrJFPs/exec';
+const params    = new URLSearchParams(window.location.search);
 const DRIVER_ID = params.get('driver');
-let KM_INIZIO  = 0;
-let TARGA_APERTA = '';
+let KM_INIZIO   = 0;
 
-// ── Chiamata Apps Script via fetch (no redirect) ──────────
+// ── JSONP — bypassa CORS completamente ───────────────────
 function callScript(azione, extra) {
-  const url = new URL(WEBAPP);
-  url.searchParams.set('action', azione);
-  url.searchParams.set('driver', DRIVER_ID);
-  if (extra) Object.entries(extra).forEach(([k,v]) => url.searchParams.set(k,v));
-  return fetch(url.toString(), {redirect: 'follow'})
-    .then(r => r.json());
+  return new Promise(function(resolve, reject) {
+    var cbName = 'cb_' + Date.now();
+    var script = document.createElement('script');
+    var url    = new URL(WEBAPP);
+    url.searchParams.set('action',   azione);
+    url.searchParams.set('driver',   DRIVER_ID);
+    url.searchParams.set('callback', cbName);
+    if (extra) Object.keys(extra).forEach(function(k){ url.searchParams.set(k, extra[k]); });
+
+    var timer = setTimeout(function(){
+      delete window[cbName];
+      if (script.parentNode) document.body.removeChild(script);
+      reject(new Error('Timeout'));
+    }, 15000);
+
+    window[cbName] = function(data) {
+      clearTimeout(timer);
+      delete window[cbName];
+      if (script.parentNode) document.body.removeChild(script);
+      resolve(data);
+    };
+    script.onerror = function() {
+      clearTimeout(timer);
+      reject(new Error('Errore connessione'));
+    };
+    script.src = url.toString();
+    document.body.appendChild(script);
+  });
 }
 
 // ── Avvio ─────────────────────────────────────────────────
 window.onload = function() {
-  if (!DRIVER_ID) {
-    mostraErrore('QR Code non valido. Scansiona il QR corretto.');
-    return;
-  }
+  if (!DRIVER_ID) { mostraErrore('QR Code non valido. Scansiona il QR corretto.'); return; }
   callScript('stato')
-    .then(res => {
+    .then(function(res) {
       document.getElementById('pageLoading').style.display = 'none';
-      if (res.occupato) {
-        mostraChiudi(res);
-      } else {
-        mostraApri(res);
-      }
+      if (res.occupato) { mostraChiudi(res); } else { mostraApri(res); }
     })
-    .catch(() => mostraErrore('Errore di connessione. Riprova.'));
+    .catch(function() { mostraErrore('Errore di connessione. Controlla la rete e riprova.'); });
 };
 
-// ── Pagina APRI ───────────────────────────────────────────
+// ── APRI ──────────────────────────────────────────────────
 function mostraApri(res) {
   document.getElementById('pageApri').style.display = 'block';
   document.getElementById('nomeApri').textContent = res.nomeDriver || '';
-  caricaVeicoli();
-}
-
-function caricaVeicoli() {
-  callScript('veicoli')
-    .then(list => {
-      const sel = document.getElementById('selVeicolo');
-      document.getElementById('loadingV').style.display = 'none';
-      sel.style.display = 'block';
-      if (!list.length) {
-        sel.innerHTML = '<option value="">Nessun veicolo disponibile</option>';
-        return;
-      }
-      list.forEach(v => {
-        const opt = document.createElement('option');
-        opt.value           = v.id;
-        opt.dataset.marca   = v.marca   || '';
-        opt.dataset.modello = v.modello || '';
-        opt.dataset.km      = v.kmFine  || '';
-        opt.textContent     = v.targa;
-        sel.appendChild(opt);
-      });
-      document.getElementById('btnApri').disabled = false;
-    })
-    .catch(() => {
-      document.getElementById('loadingV').textContent = '⚠️ Errore caricamento veicoli.';
+  callScript('veicoli').then(function(list) {
+    var sel = document.getElementById('selVeicolo');
+    document.getElementById('loadingV').style.display = 'none';
+    sel.style.display = 'block';
+    if (!list.length) { sel.innerHTML = '<option value="">Nessun veicolo disponibile</option>'; return; }
+    list.forEach(function(v) {
+      var opt = document.createElement('option');
+      opt.value = v.id;
+      opt.dataset.marca   = v.marca   || '';
+      opt.dataset.modello = v.modello || '';
+      opt.dataset.km      = v.kmFine  || '';
+      opt.textContent     = v.targa;
+      sel.appendChild(opt);
     });
+    document.getElementById('btnApri').disabled = false;
+  }).catch(function() {
+    document.getElementById('loadingV').textContent = '⚠️ Errore caricamento veicoli.';
+  });
 }
 
 function onVeicoloChange() {
-  const sel    = document.getElementById('selVeicolo');
-  const opt    = sel.options[sel.selectedIndex];
-  const detail = document.getElementById('veicoloDetail');
-  const kmInp  = document.getElementById('kmInizio');
+  var sel    = document.getElementById('selVeicolo');
+  var opt    = sel.options[sel.selectedIndex];
+  var detail = document.getElementById('veicoloDetail');
+  var kmInp  = document.getElementById('kmInizio');
   if (!opt.value) { detail.style.display = 'none'; kmInp.value = ''; return; }
-  const marcaMod = [opt.dataset.marca, opt.dataset.modello].filter(Boolean).join(' ');
-  document.getElementById('detMarcaMod').textContent = marcaMod || '—';
-  const km = opt.dataset.km;
+  var mm = [opt.dataset.marca, opt.dataset.modello].filter(Boolean).join(' ');
+  document.getElementById('detMarcaMod').textContent = mm || '—';
+  var km = opt.dataset.km;
   document.getElementById('detKm').textContent = km ? Number(km).toLocaleString('it-IT') + ' km' : 'non disponibile';
   kmInp.value = km || '';
   detail.style.display = 'block';
 }
 
 function submitApri() {
-  const targa = document.getElementById('selVeicolo').value;
-  const km    = document.getElementById('kmInizio').value;
+  var targa = document.getElementById('selVeicolo').value;
+  var km    = document.getElementById('kmInizio').value;
   if (!targa) { mostraErrApri('Seleziona un veicolo.'); return; }
   setLoadingApri(true);
-  callScript('apri', { targa: targa, km: km })
-    .then(res => {
-      setLoadingApri(false);
-      if (res.ok) {
-        document.getElementById('formApri').style.display = 'none';
-        const ok = document.getElementById('msgOkApri');
-        ok.style.display = 'block';
-        ok.innerHTML = '✅ Giro aperto!<br>Veicolo: <strong>' + targa + '</strong>';
-      } else {
-        mostraErrApri(res.errore || 'Errore sconosciuto.');
-      }
-    })
-    .catch(() => { setLoadingApri(false); mostraErrApri('Errore di connessione.'); });
+  callScript('apri', { targa: targa, km: km }).then(function(res) {
+    setLoadingApri(false);
+    if (res.ok) {
+      document.getElementById('formApri').style.display = 'none';
+      var ok = document.getElementById('msgOkApri');
+      ok.style.display = 'block';
+      ok.innerHTML = '✅ Giro aperto!<br>Veicolo: <strong>' + targa + '</strong>';
+    } else { mostraErrApri(res.errore || 'Errore sconosciuto.'); }
+  }).catch(function() { setLoadingApri(false); mostraErrApri('Errore di connessione.'); });
 }
 
 function setLoadingApri(on) {
@@ -253,57 +231,51 @@ function setLoadingApri(on) {
   document.getElementById('msgErrApri').style.display = 'none';
 }
 function mostraErrApri(m) {
-  const el = document.getElementById('msgErrApri');
+  var el = document.getElementById('msgErrApri');
   el.textContent = '⚠️ ' + m; el.style.display = 'block';
 }
 
-// ── Pagina CHIUDI ─────────────────────────────────────────
+// ── CHIUDI ────────────────────────────────────────────────
 function mostraChiudi(res) {
   document.getElementById('pageChiudi').style.display = 'block';
   document.getElementById('nomeChiudi').textContent = res.nomeDriver || '';
-  KM_INIZIO    = Number(res.kmInizio) || 0;
-  TARGA_APERTA = res.targa || '';
+  KM_INIZIO = Number(res.kmInizio) || 0;
   document.getElementById('riepilogo').innerHTML =
     '<div class="row"><span>Veicolo</span><span>' + res.targa + (res.adesivo ? ' ['+res.adesivo+']' : '') + '</span></div>' +
     '<div class="row"><span>Partenza</span><span>' + res.dataInizio + '</span></div>' +
     '<div class="row"><span>Km inizio</span><span>' + KM_INIZIO.toLocaleString('it-IT') + '</span></div>';
-  setTimeout(() => document.getElementById('kmFine').focus(), 300);
+  setTimeout(function(){ document.getElementById('kmFine').focus(); }, 300);
 }
 
 function aggiornaPreview() {
-  const val  = document.getElementById('kmFine').value;
-  const btn  = document.getElementById('btnChiudi');
-  const pre  = document.getElementById('preview');
+  var val  = document.getElementById('kmFine').value;
+  var btn  = document.getElementById('btnChiudi');
+  var pre  = document.getElementById('preview');
   if (!val) { pre.innerHTML = ''; btn.disabled = true; return; }
-  const dist = Number(val) - KM_INIZIO;
+  var dist = Number(val) - KM_INIZIO;
   if (dist < 0) {
-    pre.innerHTML = '<span class="ko">⚠️ Km inferiori ai Km di partenza (' + KM_INIZIO.toLocaleString('it-IT') + ')</span>';
+    pre.innerHTML = '<span class="ko-km">⚠️ Km inferiori ai Km di partenza (' + KM_INIZIO.toLocaleString('it-IT') + ')</span>';
     btn.disabled = true;
   } else {
-    pre.innerHTML = 'Km percorsi: <span class="ok">+' + dist.toLocaleString('it-IT') + ' km</span>';
+    pre.innerHTML = 'Km percorsi: <span class="ok-km">+' + dist.toLocaleString('it-IT') + ' km</span>';
     btn.disabled = false;
   }
 }
 
 function submitChiudi() {
-  const km = Number(document.getElementById('kmFine').value);
+  var km = Number(document.getElementById('kmFine').value);
   if (!km || km < KM_INIZIO) { mostraErrChiudi('Inserisci Km validi.'); return; }
   setLoadingChiudi(true);
-  callScript('chiudi', { km: km })
-    .then(res => {
-      setLoadingChiudi(false);
-      if (res.ok) {
-        document.getElementById('formChiudi').style.display = 'none';
-        const ok = document.getElementById('msgOkChiudi');
-        ok.style.display = 'block';
-        ok.innerHTML = '✅ Giro chiuso!<br>Veicolo <strong>' + res.targa +
-          '</strong> è libero.<br>Km percorsi: <strong>+' +
-          res.distanza.toLocaleString('it-IT') + ' km</strong><br>👋 Buon riposo!';
-      } else {
-        mostraErrChiudi(res.errore || 'Errore sconosciuto.');
-      }
-    })
-    .catch(() => { setLoadingChiudi(false); mostraErrChiudi('Errore di connessione.'); });
+  callScript('chiudi', { km: km }).then(function(res) {
+    setLoadingChiudi(false);
+    if (res.ok) {
+      document.getElementById('formChiudi').style.display = 'none';
+      var ok = document.getElementById('msgOkChiudi');
+      ok.style.display = 'block';
+      ok.innerHTML = '✅ Giro chiuso!<br>Veicolo <strong>' + res.targa + '</strong> è libero.<br>' +
+        'Km percorsi: <strong>+' + Number(res.distanza).toLocaleString('it-IT') + ' km</strong><br>👋 Buon riposo!';
+    } else { mostraErrChiudi(res.errore || 'Errore sconosciuto.'); }
+  }).catch(function() { setLoadingChiudi(false); mostraErrChiudi('Errore di connessione.'); });
 }
 
 function setLoadingChiudi(on) {
@@ -312,11 +284,10 @@ function setLoadingChiudi(on) {
   document.getElementById('msgErrChiudi').style.display = 'none';
 }
 function mostraErrChiudi(m) {
-  const el = document.getElementById('msgErrChiudi');
+  var el = document.getElementById('msgErrChiudi');
   el.textContent = '⚠️ ' + m; el.style.display = 'block';
 }
 
-// ── Errore generico ───────────────────────────────────────
 function mostraErrore(msg) {
   document.getElementById('pageLoading').style.display = 'none';
   document.getElementById('pageErrore').style.display = 'block';
@@ -325,4 +296,3 @@ function mostraErrore(msg) {
 </script>
 </body>
 </html>
-
