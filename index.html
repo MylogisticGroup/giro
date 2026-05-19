@@ -1,298 +1,554 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GiroApp</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Giro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-         background:#eef2f7;min-height:100vh;display:flex;
-         align-items:flex-start;justify-content:center;padding:1.5rem 1rem}
-    .card{background:#fff;border-radius:18px;
-          box-shadow:0 4px 24px rgba(0,0,0,.09);
-          padding:1.8rem 1.5rem;width:100%;max-width:420px}
-    .badge{display:inline-block;font-size:.72rem;font-weight:700;
-           letter-spacing:.06em;padding:.25rem .8rem;border-radius:20px;
-           margin-bottom:.8rem;text-transform:uppercase}
-    .badge-apri{background:#e3f2fd;color:#1565c0}
-    .badge-chiudi{background:#fff3e0;color:#e65100}
-    h1{font-size:1.35rem;color:#0d1b2a;margin-bottom:.25rem}
-    .sub{color:#666;font-size:.95rem;margin-bottom:1.6rem}
-    label{display:block;font-size:.75rem;font-weight:700;color:#444;
-          margin-bottom:.35rem;text-transform:uppercase;letter-spacing:.05em}
-    select{width:100%;padding:.8rem 1rem;border:2px solid #e0e0e0;
-           border-radius:10px;font-size:1rem;color:#0d1b2a;background:#fafafa;
-           margin-bottom:1.1rem;appearance:none;-webkit-appearance:none}
-    select:focus{outline:none;border-color:#1565c0;background:#fff}
-    input[type=number]{width:100%;padding:.8rem 1rem;border:2px solid #e0e0e0;
-           border-radius:10px;font-size:1rem;color:#0d1b2a;background:#fafafa;
-           margin-bottom:.4rem}
-    input[type=number]:focus{outline:none;border-color:#e65100;background:#fff}
-    .veicolo-detail{background:#f0f4f8;border-radius:8px;padding:.6rem .9rem;
-          font-size:.88rem;color:#333;margin-top:-0.6rem;margin-bottom:1.1rem;
-          display:none;line-height:1.8}
-    .veicolo-detail b{color:#1565c0}
-    .riepilogo{background:#f8f9fa;border:1px solid #e8e8e8;
-               border-radius:12px;padding:.9rem 1.1rem;margin-bottom:1.5rem}
-    .row{display:flex;justify-content:space-between;align-items:center;
-         padding:.32rem 0;font-size:.9rem;border-bottom:1px solid #eee}
-    .row:last-child{border-bottom:none}
-    .row span:first-child{color:#777;font-weight:500}
-    .row span:last-child{color:#0d1b2a;font-weight:700}
-    .preview{min-height:1.3rem;font-size:.85rem;color:#555;margin-bottom:1.1rem}
-    .ok-km{color:#2e7d32;font-weight:700}
-    .ko-km{color:#c62828;font-weight:600}
-    .btn-apri{display:block;width:100%;padding:.95rem;background:#1565c0;
-         color:#fff;border:none;border-radius:12px;font-size:1rem;
-         font-weight:700;cursor:pointer}
-    .btn-apri:disabled{background:#b0bec5;cursor:not-allowed}
-    .btn-chiudi{display:block;width:100%;padding:.95rem;background:#e65100;
-         color:#fff;border:none;border-radius:12px;font-size:1rem;
-         font-weight:700;cursor:pointer}
-    .btn-chiudi:disabled{background:#b0bec5;cursor:not-allowed}
-    .spinner-wrap{text-align:center;padding:2rem}
-    .spinner{width:44px;height:44px;border:4px solid #e0e0e0;
-             border-top:4px solid #1565c0;border-radius:50%;
-             animation:spin 0.8s linear infinite;margin:0 auto 1rem}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    .msg-ok{background:#e8f5e9;color:#2e7d32;border-radius:10px;
-            padding:1.2rem;text-align:center;font-weight:600;
-            display:none;margin-top:1rem;line-height:1.7;font-size:.95rem}
-    .msg-err{background:#ffebee;color:#c62828;border-radius:10px;
-             padding:.9rem;text-align:center;font-size:.88rem;
-             display:none;margin-top:1rem}
-    .loading-v{text-align:center;color:#888;padding:.8rem 0;font-size:.9rem}
+    :root {
+      --ink:    #0f1923;
+      --muted:  #64748b;
+      --line:   #e2e8f0;
+      --bg:     #f8fafc;
+      --card:   #ffffff;
+      --blue:   #2563eb;
+      --blue2:  #1d4ed8;
+      --green:  #16a34a;
+      --orange: #ea580c;
+      --red:    #dc2626;
+      --radius: 16px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100dvh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 16px 48px;
+    }
+
+    .wrap { width: 100%; max-width: 400px; }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .logo {
+      width: 38px; height: 38px;
+      background: var(--ink);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; flex-shrink: 0;
+    }
+    .brand { font-size: .78rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+    .driver-name { font-size: 1.05rem; font-weight: 700; color: var(--ink); line-height: 1.2; }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 20px 20px 0;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: .7rem; font-weight: 700; letter-spacing: .08em;
+      text-transform: uppercase; padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .pill-blue   { background: #eff6ff; color: var(--blue); }
+    .pill-orange { background: #fff7ed; color: var(--orange); }
+    .pill-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+    }
+    .pill-blue .pill-dot   { background: var(--blue); }
+    .pill-orange .pill-dot { background: var(--orange); }
+
+    .card-body { padding: 20px; }
+
+    /* ── Field ── */
+    .field { margin-bottom: 18px; }
+    .field:last-child { margin-bottom: 0; }
+    .field-label {
+      font-size: .7rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .08em;
+      margin-bottom: 6px; display: block;
+    }
+    select, input[type=number] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--line);
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      color: var(--ink);
+      background: var(--bg);
+      appearance: none; -webkit-appearance: none;
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+    }
+    select:focus, input[type=number]:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+      background: #fff;
+    }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--muted); pointer-events: none; font-size: .85rem;
+    }
+
+    /* ── Veicolo detail chip ── */
+    .vei-chip {
+      display: none;
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: .82rem;
+      color: #334155;
+      line-height: 1.9;
+      margin-top: 8px;
+    }
+    .vei-chip b { color: var(--ink); font-family: 'DM Mono', monospace; font-size: .8rem; }
+
+    /* ── Riepilogo (chiudi) ── */
+    .riepilogo {
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: .85rem;
+      color: #334155;
+      line-height: 2;
+      margin-bottom: 18px;
+    }
+    .riepilogo strong { color: var(--ink); }
+
+    /* ── Divider ── */
+    .divider { height: 1px; background: var(--line); margin: 18px 0; }
+
+    /* ── Button ── */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 14px;
+      border: none; border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem; font-weight: 700;
+      cursor: pointer;
+      transition: transform .1s, opacity .15s;
+      letter-spacing: .01em;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-blue   { background: var(--blue);   color: #fff; }
+    .btn-blue:hover:not(:disabled)   { background: var(--blue2); }
+    .btn-orange { background: var(--orange); color: #fff; }
+    .btn-orange:hover:not(:disabled) { background: #c2410c; }
+
+    /* ── GPS bar ── */
+    .gps-bar {
+      display: none;
+      align-items: center; gap: 8px;
+      font-size: .78rem; color: var(--muted);
+      background: #f8fafc; border: 1px solid var(--line);
+      border-radius: 8px; padding: 8px 12px;
+      margin-bottom: 14px;
+    }
+    .gps-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--blue); flex-shrink: 0;
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── Skeleton ── */
+    .skeleton {
+      height: 46px; border-radius: 10px;
+      background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.3s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ── States ── */
+    .state { display: none; padding: 20px; text-align: center; }
+    .state-icon { font-size: 2.4rem; margin-bottom: 10px; }
+    .state-title { font-size: 1rem; font-weight: 700; margin-bottom: 4px; }
+    .state-sub { font-size: .85rem; color: var(--muted); line-height: 1.5; }
+    .state-ok .state-title   { color: var(--green); }
+    .state-err .state-title  { color: var(--red); }
+
+    /* ── Spinner ── */
+    .spinner-wrap { display: none; padding: 24px 20px; text-align: center; }
+    .spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--line);
+      border-top-color: var(--blue);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-label { font-size: .82rem; color: var(--muted); }
+
+    /* ── Mono values ── */
+    .mono { font-family: 'DM Mono', monospace; font-size: .88rem; }
   </style>
 </head>
 <body>
-<div class="card">
+<div class="wrap">
 
-  <!-- CARICAMENTO -->
-  <div id="pageLoading" class="spinner-wrap">
-    <div class="spinner"></div>
-    <p style="color:#888">Caricamento…</p>
+  <!-- Header -->
+  <div class="header">
+    <div class="logo">🚚</div>
+    <div>
+      <div class="brand">My Logistic Group</div>
+      <div class="driver-name" id="driverName">Caricamento…</div>
+    </div>
   </div>
 
-  <!-- APRI GIRO -->
-  <div id="pageApri" style="display:none">
-    <div class="badge badge-apri">🚚 Nuovo Giro</div>
-    <h1>Buongiorno!</h1>
-    <p class="sub" id="nomeApri"></p>
-    <div id="formApri">
-      <label>Veicolo disponibile</label>
-      <p class="loading-v" id="loadingV">Caricamento veicoli…</p>
-      <select id="selVeicolo" style="display:none" onchange="onVeicoloChange()">
-        <option value="">— Seleziona veicolo —</option>
-      </select>
-      <div class="veicolo-detail" id="veicoloDetail">
-        🚗 <b id="detMarcaMod"></b><br>
-        📍 Km ultimo giro: <b id="detKm"></b>
+  <!-- Card -->
+  <div class="card">
+
+    <!-- SCHERMATA: loading iniziale -->
+    <div class="state" id="stateInit" style="display:block">
+      <div class="spinner-wrap" style="display:block; padding:32px 20px">
+        <div class="spinner"></div>
+        <div class="spinner-label">Verifica in corso…</div>
       </div>
-      <input type="number" id="kmInizio" style="display:none" min="0">
-      <button class="btn-apri" id="btnApri" onclick="submitApri()" disabled>✅ &nbsp;Apri Giro</button>
     </div>
-    <div class="spinner-wrap" id="spinnerApri" style="display:none"><div class="spinner"></div></div>
-    <div class="msg-ok"  id="msgOkApri"></div>
-    <div class="msg-err" id="msgErrApri"></div>
-  </div>
 
-  <!-- CHIUDI GIRO -->
-  <div id="pageChiudi" style="display:none">
-    <div class="badge badge-chiudi">🏁 Chiudi Giro</div>
-    <h1>Rientro</h1>
-    <p class="sub" id="nomeChiudi"></p>
-    <div class="riepilogo" id="riepilogo"></div>
-    <div id="formChiudi">
-      <label for="kmFine">Km attuali del veicolo</label>
-      <input type="number" id="kmFine" placeholder="es. 125 650" min="0" inputmode="numeric" oninput="aggiornaPreview()">
-      <div class="preview" id="preview"></div>
-      <button class="btn-chiudi" id="btnChiudi" onclick="submitChiudi()" disabled>🏁 &nbsp;Chiudi Giro</button>
+    <!-- SCHERMATA: apri giro -->
+    <div id="screenApri" style="display:none">
+      <div class="card-header">
+        <div class="pill pill-blue"><span class="pill-dot"></span>Nuovo Giro</div>
+      </div>
+      <div class="card-body">
+
+        <div class="field">
+          <label class="field-label">Veicolo</label>
+          <div class="skeleton" id="skelVeicolo"></div>
+          <div class="select-wrap" style="display:none" id="wrapSel">
+            <select id="selVeicolo" onchange="onVeicoloChange()">
+              <option value="">— Seleziona veicolo —</option>
+            </select>
+          </div>
+          <div class="vei-chip" id="veiChip"></div>
+        </div>
+
+        <div class="field" id="fieldKm" style="display:none">
+          <label class="field-label">Km attuali</label>
+          <input type="number" id="kmInizio" placeholder="es. 125430" min="0" inputmode="numeric">
+        </div>
+
+        <div class="gps-bar" id="gpsBar">
+          <span class="gps-dot"></span>
+          <span id="gpsMsg">Rilevazione GPS…</span>
+        </div>
+
+        <button class="btn btn-blue" id="btnApri" onclick="submitApri()" disabled>
+          <span>✓</span> Apri Giro
+        </button>
+      </div>
     </div>
-    <div class="spinner-wrap" id="spinnerChiudi" style="display:none"><div class="spinner"></div></div>
-    <div class="msg-ok"  id="msgOkChiudi"></div>
-    <div class="msg-err" id="msgErrChiudi"></div>
-  </div>
 
-  <!-- ERRORE -->
-  <div id="pageErrore" style="display:none;text-align:center;padding:1rem">
-    <div style="font-size:2.5rem">⚠️</div>
-    <h2 style="color:#c62828;margin:.5rem 0">Errore</h2>
-    <p id="testoErrore" style="color:#555;font-size:.95rem"></p>
-  </div>
+    <!-- SCHERMATA: chiudi giro -->
+    <div id="screenChiudi" style="display:none">
+      <div class="card-header">
+        <div class="pill pill-orange"><span class="pill-dot"></span>Chiudi Giro</div>
+      </div>
+      <div class="card-body">
 
+        <div class="riepilogo" id="riepilogo"></div>
+
+        <div class="field">
+          <label class="field-label">Km attuali del veicolo</label>
+          <input type="number" id="kmFine" placeholder="es. 125850" inputmode="numeric">
+        </div>
+
+        <div class="gps-bar" id="gpsBarC">
+          <span class="gps-dot"></span>
+          <span id="gpsMsgC">Rilevazione GPS…</span>
+        </div>
+
+        <button class="btn btn-orange" id="btnChiudi" onclick="submitChiudi()">
+          <span>⬛</span> Chiudi Giro
+        </button>
+      </div>
+    </div>
+
+    <!-- SCHERMATA: spinner operazione -->
+    <div class="spinner-wrap" id="spinnerOp">
+      <div class="spinner"></div>
+      <div class="spinner-label" id="spinnerLabel">Operazione in corso…</div>
+    </div>
+
+    <!-- SCHERMATA: successo -->
+    <div class="state state-ok" id="stateOk">
+      <div class="state-icon">✅</div>
+      <div class="state-title" id="okTitle"></div>
+      <div class="state-sub"  id="okBody"></div>
+    </div>
+
+    <!-- SCHERMATA: errore -->
+    <div class="state state-err" id="stateErr">
+      <div class="state-icon">⚠️</div>
+      <div class="state-title">Errore</div>
+      <div class="state-sub" id="errMsg"></div>
+      <button class="btn btn-blue" style="margin-top:16px" onclick="location.reload()">Riprova</button>
+    </div>
+
+  </div>
 </div>
+
 <script>
-const WEBAPP    = ' https://script.google.com/macros/s/AKfycbxCUqT5QlB2zK4BaQWbSONMQIbN1q0DLLuE7SEThvHNwazvBbahTm2qQ2X2UzzxArmt/exec';
-const params    = new URLSearchParams(window.location.search);
-const DRIVER_ID = params.get('driver');
-let KM_INIZIO   = 0;
+// ── Config ────────────────────────────────────────────────────
+const API = 'https://script.google.com/macros/s/AKfycbxCUqT5QlB2zK4BaQWbSONMQIbN1q0DLLuE7SEThvHNwazvBbahTm2qQ2X2UzzxArmt/exec';
 
-// ── JSONP — bypassa CORS completamente ───────────────────
-function callScript(azione, extra) {
-  return new Promise(function(resolve, reject) {
-    var cbName = 'cb_' + Date.now();
-    var script = document.createElement('script');
-    var url    = new URL(WEBAPP);
-    url.searchParams.set('action',   azione);
-    url.searchParams.set('driver',   DRIVER_ID);
-    url.searchParams.set('callback', cbName);
-    if (extra) Object.keys(extra).forEach(function(k){ url.searchParams.set(k, extra[k]); });
+// ── Stato ─────────────────────────────────────────────────────
+const params   = new URLSearchParams(location.search);
+const DRIVER   = (params.get('driver') || '').trim();
+let   gpsCoords = '';
+let   kmInizioVal = 0;
 
-    var timer = setTimeout(function(){
-      delete window[cbName];
-      if (script.parentNode) document.body.removeChild(script);
+// ── Util: chiamata JSONP (evita CORS) ────────────────────────
+function apiCall(qs) {
+  return new Promise((resolve, reject) => {
+    const cb  = '_cb' + Date.now();
+    const tag = document.createElement('script');
+    const timer = setTimeout(() => {
+      delete window[cb];
+      tag.remove();
       reject(new Error('Timeout'));
     }, 15000);
-
-    window[cbName] = function(data) {
+    window[cb] = data => {
       clearTimeout(timer);
-      delete window[cbName];
-      if (script.parentNode) document.body.removeChild(script);
+      delete window[cb];
+      tag.remove();
       resolve(data);
     };
-    script.onerror = function() {
-      clearTimeout(timer);
-      reject(new Error('Errore connessione'));
-    };
-    script.src = url.toString();
-    document.body.appendChild(script);
+    tag.src = API + '?' + qs + '&callback=' + cb;
+    document.head.appendChild(tag);
   });
 }
 
-// ── Avvio ─────────────────────────────────────────────────
-window.onload = function() {
-  if (!DRIVER_ID) { mostraErrore('QR Code non valido. Scansiona il QR corretto.'); return; }
-  callScript('stato')
-    .then(function(res) {
-      document.getElementById('pageLoading').style.display = 'none';
-      if (res.occupato) { mostraChiudi(res); } else { mostraApri(res); }
-    })
-    .catch(function() { mostraErrore('Errore di connessione. Controlla la rete e riprova.'); });
+// ── Schermate ────────────────────────────────────────────────
+function show(id) {
+  ['stateInit','screenApri','screenChiudi','spinnerOp','stateOk','stateErr']
+    .forEach(s => document.getElementById(s).style.display = 'none');
+  document.getElementById(id).style.display = 'block';
+}
+
+function showErr(msg) {
+  document.getElementById('errMsg').textContent = msg;
+  show('stateErr');
+}
+
+// ── GPS background ───────────────────────────────────────────
+function startGPS() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(
+    p => { gpsCoords = p.coords.latitude.toFixed(6) + ',' + p.coords.longitude.toFixed(6); },
+    () => { gpsCoords = ''; },
+    { timeout: 12000, maximumAge: 0, enableHighAccuracy: true }
+  );
+}
+
+async function waitGPS(maxMs = 2500) {
+  if (gpsCoords) return;
+  const bar = arguments[1]; // opzionale
+  const t0  = Date.now();
+  return new Promise(res => {
+    const iv = setInterval(() => {
+      if (gpsCoords || Date.now() - t0 > maxMs) { clearInterval(iv); res(); }
+    }, 200);
+  });
+}
+
+// ── Init ─────────────────────────────────────────────────────
+window.onload = async () => {
+  if (!DRIVER) { showErr('QR Code non valido. Parametro driver mancante.'); return; }
+
+  startGPS(); // parte subito in background
+
+  // Carica stato driver + veicoli disponibili in parallelo
+  let stato, veicoli;
+  try {
+    [stato, veicoli] = await Promise.all([
+      apiCall('action=stato&driver=' + encodeURIComponent(DRIVER)),
+      apiCall('action=veicoli')
+    ]);
+  } catch(e) {
+    showErr('Impossibile connettersi. Controlla la connessione e riprova.'); return;
+  }
+
+  document.getElementById('driverName').textContent = stato.nomeDriver || DRIVER;
+
+  if (stato.occupato) {
+    mostraChiudi(stato);
+  } else {
+    mostraApri(veicoli);
+  }
 };
 
-// ── APRI ──────────────────────────────────────────────────
-function mostraApri(res) {
-  document.getElementById('pageApri').style.display = 'block';
-  document.getElementById('nomeApri').textContent = res.nomeDriver || '';
-  callScript('veicoli').then(function(list) {
-    var sel = document.getElementById('selVeicolo');
-    document.getElementById('loadingV').style.display = 'none';
-    sel.style.display = 'block';
-    if (!list.length) { sel.innerHTML = '<option value="">Nessun veicolo disponibile</option>'; return; }
-    list.forEach(function(v) {
-      var opt = document.createElement('option');
-      opt.value = v.id;
-      opt.dataset.marca   = v.marca   || '';
-      opt.dataset.modello = v.modello || '';
-      opt.dataset.km      = v.kmFine  || '';
-      opt.textContent     = v.targa;
-      sel.appendChild(opt);
-    });
-    document.getElementById('btnApri').disabled = false;
-  }).catch(function() {
-    document.getElementById('loadingV').textContent = '⚠️ Errore caricamento veicoli.';
+// ── Schermata APRI ───────────────────────────────────────────
+function mostraApri(veicoli) {
+  show('screenApri');
+
+  document.getElementById('skelVeicolo').style.display = 'none';
+  document.getElementById('wrapSel').style.display = 'block';
+
+  const sel = document.getElementById('selVeicolo');
+  if (!veicoli || !veicoli.length) {
+    sel.innerHTML = '<option value="">Nessun veicolo disponibile</option>';
+    return;
+  }
+  veicoli.forEach(v => {
+    const o = document.createElement('option');
+    o.value           = v.id;
+    o.dataset.marca   = v.marca   || '';
+    o.dataset.modello = v.modello || '';
+    o.dataset.km      = v.kmFine  !== '' ? v.kmFine : '';
+    o.textContent     = v.targa + (v.marca ? ' — ' + v.marca + ' ' + v.modello : '');
+    sel.appendChild(o);
   });
+  document.getElementById('btnApri').disabled = false;
 }
 
 function onVeicoloChange() {
-  var sel    = document.getElementById('selVeicolo');
-  var opt    = sel.options[sel.selectedIndex];
-  var detail = document.getElementById('veicoloDetail');
-  var kmInp  = document.getElementById('kmInizio');
-  if (!opt.value) { detail.style.display = 'none'; kmInp.value = ''; return; }
-  var mm = [opt.dataset.marca, opt.dataset.modello].filter(Boolean).join(' ');
-  document.getElementById('detMarcaMod').textContent = mm || '—';
-  var km = opt.dataset.km;
-  document.getElementById('detKm').textContent = km ? Number(km).toLocaleString('it-IT') + ' km' : 'non disponibile';
-  kmInp.value = km || '';
-  detail.style.display = 'block';
+  const sel   = document.getElementById('selVeicolo');
+  const opt   = sel.options[sel.selectedIndex];
+  const chip  = document.getElementById('veiChip');
+  const fkm   = document.getElementById('fieldKm');
+  const kminp = document.getElementById('kmInizio');
+
+  if (!opt.value) {
+    chip.style.display = 'none';
+    fkm.style.display  = 'none';
+    kminp.value = '';
+    return;
+  }
+
+  const km = opt.dataset.km;
+  chip.innerHTML =
+    (opt.dataset.marca ? '🚗 <b>' + opt.dataset.marca + ' ' + opt.dataset.modello + '</b><br>' : '') +
+    '📏 Km ultimo giro: <b>' + (km ? Number(km).toLocaleString('it-IT') + ' km' : 'n/d') + '</b>';
+  chip.style.display = 'block';
+
+  kminp.value       = km || '';
+  fkm.style.display = 'block';
 }
 
-function submitApri() {
-  var targa = document.getElementById('selVeicolo').value;
-  var km    = document.getElementById('kmInizio').value;
-  if (!targa) { mostraErrApri('Seleziona un veicolo.'); return; }
-  setLoadingApri(true);
-  callScript('apri', { targa: targa, km: km }).then(function(res) {
-    setLoadingApri(false);
-    if (res.ok) {
-      document.getElementById('formApri').style.display = 'none';
-      var ok = document.getElementById('msgOkApri');
-      ok.style.display = 'block';
-      ok.innerHTML = '✅ Giro aperto!<br>Veicolo: <strong>' + targa + '</strong>';
-    } else { mostraErrApri(res.errore || 'Errore sconosciuto.'); }
-  }).catch(function() { setLoadingApri(false); mostraErrApri('Errore di connessione.'); });
-}
+async function submitApri() {
+  const targa = document.getElementById('selVeicolo').value;
+  const km    = document.getElementById('kmInizio').value;
+  if (!targa) { pulseErr('selVeicolo'); return; }
 
-function setLoadingApri(on) {
-  document.getElementById('btnApri').disabled = on;
-  document.getElementById('spinnerApri').style.display = on ? 'block' : 'none';
-  document.getElementById('msgErrApri').style.display = 'none';
-}
-function mostraErrApri(m) {
-  var el = document.getElementById('msgErrApri');
-  el.textContent = '⚠️ ' + m; el.style.display = 'block';
-}
+  // Aspetta GPS max 2.5s
+  if (!gpsCoords) {
+    const bar = document.getElementById('gpsBar');
+    bar.style.display = 'flex';
+    await waitGPS(2500);
+    bar.style.display = 'none';
+  }
 
-// ── CHIUDI ────────────────────────────────────────────────
-function mostraChiudi(res) {
-  document.getElementById('pageChiudi').style.display = 'block';
-  document.getElementById('nomeChiudi').textContent = res.nomeDriver || '';
-  KM_INIZIO = Number(res.kmInizio) || 0;
-  document.getElementById('riepilogo').innerHTML =
-    '<div class="row"><span>Veicolo</span><span>' + res.targa + (res.adesivo ? ' ['+res.adesivo+']' : '') + '</span></div>' +
-    '<div class="row"><span>Partenza</span><span>' + res.dataInizio + '</span></div>' +
-    '<div class="row"><span>Km inizio</span><span>' + KM_INIZIO.toLocaleString('it-IT') + '</span></div>';
-  setTimeout(function(){ document.getElementById('kmFine').focus(); }, 300);
-}
+  show('spinnerOp');
+  document.getElementById('spinnerLabel').textContent = 'Apertura giro…';
 
-function aggiornaPreview() {
-  var val  = document.getElementById('kmFine').value;
-  var btn  = document.getElementById('btnChiudi');
-  var pre  = document.getElementById('preview');
-  if (!val) { pre.innerHTML = ''; btn.disabled = true; return; }
-  var dist = Number(val) - KM_INIZIO;
-  if (dist < 0) {
-    pre.innerHTML = '<span class="ko-km">⚠️ Km inferiori ai Km di partenza (' + KM_INIZIO.toLocaleString('it-IT') + ')</span>';
-    btn.disabled = true;
+  let res;
+  try {
+    res = await apiCall('action=apri&driver=' + encodeURIComponent(DRIVER) +
+      '&targa=' + encodeURIComponent(targa) +
+      '&km='    + encodeURIComponent(km || 0) +
+      '&gps='   + encodeURIComponent(gpsCoords));
+  } catch(e) { showErr('Timeout. Riprova.'); return; }
+
+  if (res.ok) {
+    document.getElementById('okTitle').textContent = 'Giro aperto!';
+    document.getElementById('okBody').innerHTML =
+      '🚗 Veicolo: <strong>' + targa + '</strong><br>' +
+      '📏 Km: <strong>' + Number(km||0).toLocaleString('it-IT') + '</strong><br>' +
+      (gpsCoords ? '📍 GPS registrato' : '📍 GPS non disponibile');
+    show('stateOk');
   } else {
-    pre.innerHTML = 'Km percorsi: <span class="ok-km">+' + dist.toLocaleString('it-IT') + ' km</span>';
-    btn.disabled = false;
+    showErr(res.errore || 'Errore sconosciuto.');
   }
 }
 
-function submitChiudi() {
-  var km = Number(document.getElementById('kmFine').value);
-  if (!km || km < KM_INIZIO) { mostraErrChiudi('Inserisci Km validi.'); return; }
-  setLoadingChiudi(true);
-  callScript('chiudi', { km: km }).then(function(res) {
-    setLoadingChiudi(false);
-    if (res.ok) {
-      document.getElementById('formChiudi').style.display = 'none';
-      var ok = document.getElementById('msgOkChiudi');
-      ok.style.display = 'block';
-      ok.innerHTML = '✅ Giro chiuso!<br>Veicolo <strong>' + res.targa + '</strong> è libero.<br>' +
-        'Km percorsi: <strong>+' + Number(res.distanza).toLocaleString('it-IT') + ' km</strong><br>👋 Buon riposo!';
-    } else { mostraErrChiudi(res.errore || 'Errore sconosciuto.'); }
-  }).catch(function() { setLoadingChiudi(false); mostraErrChiudi('Errore di connessione.'); });
+// ── Schermata CHIUDI ─────────────────────────────────────────
+function mostraChiudi(stato) {
+  kmInizioVal = Number(stato.kmInizio) || 0;
+
+  document.getElementById('riepilogo').innerHTML =
+    '🚗 <strong>Veicolo:</strong> ' + stato.targa +
+    (stato.adesivo ? ' — ' + stato.adesivo : '') + '<br>' +
+    '🕐 <strong>Inizio:</strong> ' + stato.dataInizio + '<br>' +
+    '📏 <strong>Km partenza:</strong> <span class="mono">' + kmInizioVal.toLocaleString('it-IT') + '</span>';
+
+  document.getElementById('kmFine').min = kmInizioVal;
+  show('screenChiudi');
 }
 
-function setLoadingChiudi(on) {
-  document.getElementById('btnChiudi').disabled = on;
-  document.getElementById('spinnerChiudi').style.display = on ? 'block' : 'none';
-  document.getElementById('msgErrChiudi').style.display = 'none';
-}
-function mostraErrChiudi(m) {
-  var el = document.getElementById('msgErrChiudi');
-  el.textContent = '⚠️ ' + m; el.style.display = 'block';
+async function submitChiudi() {
+  const km = Number(document.getElementById('kmFine').value);
+  if (!km || km <= 0)      { pulseErrInput('kmFine'); return; }
+  if (km < kmInizioVal)    {
+    document.getElementById('kmFine').style.borderColor = 'var(--red)';
+    setTimeout(() => document.getElementById('kmFine').style.borderColor = '', 1500);
+    return;
+  }
+
+  if (!gpsCoords) {
+    const bar = document.getElementById('gpsBarC');
+    bar.style.display = 'flex';
+    await waitGPS(2500);
+    bar.style.display = 'none';
+  }
+
+  show('spinnerOp');
+  document.getElementById('spinnerLabel').textContent = 'Chiusura giro…';
+
+  let res;
+  try {
+    res = await apiCall('action=chiudi&driver=' + encodeURIComponent(DRIVER) +
+      '&km='  + encodeURIComponent(km) +
+      '&gps=' + encodeURIComponent(gpsCoords));
+  } catch(e) { showErr('Timeout. Riprova.'); return; }
+
+  if (res.ok) {
+    document.getElementById('okTitle').textContent = 'Giro chiuso!';
+    document.getElementById('okBody').innerHTML =
+      '🚗 Veicolo: <strong>' + res.targa + '</strong><br>' +
+      '📏 Distanza: <strong>' + Number(res.distanza).toLocaleString('it-IT') + ' km</strong><br>' +
+      (gpsCoords ? '📍 GPS registrato' : '📍 GPS non disponibile');
+    show('stateOk');
+  } else {
+    showErr(res.errore || 'Errore sconosciuto.');
+  }
 }
 
-function mostraErrore(msg) {
-  document.getElementById('pageLoading').style.display = 'none';
-  document.getElementById('pageErrore').style.display = 'block';
-  document.getElementById('testoErrore').textContent = msg;
+// ── micro feedback errore input ──────────────────────────────
+function pulseErrInput(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = 'var(--red)';
+  el.style.boxShadow   = '0 0 0 3px rgba(220,38,38,.15)';
+  el.focus();
+  setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1600);
 }
+function pulseErr(id) { pulseErrInput(id); }
 </script>
 </body>
 </html>
