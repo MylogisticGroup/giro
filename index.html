@@ -2,560 +2,349 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Giro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scanner Giro — My Logistic Group</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink:    #0a0f1e;
+      --bg:     #0a0f1a;
+      --card:   #111827;
+      --line:   #1f2937;
+      --accent: #facc15;
+      --dim:    #4b5563;
+      --text:   #f9fafb;
       --muted:  #6b7280;
-      --line:   #e5e7eb;
-      --bg:     #f3f4f6;
-      --card:   #ffffff;
-      --blue:   #2563eb;
-      --blue2:  #1d4ed8;
-      --green:  #16a34a;
-      --green2: #15803d;
-      --orange: #ea580c;
-      --red:    #dc2626;
+      --green:  #4ade80;
+      --red:    #f87171;
     }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      font-family: 'Sora', sans-serif;
+      font-family: 'Syne', sans-serif;
       background: var(--bg);
-      color: var(--ink);
-      min-height: 100dvh;
+      color: var(--text);
+      min-height: 100vh;
       display: flex;
-      align-items: flex-start;
+      flex-direction: column;
+      align-items: center;
       justify-content: center;
-      padding: 0 0 48px;
+      padding: 24px;
+      overflow: hidden;
     }
-    .wrap { width: 100%; max-width: 480px; }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 50%, rgba(250,204,21,.04) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 80% 30%, rgba(74,222,128,.03) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 580px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ── Link apri scanner ── */
+    .scanner-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent);
+      color: #0a0f1a;
+      font-family: 'Syne', sans-serif;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 9px 20px;
+      border-radius: 10px;
+      align-self: flex-end;
+      transition: opacity .15s;
+    }
+    .scanner-link:hover { opacity: .85; }
 
     /* ── Header ── */
-    .header {
-      background: #1e2a3a;
-      border-radius: 0 0 28px 28px;
-      padding: 34px 28px 36px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
+    .header { text-align: center; }
     .brand {
-      font-size: .67rem; font-weight: 600;
-      letter-spacing: .2em; text-transform: uppercase;
-      color: rgba(255,255,255,.4); margin-bottom: 14px;
+      font-size: .7rem; font-weight: 700;
+      letter-spacing: .18em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 6px;
     }
-    .driver-cognome {
-      font-size: 1.75rem; font-weight: 700;
-      color: #fff; letter-spacing: .05em;
-      line-height: 1.1; margin-bottom: 4px;
+    .title {
+      font-size: 2.2rem; font-weight: 800;
+      color: var(--text); line-height: 1.1;
     }
-    .driver-nome {
-      font-size: 1.05rem; font-weight: 300;
-      color: rgba(255,255,255,.5);
-      letter-spacing: .06em; margin-bottom: 16px;
-    }
-    .status-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(37,99,235,.2);
-      border: 1px solid rgba(37,99,235,.4);
-      border-radius: 20px; padding: 5px 14px;
-      font-size: .68rem; font-weight: 600;
-      letter-spacing: .1em; text-transform: uppercase; color: #93c5fd;
-    }
+    .title span { color: var(--accent); }
 
-    /* ── Card ── */
-    .card {
+    /* ── Scanner box ── */
+    .scanner-box {
+      width: 100%;
       background: var(--card);
-      border-radius: 18px;
       border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 40px 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 28px;
+      position: relative;
       overflow: hidden;
-      box-shadow: 0 2px 12px rgba(0,0,0,.06);
-      margin: 0 14px;
-    }
-    .card-body { padding: 24px 24px 26px; }
-
-    /* ── Field ── */
-    .field { margin-bottom: 16px; }
-    .field:last-child { margin-bottom: 0; }
-    .field-label {
-      font-size: .75rem; font-weight: 700;
-      color: var(--muted); text-transform: uppercase;
-      letter-spacing: .12em; margin-bottom: 10px;
-      display: block; text-align: center;
-    }
-
-    select, input[type=number] {
-      width: 100%; padding: 15px 18px;
-      border: 2px solid var(--line);
-      border-radius: 12px;
-      font-family: 'Sora', sans-serif;
-      font-size: .95rem; color: var(--ink);
-      background: var(--bg);
-      appearance: none; -webkit-appearance: none;
-      transition: border-color .15s, box-shadow .15s;
-      outline: none;
-    }
-    select:focus, input[type=number]:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 4px rgba(37,99,235,.1);
-      background: #fff;
-    }
-    .select-wrap { position: relative; }
-    .select-wrap::after {
-      content: '▾';
-      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-      color: var(--blue); pointer-events: none; font-size: .85rem;
-    }
-    select.accented {
-      border-color: var(--blue); color: var(--blue);
-      background: #eff6ff; font-weight: 600;
-      box-shadow: 0 0 0 4px rgba(37,99,235,.08);
-    }
-
-    /* ── Chip veicolo ── */
-    .vei-chip {
-      display: none;
-      background: #f8fafc; border: 1px solid var(--line);
-      border-radius: 9px; padding: 10px 12px;
-      font-size: .8rem; color: #374151; line-height: 1.9; margin-top: 8px;
-    }
-    .vei-chip .mono {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .78rem; color: var(--blue);
-    }
-
-    /* ── Riepilogo chiudi ── */
-    .riepilogo {
-      background: #f8fafc; border: 1px solid var(--line);
-      border-radius: 10px; padding: 12px 14px;
-      font-size: .83rem; color: #374151;
-      line-height: 2; margin-bottom: 16px;
-    }
-    .riepilogo strong { color: var(--ink); }
-    .riepilogo .mono { font-family: 'JetBrains Mono', monospace; font-size: .78rem; }
-
-    /* ── Button ── */
-    .btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; padding: 15px 14px;
-      border: none; border-radius: 12px;
-      font-family: 'Sora', sans-serif;
-      font-size: 1rem; font-weight: 700;
-      cursor: pointer;
-      transition: transform .12s, opacity .15s, background .15s;
-      letter-spacing: .02em;
-    }
-    .btn:active  { transform: scale(.96); }
-    .btn:disabled { opacity: .35; cursor: not-allowed; }
-    .btn-green  { background: var(--green); color: #fff; box-shadow: 0 4px 14px rgba(22,163,74,.35); }
-    .btn-green:hover:not(:disabled)  { background: var(--green2); }
-    .btn-orange { background: var(--orange); color: #fff; }
-    .btn-orange:hover:not(:disabled) { background: #c2410c; }
-
-    /* ── Pill dot ── */
-    .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
-    .pill-dot-blue   { background: #93c5fd; animation: blink 2s infinite; }
-    .pill-dot-orange { background: var(--orange); animation: blink 2s infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
-
-    /* ── Orange pill (chiudi) ── */
-    .pill-orange {
-      display: inline-flex; align-items: center; gap: 7px;
-      background: #fff7ed; color: var(--orange);
-      border-radius: 20px; padding: 5px 14px;
-      font-size: .68rem; font-weight: 700;
-      letter-spacing: .1em; text-transform: uppercase;
-    }
-    .card-top { padding: 18px 24px 0; }
-
-    /* ── Skeleton ── */
-    .skeleton {
-      height: 52px; border-radius: 12px;
-      background: linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.3s infinite;
-    }
-    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-    /* ── Successo ── */
-    .state-ok {
-      display: none;
-      padding: 36px 24px;
-      text-align: center;
-    }
-    .ok-icon { font-size: 3rem; margin-bottom: 14px; }
-    .ok-title { font-size: 1.2rem; font-weight: 700; color: var(--green); margin-bottom: 8px; }
-    .ok-body  { font-size: .88rem; color: var(--muted); line-height: 1.8; margin-bottom: 18px; }
-    .ok-countdown {
-      font-size: .75rem; color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .ok-bar-wrap {
-      width: 100%; height: 3px; background: var(--line);
-      border-radius: 2px; margin-top: 16px; overflow: hidden;
-    }
-    .ok-bar {
-      height: 100%; width: 100%;
-      background: var(--green);
-      border-radius: 2px;
-      transform-origin: left;
-      animation: shrink 3s linear forwards;
-    }
-    @keyframes shrink { from{transform:scaleX(1)} to{transform:scaleX(0)} }
-
-    /* ── Errore ── */
-    .state-err {
-      display: none;
-      padding: 36px 24px;
-      text-align: center;
-    }
-    .err-icon  { font-size: 2.6rem; margin-bottom: 12px; }
-    .err-title { font-size: 1.05rem; font-weight: 700; color: var(--red); margin-bottom: 6px; }
-    .err-body  { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
-    .btn-ghost {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 10px 24px;
-      background: transparent; color: var(--blue);
-      border: 1.5px solid var(--blue); border-radius: 10px;
-      font-family: 'Sora', sans-serif; font-size: .9rem; font-weight: 600;
       cursor: pointer;
     }
-    .btn-ghost:hover { background: #eff6ff; }
-
-    /* ── Spinner ── */
-    .spin-wrap { display: none; padding: 36px 20px; text-align: center; }
-    .spinner {
-      width: 30px; height: 30px;
-      border: 3px solid var(--line); border-top-color: var(--blue);
-      border-radius: 50%; animation: spin .75s linear infinite;
-      margin: 0 auto 12px;
+    .scanner-box::before,
+    .scanner-box::after {
+      content: '';
+      position: absolute;
+      width: 24px; height: 24px;
+      border-color: var(--accent);
+      border-style: solid;
+      opacity: .5;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spin-label { font-size: .82rem; color: var(--muted); }
+    .scanner-box::before { top: 16px; left: 16px; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+    .scanner-box::after  { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+
+    /* ── Icona QR ── */
+    .scan-icon { position: relative; width: 96px; height: 96px; }
+    .scan-icon svg { width: 100%; height: 100%; opacity: .9; }
+    .scan-line {
+      position: absolute;
+      left: 12px; right: 12px; height: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent), 0 0 20px var(--accent);
+      border-radius: 2px; top: 12px;
+      animation: scanMove 2s ease-in-out infinite;
+    }
+    @keyframes scanMove {
+      0%   { top: 12px; }
+      50%  { top: calc(100% - 14px); }
+      100% { top: 12px; }
+    }
+
+    /* ── Istruzione ── */
+    .instruction { text-align: center; }
+    .instruction-main { font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .instruction-sub  { font-size: .82rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+
+    /* ── Input nascosto ── */
+    .hidden-input {
+      position: absolute; opacity: 0;
+      width: 1px; height: 1px; pointer-events: none;
+    }
+
+    /* ── Buffer ── */
+    .buffer-wrap {
+      width: 100%; background: var(--bg);
+      border: 1.5px solid var(--line);
+      border-radius: 12px; padding: 14px 18px;
+      display: flex; align-items: center; gap: 12px;
+      min-height: 52px; transition: border-color .2s;
+    }
+    .buffer-wrap.active { border-color: var(--accent); }
+    .buffer-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--dim); flex-shrink: 0; transition: background .2s;
+    }
+    .buffer-wrap.active .buffer-dot { background: var(--accent); animation: blink .6s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+    .buffer-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 1rem; color: var(--text); letter-spacing: .08em; flex: 1;
+    }
+    .buffer-text.empty { color: var(--dim); font-size: .82rem; font-family: 'Syne', sans-serif; }
+
+    /* ── Feedback ── */
+    .feedback {
+      width: 100%; border-radius: 12px; padding: 14px 18px;
+      font-size: .9rem; font-weight: 700; text-align: center;
+      display: none; animation: fadeIn .25s ease;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+    .feedback.ok  { background: rgba(74,222,128,.1);  color: var(--green); border: 1px solid rgba(74,222,128,.2); }
+    .feedback.err { background: rgba(248,113,113,.1); color: var(--red);   border: 1px solid rgba(248,113,113,.2); }
+
+    /* ── Footer info ── */
+    .last-scan { font-size: .75rem; color: var(--dim); font-family: 'DM Mono', monospace; text-align: center; min-height: 18px; }
+    .clock     { font-size: .8rem;  color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: .06em; }
+
+    .refocus-btn {
+      background: transparent; border: 1px solid var(--line);
+      color: var(--muted); font-family: 'Syne', sans-serif;
+      font-size: .75rem; padding: 7px 16px; border-radius: 8px;
+      cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    .refocus-btn:hover { border-color: var(--accent); color: var(--accent); }
   </style>
 </head>
 <body>
 <div class="wrap">
 
+  <!-- Link apertura rapida scanner (utile da bookmark) -->
+  <a class="scanner-link" href="https://mylogisticgroup.github.io/giro/" onclick="refocus(); return false;">
+    ⟳ &nbsp;Riapri Scanner
+  </a>
+
   <!-- Header -->
-  <div class="header" id="mainHeader">
+  <div class="header">
     <div class="brand">My Logistic Group</div>
-    <div class="driver-cognome" id="driverCognome">Caricamento…</div>
-    <div class="driver-nome"    id="driverNome"></div>
-    <div class="status-pill" id="headerPill" style="display:none">
-      <span class="pill-dot pill-dot-blue" id="headerDot"></span>
-      <span id="headerPillLabel">Nuovo Giro</span>
-    </div>
+    <div class="title">Scanner <span>Giro</span></div>
   </div>
 
-  <!-- Card -->
-  <div class="card">
+  <!-- Box scanner -->
+  <div class="scanner-box" onclick="refocus()">
 
-    <!-- Init loading -->
-    <div class="spin-wrap" id="stateInit" style="display:block">
-      <div class="spinner"></div>
-      <div class="spin-label">Verifica in corso…</div>
+    <div class="scan-icon">
+      <svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="8"  y="8"  width="28" height="28" rx="4" stroke="#facc15" stroke-width="3" fill="none"/>
+        <rect x="16" y="16" width="12" height="12" rx="2" fill="#facc15" opacity=".6"/>
+        <rect x="60" y="8"  width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
+        <rect x="68" y="16" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
+        <rect x="8"  y="60" width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
+        <rect x="16" y="68" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
+        <rect x="44" y="44" width="8"  height="8"  rx="1" fill="#facc15" opacity=".5"/>
+        <rect x="56" y="44" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+        <rect x="68" y="56" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+        <rect x="44" y="56" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+        <rect x="56" y="68" width="8"  height="8"  rx="1" fill="#facc15" opacity=".5"/>
+        <rect x="68" y="44" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+        <rect x="44" y="68" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+        <rect x="56" y="56" width="8"  height="8"  rx="1" fill="#facc15" opacity=".7"/>
+        <rect x="68" y="68" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+      </svg>
+      <div class="scan-line"></div>
     </div>
 
-    <!-- ── APRI GIRO ── -->
-    <div id="screenApri" style="display:none">
-      <div class="card-body">
-        <div class="field">
-          <label class="field-label">Veicolo</label>
-          <div class="skeleton" id="skelVeicolo"></div>
-          <div class="select-wrap" style="display:none" id="wrapSel">
-            <select id="selVeicolo" class="accented" onchange="onVeicoloChange()">
-              <option value="">— Seleziona veicolo —</option>
-            </select>
-          </div>
-          <div class="vei-chip" id="veiChip"></div>
-        </div>
-        <div class="field" id="fieldKm" style="display:none">
-          <label class="field-label">Km attuali del veicolo</label>
-          <input type="number" id="kmInizio" placeholder="es. 125430" min="0" inputmode="numeric">
-        </div>
-        <button class="btn btn-green" id="btnApri" onclick="submitApri()" disabled>
-          ✓ &nbsp;Apri Giro
-        </button>
-      </div>
+    <div class="instruction">
+      <div class="instruction-main">Scannerizza il QR Code del driver</div>
+      <div class="instruction-sub">apertura e chiusura automatica del giro</div>
     </div>
 
-    <!-- ── CHIUDI GIRO ── -->
-    <div id="screenChiudi" style="display:none">
-      <div class="card-top">
-        <div class="pill-orange">
-          <span class="pill-dot pill-dot-orange"></span>Chiudi Giro
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="riepilogo" id="riepilogo"></div>
-        <div class="field">
-          <label class="field-label">Km attuali del veicolo</label>
-          <input type="number" id="kmFine" placeholder="es. 125850" inputmode="numeric">
-        </div>
-        <button class="btn btn-orange" id="btnChiudi" onclick="submitChiudi()">
-          ⬛ &nbsp;Chiudi Giro
-        </button>
-      </div>
+    <div class="buffer-wrap" id="bufferWrap">
+      <span class="buffer-dot"></span>
+      <span class="buffer-text empty" id="bufferText">In attesa scansione…</span>
     </div>
 
-    <!-- Spinner operazione -->
-    <div class="spin-wrap" id="spinnerOp">
-      <div class="spinner"></div>
-      <div class="spin-label" id="spinnerLabel">Operazione in corso…</div>
-    </div>
+    <div class="feedback" id="feedback"></div>
 
-    <!-- Successo -->
-    <div class="state-ok" id="stateOk">
-      <div class="ok-icon">✅</div>
-      <div class="ok-title" id="okTitle"></div>
-      <div class="ok-body"  id="okBody"></div>
-      <div class="ok-countdown" id="okCountdown"></div>
-      <div class="ok-bar-wrap"><div class="ok-bar" id="okBar"></div></div>
-    </div>
-
-    <!-- Errore -->
-    <div class="state-err" id="stateErr">
-      <div class="err-icon">⚠️</div>
-      <div class="err-title">Errore</div>
-      <div class="err-body" id="errMsg"></div>
-      <button class="btn-ghost" onclick="location.reload()">↩ Riprova</button>
-    </div>
+    <input class="hidden-input" id="scanInput" type="text"
+      autocomplete="off" autocorrect="off" spellcheck="false">
 
   </div>
+
+  <div class="last-scan" id="lastScan">Nessuna scansione ancora</div>
+  <div class="clock" id="clock"></div>
+  <button class="refocus-btn" onclick="refocus()">↺ Riattiva scanner</button>
+
 </div>
 
 <script>
-const API    = 'https://script.google.com/macros/s/AKfycbzpihespHqhVbDgh2A5F-0z0K4_J7qNsjsQU7OzeNKDM8h2vOyI-CyRla0yBkHqSaqJ/exec';
-// URL della pagina scanner a cui tornare dopo il successo
-const SCANNER_URL = 'index.html';   // ← adatta se necessario
+// ── Config ────────────────────────────────────────────────────
+const BASE_URL    = 'https://mylogisticgroup.github.io/giro/giro.html';
+const SCAN_TIMEOUT = 300;
 
-const params      = new URLSearchParams(location.search);
-const DRIVER      = (params.get('driver') || '').trim();
-let   kmInizioVal = 0;
+// ── Elementi ──────────────────────────────────────────────────
+const input      = document.getElementById('scanInput');
+const bufferWrap = document.getElementById('bufferWrap');
+const bufferText = document.getElementById('bufferText');
+const feedback   = document.getElementById('feedback');
+const lastScan   = document.getElementById('lastScan');
 
-/* ── Split cognome / nome ── */
-function splitNome(full) {
-  const parts = (full || '').trim().split(/\s+/);
-  const upper = parts.filter(p => p === p.toUpperCase() && p.length > 1);
-  if (upper.length) {
-    return { cognome: upper.join(' '), nome: parts.filter(p => !upper.includes(p)).join(' ') };
+let buffer = '';
+let timer  = null;
+
+// ── Focus permanente ──────────────────────────────────────────
+function refocus() { input.focus(); }
+input.addEventListener('blur', () => setTimeout(refocus, 100));
+document.addEventListener('click', refocus);
+document.addEventListener('keydown', refocus);
+window.addEventListener('load', refocus);
+
+// ── Lettura scanner ───────────────────────────────────────────
+input.addEventListener('input', () => {
+  buffer = input.value.trim();
+  if (buffer) {
+    bufferText.textContent = buffer;
+    bufferText.classList.remove('empty');
+    bufferWrap.classList.add('active');
   }
-  return { cognome: parts[0] || full, nome: parts.slice(1).join(' ') };
-}
-function setDriverHeader(fullName) {
-  const { cognome, nome } = splitNome(fullName);
-  document.getElementById('driverCognome').textContent = cognome || fullName;
-  document.getElementById('driverNome').textContent    = nome || '';
-}
+  clearTimeout(timer);
+  timer = setTimeout(() => elabora(buffer), SCAN_TIMEOUT);
+});
 
-/* ── JSONP ── */
-function apiCall(qs) {
-  return new Promise((resolve, reject) => {
-    const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
-    const tag   = document.createElement('script');
-    const timer = setTimeout(() => { delete window[cb]; tag.remove(); reject(new Error('Timeout')); }, 18000);
-    window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
-    tag.src = API + '?' + qs + '&callback=' + cb;
-    document.head.appendChild(tag);
-  });
-}
+input.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    clearTimeout(timer);
+    const val = input.value.trim();
+    if (val) elabora(val);
+  }
+});
 
-/* ── Schermate ── */
-const SCREENS = ['stateInit','screenApri','screenChiudi','spinnerOp','stateOk','stateErr'];
-function show(id) {
-  SCREENS.forEach(s => { document.getElementById(s).style.display = (s === id) ? 'block' : 'none'; });
-}
-function showErr(msg) {
-  document.getElementById('errMsg').textContent = msg;
-  show('stateErr');
-}
+// ── Elaborazione codice ───────────────────────────────────────
+function elabora(codice) {
+  if (!codice) return;
 
-/* ── Successo con countdown e poi redirect allo scanner ── */
-function showSuccess(title, bodyHtml) {
-  document.getElementById('okTitle').textContent = title;
-  document.getElementById('okBody').innerHTML    = bodyHtml;
-
-  // Nascondi header con nominativo
-  document.getElementById('mainHeader').style.display = 'none';
-
-  show('stateOk');
-
-  // Barra animata (3s) + countdown testuale
-  const bar       = document.getElementById('okBar');
-  const countdown = document.getElementById('okCountdown');
-  let   secs      = 3;
-
-  // Reset animazione
-  bar.style.animation = 'none';
-  bar.offsetHeight;                          // reflow
-  bar.style.animation = 'shrink 3s linear forwards';
-
-  countdown.textContent = 'Ritorno allo scanner tra ' + secs + 's…';
-  const iv = setInterval(() => {
-    secs--;
-    if (secs <= 0) {
-      clearInterval(iv);
-      window.location.href = SCANNER_URL;
-    } else {
-      countdown.textContent = 'Ritorno allo scanner tra ' + secs + 's…';
-    }
-  }, 1000);
-}
-
-/* ── INIT ── */
-window.onload = async () => {
-  if (!DRIVER) { window.location.replace(SCANNER_URL); return; }
-
-  let data;
+  let driverId = codice;
   try {
-    data = await apiCall('action=init&driver=' + encodeURIComponent(DRIVER));
+    const url = new URL(codice);
+    const d   = url.searchParams.get('driver');
+    if (d) driverId = d.trim();
   } catch(e) {
-    showErr('Impossibile connettersi. Controlla la connessione e riprova.'); return;
+    driverId = codice.trim();
   }
 
-  setDriverHeader(data.nomeDriver || DRIVER);
-
-  if (data.occupato) {
-    mostraChiudi(data);
-  } else {
-    mostraApri(data.veicoli || []);
-  }
-};
-
-/* ── APRI ── */
-function mostraApri(veicoli) {
-  document.getElementById('headerPillLabel').textContent = 'Nuovo Giro';
-  document.getElementById('headerPill').style.display    = 'inline-flex';
-  show('screenApri');
-
-  document.getElementById('skelVeicolo').style.display = 'none';
-  document.getElementById('wrapSel').style.display     = 'block';
-
-  const sel = document.getElementById('selVeicolo');
-  if (!veicoli.length) { sel.innerHTML = '<option value="">Nessun veicolo disponibile</option>'; return; }
-
-  veicoli.forEach(v => {
-    const o = document.createElement('option');
-    o.value           = v.id;
-    o.dataset.marca   = v.marca   || '';
-    o.dataset.modello = v.modello || '';
-    o.dataset.km      = v.kmFine  !== '' ? v.kmFine : '';
-    o.textContent     = v.targa + (v.marca ? ' — ' + v.marca + ' ' + v.modello : '');
-    sel.appendChild(o);
-  });
-  document.getElementById('btnApri').disabled = false;
-}
-
-function onVeicoloChange() {
-  const sel   = document.getElementById('selVeicolo');
-  const opt   = sel.options[sel.selectedIndex];
-  const chip  = document.getElementById('veiChip');
-  const fkm   = document.getElementById('fieldKm');
-  const kminp = document.getElementById('kmInizio');
-
-  if (!opt.value) {
-    sel.classList.add('accented');
-    chip.style.display = 'none';
-    fkm.style.display  = 'none';
-    kminp.value = '';
+  if (!driverId) {
+    mostraFeedback('QR Code non riconosciuto.', false);
+    reset();
     return;
   }
-  sel.classList.remove('accented');
-  const km = opt.dataset.km;
-  chip.innerHTML =
-    (opt.dataset.marca ? '🚗 <span class="mono">' + opt.dataset.marca + ' ' + opt.dataset.modello + '</span><br>' : '') +
-    '📏 Km ultimo giro: <span class="mono">' + (km ? Number(km).toLocaleString('it-IT') + ' km' : 'non disponibile') + '</span>';
-  chip.style.display = 'block';
-  kminp.value       = km || '';
-  fkm.style.display = 'block';
+
+  const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  lastScan.textContent = 'Ultima scansione: Driver ' + driverId + ' — ' + ora;
+  mostraFeedback('✓ Driver ' + driverId + ' — apertura pagina…', true);
+
+  setTimeout(() => {
+    window.location.href = BASE_URL + '?driver=' + encodeURIComponent(driverId);
+  }, 600);
 }
 
-async function submitApri() {
-  const targa = document.getElementById('selVeicolo').value;
-  const km    = document.getElementById('kmInizio').value;
-  if (!targa) { shakeInput('selVeicolo'); return; }
-
-  show('spinnerOp');
-  document.getElementById('spinnerLabel').textContent = 'Apertura giro…';
-
-  let res;
-  try {
-    res = await apiCall(
-      'action=apri&driver=' + encodeURIComponent(DRIVER) +
-      '&targa=' + encodeURIComponent(targa) +
-      '&km='    + encodeURIComponent(km || 0)
-    );
-  } catch(e) { showErr('Timeout. Riprova tra qualche secondo.'); return; }
-
-  if (res.ok) {
-    showSuccess('Giro aperto!',
-      '🚗 Veicolo: <strong>' + targa + '</strong><br>' +
-      '📏 Km: <strong>' + Number(km || 0).toLocaleString('it-IT') + '</strong>'
-    );
-  } else {
-    showErr(res.errore || 'Errore sconosciuto.');
-  }
+// ── Feedback ─────────────────────────────────────────────────
+function mostraFeedback(msg, ok) {
+  feedback.textContent   = msg;
+  feedback.className     = 'feedback ' + (ok ? 'ok' : 'err');
+  feedback.style.display = 'block';
+  if (!ok) setTimeout(() => { feedback.style.display = 'none'; reset(); }, 2500);
 }
 
-/* ── CHIUDI ── */
-function mostraChiudi(stato) {
-  kmInizioVal = Number(stato.kmInizio) || 0;
-
-  const pill = document.getElementById('headerPill');
-  document.getElementById('headerPillLabel').textContent = 'Giro in corso';
-  pill.style.display     = 'inline-flex';
-  pill.style.background  = 'rgba(234,88,12,.2)';
-  pill.style.borderColor = 'rgba(234,88,12,.4)';
-  pill.style.color       = '#fb923c';
-  pill.querySelector('.pill-dot').style.background = '#fb923c';
-
-  document.getElementById('riepilogo').innerHTML =
-    '🚗 <strong>Veicolo:</strong> ' + stato.targa +
-    (stato.adesivo ? ' — ' + stato.adesivo : '') + '<br>' +
-    '🕐 <strong>Inizio:</strong> ' + stato.dataInizio + '<br>' +
-    '📏 <strong>Km partenza:</strong> <span class="mono">' + kmInizioVal.toLocaleString('it-IT') + '</span>';
-
-  document.getElementById('kmFine').min = kmInizioVal;
-  show('screenChiudi');
+function reset() {
+  buffer = '';
+  input.value = '';
+  bufferText.textContent = 'In attesa scansione…';
+  bufferText.classList.add('empty');
+  bufferWrap.classList.remove('active');
+  setTimeout(refocus, 50);
 }
 
-async function submitChiudi() {
-  const km = Number(document.getElementById('kmFine').value);
-  if (!km || km <= 0) { shakeInput('kmFine'); return; }
-  if (km < kmInizioVal) { shakeInput('kmFine'); return; }
-
-  show('spinnerOp');
-  document.getElementById('spinnerLabel').textContent = 'Chiusura giro…';
-
-  let res;
-  try {
-    res = await apiCall(
-      'action=chiudi&driver=' + encodeURIComponent(DRIVER) +
-      '&km=' + encodeURIComponent(km)
-    );
-  } catch(e) { showErr('Timeout. Riprova tra qualche secondo.'); return; }
-
-  if (res.ok) {
-    showSuccess('Giro chiuso!',
-      '🚗 Veicolo: <strong>' + res.targa + '</strong><br>' +
-      '📏 Distanza: <strong>' + Number(res.distanza).toLocaleString('it-IT') + ' km</strong>'
-    );
-  } else {
-    showErr(res.errore || 'Errore sconosciuto.');
-  }
+// ── Orologio ─────────────────────────────────────────────────
+function aggiornaClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 }
+aggiornaClock();
+setInterval(aggiornaClock, 1000);
 
-/* ── Shake errore input ── */
-function shakeInput(id) {
-  const el = document.getElementById(id);
-  el.style.borderColor = 'var(--red)';
-  el.style.boxShadow   = '0 0 0 4px rgba(220,38,38,.15)';
-  el.focus();
-  setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1600);
-}
+// ── Reset automatico al ritorno sulla pagina ──────────────────
+window.addEventListener('pageshow', () => { reset(); refocus(); });
 </script>
 </body>
 </html>
