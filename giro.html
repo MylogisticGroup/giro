@@ -513,8 +513,7 @@ function mostraChiudi(stato) {
   pill.querySelector('.pill-dot').style.background = '#fb923c';
 
   document.getElementById('riepilogo').innerHTML =
-    '🚗 <strong>Veicolo:</strong> ' + stato.targa +
-    (stato.adesivo ? ' — ' + stato.adesivo : '') + '<br>' +
+    '🚗 <strong>Veicolo:</strong> ' + stato.targa + '<br>' +
     '🕐 <strong>Inizio:</strong> ' + stato.dataInizio + '<br>' +
     '📏 <strong>Km partenza:</strong> <span class="mono">' + kmInizioVal.toLocaleString('it-IT') + '</span>';
 
