@@ -8,20 +8,22 @@
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --ink:     #0a0f1e;
-      --muted:   #6b7280;
-      --line:    #e5e7eb;
-      --bg:      #f3f4f6;
-      --card:    #ffffff;
-      --blue:    #2563eb;
-      --blue2:   #1d4ed8;
-      --green:   #16a34a;
-      --green2:  #15803d;
-      --orange:  #ea580c;
-      --red:     #dc2626;
-      --r:       14px;
+      --ink:    #0a0f1e;
+      --muted:  #6b7280;
+      --line:   #e5e7eb;
+      --bg:     #f3f4f6;
+      --card:   #ffffff;
+      --blue:   #2563eb;
+      --blue2:  #1d4ed8;
+      --green:  #16a34a;
+      --green2: #15803d;
+      --orange: #ea580c;
+      --red:    #dc2626;
+      --r:      14px;
     }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
       font-family: 'Sora', sans-serif;
       background: var(--bg);
@@ -32,6 +34,7 @@
       justify-content: center;
       padding: 0 0 48px;
     }
+
     .wrap { width: 100%; max-width: 480px; }
 
     /* ── Header ── */
@@ -42,121 +45,199 @@
       text-align: center;
       margin-bottom: 20px;
     }
-    .brand { font-size:.67rem; font-weight:600; letter-spacing:.2em; text-transform:uppercase; color:rgba(255,255,255,.4); margin-bottom:14px; }
-    .driver-cognome { font-size:1.75rem; font-weight:700; color:#fff; letter-spacing:.05em; line-height:1.1; margin-bottom:4px; }
-    .driver-nome    { font-size:1.05rem; font-weight:300; color:rgba(255,255,255,.5); letter-spacing:.06em; margin-bottom:16px; }
+    .brand {
+      font-size: .67rem; font-weight: 600;
+      letter-spacing: .2em; text-transform: uppercase;
+      color: rgba(255,255,255,.4); margin-bottom: 14px;
+    }
+    .driver-cognome {
+      font-size: 1.75rem; font-weight: 700;
+      color: #ffffff; letter-spacing: .05em;
+      line-height: 1.1; margin-bottom: 4px;
+    }
+    .driver-nome {
+      font-size: 1.05rem; font-weight: 300;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .06em; margin-bottom: 16px;
+    }
     .status-pill {
-      display:inline-flex; align-items:center; gap:6px;
-      background:rgba(37,99,235,.2); border:1px solid rgba(37,99,235,.4);
-      border-radius:20px; padding:5px 14px;
-      font-size:.68rem; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#93c5fd;
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(37,99,235,.2);
+      border: 1px solid rgba(37,99,235,.4);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: .68rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase; color: #93c5fd;
     }
 
     /* ── Card ── */
-    .card { background:var(--card); border-radius:18px; border:1px solid var(--line); overflow:hidden; box-shadow:0 2px 12px rgba(0,0,0,.06); margin:0 14px; }
-    .card-body { padding:24px 24px 26px; }
-    .card-top  { padding:18px 24px 0; }
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      margin: 0 14px;
+    }
+
+    .card-body { padding: 24px 24px 26px; }
 
     /* ── Field ── */
-    .field { margin-bottom:16px; }
-    .field:last-child { margin-bottom:0; }
-    .field-label { font-size:.75rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.12em; margin-bottom:10px; display:block; text-align:center; }
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    .field-label {
+      font-size: .75rem; font-weight: 700;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: .12em; margin-bottom: 10px;
+      display: block; text-align: center;
+    }
 
     select, input[type=number] {
-      width:100%; padding:15px 18px;
-      border:2px solid var(--line); border-radius:12px;
-      font-family:'Sora',sans-serif; font-size:.95rem; color:var(--ink); background:var(--bg);
-      appearance:none; -webkit-appearance:none;
-      transition:border-color .15s, box-shadow .15s; outline:none;
+      width: 100%; padding: 15px 18px;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      font-family: 'Sora', sans-serif;
+      font-size: .95rem; color: var(--ink);
+      background: var(--bg);
+      appearance: none; -webkit-appearance: none;
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
     }
-    select:focus, input[type=number]:focus { border-color:var(--blue); box-shadow:0 0 0 4px rgba(37,99,235,.1); background:#fff; }
-    .select-wrap { position:relative; }
-    .select-wrap::after { content:'▾'; position:absolute; right:16px; top:50%; transform:translateY(-50%); color:var(--blue); pointer-events:none; font-size:.85rem; }
-    select.accented { border-color:var(--blue); color:var(--blue); background:#eff6ff; font-weight:600; box-shadow:0 0 0 4px rgba(37,99,235,.08); }
+    select:focus, input[type=number]:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.1);
+      background: #fff;
+    }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+      color: var(--blue); pointer-events: none; font-size: .85rem;
+    }
+    select.accented {
+      border-color: var(--blue); color: var(--blue);
+      background: #eff6ff; font-weight: 600;
+      box-shadow: 0 0 0 4px rgba(37,99,235,.08);
+    }
 
-    .vei-chip { display:none; background:#f8fafc; border:1px solid var(--line); border-radius:9px; padding:10px 12px; font-size:.8rem; color:#374151; line-height:1.9; margin-top:8px; }
-    .vei-chip .mono { font-family:'JetBrains Mono',monospace; font-size:.78rem; color:var(--blue); }
+    /* ── Chip veicolo ── */
+    .vei-chip {
+      display: none;
+      background: #f8fafc; border: 1px solid var(--line);
+      border-radius: 9px; padding: 10px 12px;
+      font-size: .8rem; color: #374151; line-height: 1.9; margin-top: 8px;
+    }
+    .vei-chip .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .78rem; color: var(--blue);
+    }
 
-    .riepilogo { background:#f8fafc; border:1px solid var(--line); border-radius:10px; padding:12px 14px; font-size:.83rem; color:#374151; line-height:2; margin-bottom:16px; }
-    .riepilogo strong { color:var(--ink); }
-    .riepilogo .mono { font-family:'JetBrains Mono',monospace; font-size:.78rem; }
+    /* ── Riepilogo chiudi ── */
+    .riepilogo {
+      background: #f8fafc; border: 1px solid var(--line);
+      border-radius: 10px; padding: 12px 14px;
+      font-size: .83rem; color: #374151;
+      line-height: 2; margin-bottom: 16px;
+    }
+    .riepilogo strong { color: var(--ink); }
+    .riepilogo .mono {
+      font-family: 'JetBrains Mono', monospace; font-size: .78rem;
+    }
 
-    /* ── Buttons ── */
-    .btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:15px 14px; border:none; border-radius:12px; font-family:'Sora',sans-serif; font-size:1rem; font-weight:700; cursor:pointer; transition:transform .12s, opacity .15s, background .15s; letter-spacing:.02em; }
-    .btn:active  { transform:scale(.96); }
-    .btn:disabled { opacity:.35; cursor:not-allowed; }
-    .btn-green  { background:var(--green);  color:#fff; box-shadow:0 4px 14px rgba(22,163,74,.35); }
-    .btn-green:hover:not(:disabled)  { background:var(--green2); }
-    .btn-orange { background:var(--orange); color:#fff; }
-    .btn-orange:hover:not(:disabled) { background:#c2410c; }
-    .btn-ghost  { background:transparent; color:var(--blue); border:1.5px solid var(--blue); margin-top:10px; box-shadow:none; }
-    .btn-ghost:hover { background:#eff6ff; }
+    /* ── Button ── */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 15px 14px;
+      border: none; border-radius: 12px;
+      font-family: 'Sora', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      cursor: pointer;
+      transition: transform .12s, opacity .15s, background .15s;
+      letter-spacing: .02em;
+    }
+    .btn:active  { transform: scale(.96); }
+    .btn:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-green  { background: var(--green); color: #fff; box-shadow: 0 4px 14px rgba(22,163,74,.35); }
+    .btn-green:hover:not(:disabled)  { background: var(--green2); }
+    .btn-orange { background: var(--orange); color: #fff; }
+    .btn-orange:hover:not(:disabled) { background: #c2410c; }
+    .btn-ghost {
+      background: transparent; color: var(--blue);
+      border: 1.5px solid var(--blue); margin-top: 10px; box-shadow: none;
+    }
+    .btn-ghost:hover { background: #eff6ff; }
 
-    .gps-bar { display:none; align-items:center; gap:8px; font-size:.76rem; color:var(--muted); background:#f8fafc; border:1px solid var(--line); border-radius:8px; padding:8px 12px; margin-bottom:12px; }
-    .gps-dot { width:7px; height:7px; border-radius:50%; background:var(--blue); flex-shrink:0; animation:blink 1s infinite; }
+    /* ── Orange pill (chiudi) ── */
+    .pill-orange {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: #fff7ed; color: var(--orange);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: .68rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+    }
+    .card-top { padding: 18px 24px 0; }
 
-    .pill-dot { width:6px; height:6px; border-radius:50%; }
-    .pill-dot-blue   { background:#93c5fd; animation:blink 2s infinite; }
-    .pill-dot-orange { background:var(--orange); animation:blink 2s infinite; }
+    /* ── Pill dot ── */
+    .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .pill-dot-blue   { background: #93c5fd; animation: blink 2s infinite; }
+    .pill-dot-orange { background: var(--orange); animation: blink 2s infinite; }
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
 
-    .pill-orange { display:inline-flex; align-items:center; gap:7px; background:#fff7ed; color:var(--orange); border-radius:20px; padding:5px 14px; font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
-
-    .skeleton { height:52px; border-radius:12px; background:linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%); background-size:200% 100%; animation:shimmer 1.3s infinite; }
+    /* ── Skeleton ── */
+    .skeleton {
+      height: 52px; border-radius: 12px;
+      background: linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.3s infinite;
+    }
     @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-    /* ── States ── */
+    /* ── State screens ── */
     .state { display:none; padding:36px 20px; text-align:center; }
-    .state-icon  { font-size:2.6rem; margin-bottom:12px; }
-    .state-title { font-size:1.05rem; font-weight:700; margin-bottom:6px; }
-    .state-sub   { font-size:.85rem; color:var(--muted); line-height:1.6; margin-bottom:4px; }
-    .state-ok  .state-title { color:var(--green); }
-    .state-err .state-title { color:var(--red); }
-
-    /* ── Countdown ring ── */
-    .countdown-wrap { margin-top:22px; display:flex; flex-direction:column; align-items:center; gap:8px; }
-    .countdown-ring { position:relative; width:60px; height:60px; }
-    .countdown-ring svg { transform:rotate(-90deg); }
-    .countdown-ring circle { fill:none; stroke-width:4; }
-    .countdown-ring .track { stroke:var(--line); }
-    .countdown-ring .prog  { stroke:var(--green); stroke-linecap:round; transition:stroke-dashoffset 1s linear; }
-    .countdown-ring.orange .prog { stroke:var(--orange); }
-    .countdown-num { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:700; color:var(--ink); }
-    .countdown-label { font-size:.73rem; color:var(--muted); }
+    .state-icon { font-size: 2.6rem; margin-bottom: 12px; }
+    .state-title { font-size: 1.05rem; font-weight: 700; margin-bottom: 6px; }
+    .state-sub { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 4px; }
+    .state-ok  .state-title { color: var(--green); }
+    .state-err .state-title { color: var(--red); }
 
     /* ── Spinner ── */
     .spin-wrap { display:none; padding:36px 20px; text-align:center; }
-    .spinner { width:30px; height:30px; border:3px solid var(--line); border-top-color:var(--blue); border-radius:50%; animation:spin .75s linear infinite; margin:0 auto 12px; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .spin-label { font-size:.82rem; color:var(--muted); }
-
-    .divider { height:1px; background:var(--line); margin:16px 0; }
+    .spinner {
+      width: 30px; height: 30px;
+      border: 3px solid var(--line); border-top-color: var(--blue);
+      border-radius: 50%; animation: spin .75s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin-label { font-size: .82rem; color: var(--muted); }
   </style>
 </head>
 <body>
 <div class="wrap">
 
+  <!-- Header -->
   <div class="header">
     <div class="brand">My Logistic Group</div>
     <div class="driver-cognome" id="driverCognome">Caricamento…</div>
     <div class="driver-nome"    id="driverNome"></div>
     <div class="status-pill" id="headerPill" style="display:none">
-      <span class="pill-dot pill-dot-blue" id="headerPillDot"></span>
+      <span class="pill-dot pill-dot-blue" id="headerDot"></span>
       <span id="headerPillLabel">Nuovo Giro</span>
     </div>
   </div>
 
+  <!-- Card -->
   <div class="card">
 
-    <!-- Init -->
+    <!-- Init loading -->
     <div class="spin-wrap" id="stateInit" style="display:block">
       <div class="spinner"></div>
       <div class="spin-label">Verifica in corso…</div>
     </div>
 
-    <!-- APRI -->
+    <!-- ── APRI GIRO ── -->
     <div id="screenApri" style="display:none">
       <div class="card-body">
+
         <div class="field">
           <label class="field-label">Veicolo</label>
           <div class="skeleton" id="skelVeicolo"></div>
@@ -167,28 +248,39 @@
           </div>
           <div class="vei-chip" id="veiChip"></div>
         </div>
+
         <div class="field" id="fieldKm" style="display:none">
           <label class="field-label">Km attuali del veicolo</label>
           <input type="number" id="kmInizio" placeholder="es. 125430" min="0" inputmode="numeric">
         </div>
-        <div class="gps-bar" id="gpsBarA"><span class="gps-dot"></span><span>Acquisizione GPS…</span></div>
-        <button class="btn btn-green" id="btnApri" onclick="submitApri()" disabled>✓ &nbsp;Apri Giro</button>
+
+        <button class="btn btn-green" id="btnApri" onclick="submitApri()" disabled>
+          ✓ &nbsp;Apri Giro
+        </button>
+
       </div>
     </div>
 
-    <!-- CHIUDI -->
+    <!-- ── CHIUDI GIRO ── -->
     <div id="screenChiudi" style="display:none">
       <div class="card-top">
-        <div class="pill-orange"><span class="pill-dot pill-dot-orange"></span>Chiudi Giro</div>
+        <div class="pill-orange">
+          <span class="pill-dot pill-dot-orange"></span>Chiudi Giro
+        </div>
       </div>
       <div class="card-body">
+
         <div class="riepilogo" id="riepilogo"></div>
+
         <div class="field">
           <label class="field-label">Km attuali del veicolo</label>
           <input type="number" id="kmFine" placeholder="es. 125850" inputmode="numeric">
         </div>
-        <div class="gps-bar" id="gpsBarC"><span class="gps-dot"></span><span>Acquisizione GPS…</span></div>
-        <button class="btn btn-orange" id="btnChiudi" onclick="submitChiudi()">⬛ &nbsp;Chiudi Giro</button>
+
+        <button class="btn btn-orange" id="btnChiudi" onclick="submitChiudi()">
+          ⬛ &nbsp;Chiudi Giro
+        </button>
+
       </div>
     </div>
 
@@ -198,24 +290,11 @@
       <div class="spin-label" id="spinnerLabel">Operazione in corso…</div>
     </div>
 
-    <!-- Successo + countdown -->
+    <!-- Successo -->
     <div class="state state-ok" id="stateOk">
       <div class="state-icon">✅</div>
       <div class="state-title" id="okTitle"></div>
       <div class="state-sub"  id="okBody"></div>
-      <div class="countdown-wrap">
-        <div class="countdown-ring" id="cdRing">
-          <svg width="60" height="60" viewBox="0 0 60 60">
-            <circle class="track" cx="30" cy="30" r="26"/>
-            <circle class="prog"  cx="30" cy="30" r="26"
-              id="cdCircle"
-              stroke-dasharray="163.4"
-              stroke-dashoffset="0"/>
-          </svg>
-          <div class="countdown-num" id="cdNum">5</div>
-        </div>
-        <div class="countdown-label">Torno allo scanner…</div>
-      </div>
     </div>
 
     <!-- Errore -->
@@ -234,10 +313,8 @@ const API = 'https://script.google.com/macros/s/AKfycbzpihespHqhVbDgh2A5F-0z0K4_
 
 const params      = new URLSearchParams(location.search);
 const DRIVER      = (params.get('driver') || '').trim();
-let   gpsCoords   = '';
 let   kmInizioVal = 0;
 
-// ── Split cognome/nome ───────────────────────────────────────
 function splitNome(full) {
   const parts = (full || '').trim().split(/\s+/);
   const upper = parts.filter(p => p === p.toUpperCase() && p.length > 1);
@@ -246,177 +323,189 @@ function splitNome(full) {
   }
   return { cognome: parts[0] || full, nome: parts.slice(1).join(' ') };
 }
+
 function setDriverHeader(fullName) {
   const { cognome, nome } = splitNome(fullName);
   document.getElementById('driverCognome').textContent = cognome || fullName;
   document.getElementById('driverNome').textContent    = nome || '';
 }
 
-// ── JSONP ────────────────────────────────────────────────────
 function apiCall(qs) {
   return new Promise((resolve, reject) => {
     const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
     const tag   = document.createElement('script');
-    const timer = setTimeout(() => { delete window[cb]; tag.remove(); reject(new Error('Timeout')); }, 18000);
-    window[cb]  = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
-    tag.src     = API + '?' + qs + '&callback=' + cb;
+    const timer = setTimeout(() => {
+      delete window[cb]; tag.remove();
+      reject(new Error('Timeout'));
+    }, 18000);
+    window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
+    tag.src = API + '?' + qs + '&callback=' + cb;
     document.head.appendChild(tag);
   });
 }
 
-// ── Schermate ────────────────────────────────────────────────
 const SCREENS = ['stateInit','screenApri','screenChiudi','spinnerOp','stateOk','stateErr'];
 function show(id) {
   SCREENS.forEach(s => { document.getElementById(s).style.display = (s === id) ? 'block' : 'none'; });
 }
-function showErr(msg) { document.getElementById('errMsg').textContent = msg; show('stateErr'); }
-
-// ── GPS ──────────────────────────────────────────────────────
-function startGPS() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(
-    p => { gpsCoords = p.coords.latitude.toFixed(6) + ',' + p.coords.longitude.toFixed(6); },
-    () => { gpsCoords = ''; },
-    { timeout: 12000, maximumAge: 0, enableHighAccuracy: true }
-  );
-}
-function waitGPS(maxMs = 2500) {
-  if (gpsCoords) return Promise.resolve();
-  const t0 = Date.now();
-  return new Promise(res => {
-    const iv = setInterval(() => { if (gpsCoords || Date.now() - t0 > maxMs) { clearInterval(iv); res(); } }, 200);
-  });
+function showErr(msg) {
+  document.getElementById('errMsg').textContent = msg;
+  show('stateErr');
 }
 
-// ── Countdown 5s → torna allo scanner ───────────────────────
-const CIRC = 163.4; // 2 * π * 26
-const SECS = 5;
-
-function avviaCountdown(isOrange) {
-  const ring   = document.getElementById('cdRing');
-  const circle = document.getElementById('cdCircle');
-  const num    = document.getElementById('cdNum');
-
-  if (isOrange) ring.classList.add('orange');
-  else          ring.classList.remove('orange');
-
-  let s = SECS;
-  num.textContent = s;
-  circle.style.strokeDashoffset = '0';
-
-  const iv = setInterval(() => {
-    s--;
-    num.textContent = s;
-    circle.style.strokeDashoffset = CIRC * (1 - s / SECS);
-    if (s <= 0) {
-      clearInterval(iv);
-      window.history.back(); // torna alla scanner.html
-    }
-  }, 1000);
-}
-
-// ── INIT ─────────────────────────────────────────────────────
 window.onload = async () => {
   if (!DRIVER) { showErr('QR Code non valido — parametro driver mancante.'); return; }
-  startGPS();
+
   let data;
-  try { data = await apiCall('action=init&driver=' + encodeURIComponent(DRIVER)); }
-  catch(e) { showErr('Impossibile connettersi. Controlla la connessione e riprova.'); return; }
+  try {
+    data = await apiCall('action=init&driver=' + encodeURIComponent(DRIVER));
+  } catch(e) {
+    showErr('Impossibile connettersi. Controlla la connessione e riprova.'); return;
+  }
+
   setDriverHeader(data.nomeDriver || DRIVER);
-  if (data.occupato) mostraChiudi(data);
-  else               mostraApri(data.veicoli || []);
+
+  if (data.occupato) {
+    mostraChiudi(data);
+  } else {
+    mostraApri(data.veicoli || []);
+  }
 };
 
-// ── SCHERMATA APRI ───────────────────────────────────────────
 function mostraApri(veicoli) {
   document.getElementById('headerPillLabel').textContent = 'Nuovo Giro';
   document.getElementById('headerPill').style.display = 'inline-flex';
   show('screenApri');
+
   document.getElementById('skelVeicolo').style.display = 'none';
   document.getElementById('wrapSel').style.display = 'block';
+
   const sel = document.getElementById('selVeicolo');
-  if (!veicoli.length) { sel.innerHTML = '<option value="">Nessun veicolo disponibile</option>'; return; }
+  if (!veicoli.length) {
+    sel.innerHTML = '<option value="">Nessun veicolo disponibile</option>';
+    return;
+  }
   veicoli.forEach(v => {
     const o = document.createElement('option');
-    o.value = v.id; o.dataset.marca = v.marca || ''; o.dataset.modello = v.modello || '';
-    o.dataset.km = v.kmFine !== '' ? v.kmFine : '';
-    o.textContent = v.targa + (v.marca ? ' — ' + v.marca + ' ' + v.modello : '');
+    o.value           = v.id;
+    o.dataset.marca   = v.marca   || '';
+    o.dataset.modello = v.modello || '';
+    o.dataset.km      = v.kmFine  !== '' ? v.kmFine : '';
+    o.textContent     = v.targa + (v.marca ? ' — ' + v.marca + ' ' + v.modello : '');
     sel.appendChild(o);
   });
   document.getElementById('btnApri').disabled = false;
 }
 
 function onVeicoloChange() {
-  const sel = document.getElementById('selVeicolo');
-  const opt = sel.options[sel.selectedIndex];
+  const sel  = document.getElementById('selVeicolo');
+  const opt  = sel.options[sel.selectedIndex];
   const chip = document.getElementById('veiChip');
   const fkm  = document.getElementById('fieldKm');
-  const kminp= document.getElementById('kmInizio');
-  if (!opt.value) { sel.classList.add('accented'); chip.style.display='none'; fkm.style.display='none'; kminp.value=''; return; }
+  const kminp = document.getElementById('kmInizio');
+
+  if (!opt.value) {
+    sel.classList.add('accented');
+    chip.style.display = 'none';
+    fkm.style.display  = 'none';
+    kminp.value = '';
+    return;
+  }
   sel.classList.remove('accented');
+
   const km = opt.dataset.km;
-  chip.innerHTML = (opt.dataset.marca ? '🚗 <span class="mono">'+opt.dataset.marca+' '+opt.dataset.modello+'</span><br>' : '') +
-    '📏 Km ultimo giro: <span class="mono">'+(km ? Number(km).toLocaleString('it-IT')+' km' : 'non disponibile')+'</span>';
+  chip.innerHTML =
+    (opt.dataset.marca ? '🚗 <span class="mono">' + opt.dataset.marca + ' ' + opt.dataset.modello + '</span><br>' : '') +
+    '📏 Km ultimo giro: <span class="mono">' + (km ? Number(km).toLocaleString('it-IT') + ' km' : 'non disponibile') + '</span>';
   chip.style.display = 'block';
-  kminp.value = km || ''; fkm.style.display = 'block';
+  kminp.value       = km || '';
+  fkm.style.display = 'block';
 }
 
 async function submitApri() {
   const targa = document.getElementById('selVeicolo').value;
   const km    = document.getElementById('kmInizio').value;
   if (!targa) { shakeInput('selVeicolo'); return; }
-  if (!gpsCoords) { document.getElementById('gpsBarA').style.display='flex'; await waitGPS(2500); document.getElementById('gpsBarA').style.display='none'; }
-  show('spinnerOp'); document.getElementById('spinnerLabel').textContent = 'Apertura giro…';
+
+  show('spinnerOp');
+  document.getElementById('spinnerLabel').textContent = 'Apertura giro…';
+
   let res;
-  try { res = await apiCall('action=apri&driver='+encodeURIComponent(DRIVER)+'&targa='+encodeURIComponent(targa)+'&km='+encodeURIComponent(km||0)+'&gps='+encodeURIComponent(gpsCoords)); }
-  catch(e) { showErr('Timeout. Riprova tra qualche secondo.'); return; }
+  try {
+    res = await apiCall(
+      'action=apri' +
+      '&driver=' + encodeURIComponent(DRIVER) +
+      '&targa='  + encodeURIComponent(targa) +
+      '&km='     + encodeURIComponent(km || 0)
+    );
+  } catch(e) { showErr('Timeout. Riprova tra qualche secondo.'); return; }
+
   if (res.ok) {
     document.getElementById('okTitle').textContent = 'Giro aperto!';
-    document.getElementById('okBody').innerHTML = '🚗 Veicolo: <strong>'+targa+'</strong><br>📏 Km: <strong>'+Number(km||0).toLocaleString('it-IT')+'</strong><br>'+(gpsCoords?'📍 GPS registrato':'📍 GPS non disponibile');
+    document.getElementById('okBody').innerHTML =
+      '🚗 Veicolo: <strong>' + targa + '</strong><br>' +
+      '📏 Km: <strong>' + Number(km || 0).toLocaleString('it-IT') + '</strong>';
     show('stateOk');
-    avviaCountdown(false); // verde
-  } else { showErr(res.errore || 'Errore sconosciuto.'); }
+  } else {
+    showErr(res.errore || 'Errore sconosciuto.');
+  }
 }
 
-// ── SCHERMATA CHIUDI ─────────────────────────────────────────
 function mostraChiudi(stato) {
   kmInizioVal = Number(stato.kmInizio) || 0;
+
   const pill = document.getElementById('headerPill');
   document.getElementById('headerPillLabel').textContent = 'Giro in corso';
-  pill.style.display = 'inline-flex';
-  pill.style.background = 'rgba(234,88,12,.2)'; pill.style.borderColor = 'rgba(234,88,12,.4)';
-  pill.style.color = '#fb923c'; pill.querySelector('.pill-dot').style.background = '#fb923c';
+  pill.style.display    = 'inline-flex';
+  pill.style.background = 'rgba(234,88,12,.2)';
+  pill.style.borderColor = 'rgba(234,88,12,.4)';
+  pill.style.color      = '#fb923c';
+  pill.querySelector('.pill-dot').style.background = '#fb923c';
+
   document.getElementById('riepilogo').innerHTML =
-    '🚗 <strong>Veicolo:</strong> '+stato.targa+(stato.adesivo?' — '+stato.adesivo:'')+'<br>'+
-    '🕐 <strong>Inizio:</strong> '+stato.dataInizio+'<br>'+
-    '📏 <strong>Km partenza:</strong> <span class="mono">'+kmInizioVal.toLocaleString('it-IT')+'</span>';
+    '🚗 <strong>Veicolo:</strong> ' + stato.targa +
+    (stato.adesivo ? ' — ' + stato.adesivo : '') + '<br>' +
+    '🕐 <strong>Inizio:</strong> ' + stato.dataInizio + '<br>' +
+    '📏 <strong>Km partenza:</strong> <span class="mono">' + kmInizioVal.toLocaleString('it-IT') + '</span>';
+
   document.getElementById('kmFine').min = kmInizioVal;
   show('screenChiudi');
 }
 
 async function submitChiudi() {
   const km = Number(document.getElementById('kmFine').value);
-  if (!km || km <= 0)  { shakeInput('kmFine'); return; }
-  if (km < kmInizioVal){ shakeInput('kmFine'); return; }
-  if (!gpsCoords) { document.getElementById('gpsBarC').style.display='flex'; await waitGPS(2500); document.getElementById('gpsBarC').style.display='none'; }
-  show('spinnerOp'); document.getElementById('spinnerLabel').textContent = 'Chiusura giro…';
+  if (!km || km <= 0) { shakeInput('kmFine'); return; }
+  if (km < kmInizioVal) { shakeInput('kmFine'); return; }
+
+  show('spinnerOp');
+  document.getElementById('spinnerLabel').textContent = 'Chiusura giro…';
+
   let res;
-  try { res = await apiCall('action=chiudi&driver='+encodeURIComponent(DRIVER)+'&km='+encodeURIComponent(km)+'&gps='+encodeURIComponent(gpsCoords)); }
-  catch(e) { showErr('Timeout. Riprova tra qualche secondo.'); return; }
+  try {
+    res = await apiCall(
+      'action=chiudi' +
+      '&driver=' + encodeURIComponent(DRIVER) +
+      '&km='     + encodeURIComponent(km)
+    );
+  } catch(e) { showErr('Timeout. Riprova tra qualche secondo.'); return; }
+
   if (res.ok) {
     document.getElementById('okTitle').textContent = 'Giro chiuso!';
-    document.getElementById('okBody').innerHTML = '🚗 Veicolo: <strong>'+res.targa+'</strong><br>📏 Distanza: <strong>'+Number(res.distanza).toLocaleString('it-IT')+' km</strong><br>'+(gpsCoords?'📍 GPS registrato':'📍 GPS non disponibile');
+    document.getElementById('okBody').innerHTML =
+      '🚗 Veicolo: <strong>' + res.targa + '</strong><br>' +
+      '📏 Distanza: <strong>' + Number(res.distanza).toLocaleString('it-IT') + ' km</strong>';
     show('stateOk');
-    avviaCountdown(true); // arancione
-  } else { showErr(res.errore || 'Errore sconosciuto.'); }
+  } else {
+    showErr(res.errore || 'Errore sconosciuto.');
+  }
 }
 
-// ── Shake errore ─────────────────────────────────────────────
 function shakeInput(id) {
   const el = document.getElementById(id);
-  el.style.borderColor = 'var(--red)'; el.style.boxShadow = '0 0 0 4px rgba(220,38,38,.15)';
+  el.style.borderColor = 'var(--red)';
+  el.style.boxShadow   = '0 0 0 4px rgba(220,38,38,.15)';
   el.focus();
-  setTimeout(() => { el.style.borderColor=''; el.style.boxShadow=''; }, 1600);
+  setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1600);
 }
 </script>
 </body>
