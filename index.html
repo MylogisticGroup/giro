@@ -407,7 +407,7 @@ function showSuccess(title, bodyHtml) {
 
 /* ── INIT ── */
 window.onload = async () => {
-  if (!DRIVER) { showErr('QR Code non valido — parametro driver mancante.'); return; }
+  if (!DRIVER) { window.location.replace(SCANNER_URL); return; }
 
   let data;
   try {
