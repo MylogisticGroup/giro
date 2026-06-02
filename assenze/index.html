@@ -1,1 +1,1027 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Assenze — My Logistic Group</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #080d18;
+      --surface:   #0f1624;
+      --card:      #141d2e;
+      --card2:     #1a2438;
+      --line:      #1f2d45;
+      --line2:     #263548;
+      --accent:    #facc15;
+      --accent2:   #f59e0b;
+      --text:      #f0f4ff;
+      --muted:     #6b7a99;
+      --dim:       #3a4a6b;
 
+      --ferie:     #22c55e;
+      --permesso:  #facc15;
+      --malattia:  #a855f7;
+      --riposo:    #38bdf8;
+      --richiesta: #3b82f6;
+      --bloccato:  #e2e8f0;
+      --pieno:     #ef4444;
+      --parziale:  #f97316;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(160deg, #0f1e38 0%, #0a1220 100%);
+      border-bottom: 1px solid var(--line);
+      padding: 28px 20px 24px;
+      text-align: center;
+      position: relative;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 10%; right: 10%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: .4;
+    }
+    .brand {
+      font-size: .62rem; font-weight: 700;
+      letter-spacing: .22em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 10px;
+    }
+    .driver-name {
+      font-size: 1.6rem; font-weight: 800;
+      color: var(--text); letter-spacing: .04em;
+      line-height: 1.1; margin-bottom: 12px;
+    }
+    .driver-name span { color: var(--accent); }
+    .header-pills {
+      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+    }
+    .pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 12px; border-radius: 20px;
+      font-size: .65rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+    .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    /* ── LEGENDA ── */
+    .legenda {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      padding: 14px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--line);
+      justify-content: center;
+    }
+    .leg-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: .62rem; color: var(--muted); font-weight: 600;
+      letter-spacing: .05em; text-transform: uppercase;
+    }
+    .leg-dot {
+      width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0;
+    }
+
+    /* ── CALENDARIO ── */
+    .cal-wrap { padding: 16px 12px 0; }
+
+    .cal-nav {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 16px; padding: 0 4px;
+    }
+    .cal-nav-btn {
+      width: 36px; height: 36px;
+      background: var(--card); border: 1px solid var(--line2);
+      border-radius: 10px; color: var(--text);
+      font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background .15s, border-color .15s;
+    }
+    .cal-nav-btn:hover { background: var(--card2); border-color: var(--accent); }
+    .cal-title {
+      font-size: 1rem; font-weight: 700;
+      color: var(--text); letter-spacing: .08em; text-transform: uppercase;
+    }
+    .cal-today-btn {
+      font-size: .65rem; font-weight: 700; letter-spacing: .1em;
+      text-transform: uppercase; color: var(--accent);
+      background: rgba(250,204,21,.08); border: 1px solid rgba(250,204,21,.2);
+      border-radius: 8px; padding: 5px 10px; cursor: pointer;
+    }
+
+    .cal-grid-head {
+      display: grid; grid-template-columns: repeat(7,1fr);
+      gap: 3px; margin-bottom: 4px;
+    }
+    .cal-dow {
+      text-align: center; font-size: .6rem; font-weight: 700;
+      color: var(--muted); letter-spacing: .1em; text-transform: uppercase;
+      padding: 4px 0;
+    }
+    .cal-dow.weekend { color: var(--dim); }
+
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7,1fr);
+      gap: 3px;
+    }
+
+    .cal-day {
+      position: relative;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      min-height: 64px;
+      padding: 5px 4px 4px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      overflow: hidden;
+    }
+    .cal-day:hover:not(.empty):not(.past) {
+      border-color: var(--accent);
+      background: var(--card2);
+    }
+    .cal-day.empty { background: transparent; border-color: transparent; cursor: default; }
+    .cal-day.past  { opacity: .4; cursor: not-allowed; }
+    .cal-day.today { border-color: var(--accent); }
+    .cal-day.today .cal-day-num { color: var(--accent); font-weight: 800; }
+
+    .cal-day.sel-start,
+    .cal-day.sel-end   { border-color: var(--accent); background: rgba(250,204,21,.12); }
+    .cal-day.sel-range { background: rgba(250,204,21,.06); border-color: rgba(250,204,21,.25); }
+
+    .cal-day.bloccato  { background: rgba(226,232,240,.06); border-color: rgba(226,232,240,.2); cursor: not-allowed; }
+    .cal-day.pieno     { border-color: rgba(239,68,68,.4); }
+    .cal-day.parziale  { border-color: rgba(249,115,22,.3); }
+
+    .cal-day-num {
+      font-size: .72rem; font-weight: 700;
+      color: var(--text); line-height: 1;
+      margin-bottom: 3px;
+    }
+    .cal-day.weekend .cal-day-num { color: var(--dim); }
+
+    .cal-events { display: flex; flex-direction: column; gap: 2px; }
+    .cal-event {
+      font-size: .5rem; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase;
+      padding: 2px 4px; border-radius: 3px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+    .cal-event.ferie-ok    { background: rgba(34,197,94,.2);  color: #86efac; }
+    .cal-event.permesso-ok { background: rgba(250,204,21,.2); color: #fde68a; }
+    .cal-event.malattia    { background: rgba(168,85,247,.2); color: #d8b4fe; }
+    .cal-event.riposo      { background: rgba(56,189,248,.2); color: #7dd3fc; }
+    .cal-event.richiesta   { background: rgba(59,130,246,.2); color: #93c5fd; }
+    .cal-event.bloccato    { background: rgba(226,232,240,.12); color: #cbd5e1; }
+    .cal-event.altri       { background: rgba(255,255,255,.06); color: var(--muted); }
+
+    .cal-count {
+      position: absolute; bottom: 3px; right: 4px;
+      font-size: .5rem; font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--muted);
+    }
+    .cal-count.red   { color: #f87171; }
+    .cal-count.orange{ color: #fb923c; }
+
+    /* ── FORM RICHIESTA ── */
+    .form-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(8,13,24,.85);
+      backdrop-filter: blur(6px);
+      z-index: 100;
+      align-items: flex-end;
+      justify-content: center;
+    }
+    .form-overlay.open { display: flex; animation: slideUp .3s ease; }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .form-sheet {
+      background: var(--card);
+      border: 1px solid var(--line2);
+      border-radius: 24px 24px 0 0;
+      padding: 24px 20px 40px;
+      width: 100%; max-width: 520px;
+      max-height: 92dvh;
+      overflow-y: auto;
+    }
+    .form-handle {
+      width: 40px; height: 4px;
+      background: var(--line2); border-radius: 2px;
+      margin: 0 auto 20px;
+    }
+    .form-title {
+      font-size: 1.1rem; font-weight: 800;
+      color: var(--text); margin-bottom: 4px;
+    }
+    .form-subtitle {
+      font-size: .78rem; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 20px;
+    }
+
+    .form-field { margin-bottom: 16px; }
+    .form-label {
+      display: block; font-size: .65rem; font-weight: 700;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: .12em; margin-bottom: 8px;
+    }
+
+    .tipo-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .tipo-btn {
+      padding: 12px 8px; border-radius: 10px;
+      border: 1.5px solid var(--line2);
+      background: var(--surface); color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-size: .8rem; font-weight: 700;
+      cursor: pointer; text-align: center;
+      transition: all .15s;
+    }
+    .tipo-btn:hover { border-color: var(--accent); color: var(--text); }
+    .tipo-btn.active-ferie   { border-color: var(--ferie);    background: rgba(34,197,94,.12);   color: #86efac; }
+    .tipo-btn.active-permesso{ border-color: var(--permesso); background: rgba(250,204,21,.12);  color: #fde68a; }
+
+    .permesso-grid {
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 6px; display: none;
+    }
+    .permesso-grid.visible { display: grid; }
+    .pgiro-btn {
+      padding: 10px 4px; border-radius: 8px;
+      border: 1.5px solid var(--line2);
+      background: var(--surface); color: var(--muted);
+      font-family: 'Syne', sans-serif;
+      font-size: .75rem; font-weight: 700;
+      cursor: pointer; text-align: center;
+      transition: all .15s;
+    }
+    .pgiro-btn:hover  { border-color: var(--permesso); color: var(--text); }
+    .pgiro-btn.active { border-color: var(--permesso); background: rgba(250,204,21,.12); color: #fde68a; }
+
+    .date-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .date-box {
+      background: var(--surface); border: 1.5px solid var(--line2);
+      border-radius: 10px; padding: 12px 14px;
+      cursor: pointer; transition: border-color .15s;
+    }
+    .date-box:hover { border-color: var(--accent); }
+    .date-box.filled { border-color: var(--accent); }
+    .date-box-label { font-size: .6rem; color: var(--muted); font-weight: 700; letter-spacing: .1em; text-transform: uppercase; margin-bottom: 4px; }
+    .date-box-val { font-size: .9rem; font-weight: 700; color: var(--text); font-family: 'JetBrains Mono', monospace; }
+    .date-box-val.empty { color: var(--dim); font-size: .8rem; }
+
+    .giorni-badge {
+      display: none; background: rgba(250,204,21,.1);
+      border: 1px solid rgba(250,204,21,.25);
+      border-radius: 8px; padding: 10px 14px;
+      font-size: .85rem; font-weight: 700;
+      color: var(--accent); text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .giorni-badge.visible { display: block; }
+
+    .avviso-box {
+      display: none; background: rgba(239,68,68,.08);
+      border: 1px solid rgba(239,68,68,.25);
+      border-radius: 10px; padding: 12px 14px;
+      font-size: .82rem; color: #fca5a5; line-height: 1.5;
+    }
+    .avviso-box.visible { display: block; }
+
+    .btn-submit {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 15px;
+      background: var(--accent); color: #0a0f1a;
+      border: none; border-radius: 12px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 800;
+      cursor: pointer; letter-spacing: .04em;
+      transition: background .15s, transform .1s;
+      margin-top: 4px;
+    }
+    .btn-submit:active { transform: scale(.97); }
+    .btn-submit:disabled { background: var(--dim); color: var(--muted); cursor: not-allowed; }
+    .btn-submit:hover:not(:disabled) { background: var(--accent2); }
+
+    .btn-cancel {
+      display: block; width: 100%; padding: 12px;
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--line2); border-radius: 12px;
+      font-family: 'Syne', sans-serif;
+      font-size: .85rem; font-weight: 700;
+      cursor: pointer; margin-top: 8px;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-cancel:hover { border-color: var(--text); color: var(--text); }
+
+    /* ── LISTA ASSENZE ── */
+    .lista-wrap { padding: 16px 12px 24px; }
+    .lista-title {
+      font-size: .65rem; font-weight: 700;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: .14em; margin-bottom: 12px;
+      padding: 0 4px;
+    }
+    .assenza-item {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px; padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .assenza-color {
+      width: 4px; height: 40px; border-radius: 2px; flex-shrink: 0;
+    }
+    .assenza-info { flex: 1; }
+    .assenza-tipo {
+      font-size: .72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .08em;
+      margin-bottom: 3px;
+    }
+    .assenza-date {
+      font-size: .75rem; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .assenza-giorni {
+      font-size: .65rem; color: var(--dim);
+      margin-top: 2px;
+    }
+    .assenza-stato {
+      font-size: .6rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .stato-approvato { background: rgba(34,197,94,.15);  color: #86efac; }
+    .stato-richiesta { background: rgba(59,130,246,.15); color: #93c5fd; }
+    .stato-rifiutato { background: rgba(239,68,68,.15);  color: #fca5a5; }
+
+    /* ── FAB ── */
+    .fab {
+      position: fixed; bottom: 24px; right: 20px;
+      width: 56px; height: 56px;
+      background: var(--accent); color: #0a0f1a;
+      border: none; border-radius: 50%;
+      font-size: 1.5rem; font-weight: 700;
+      cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      box-shadow: 0 4px 20px rgba(250,204,21,.35);
+      transition: transform .15s, background .15s;
+      z-index: 50;
+    }
+    .fab:hover { transform: scale(1.08); background: var(--accent2); }
+    .fab:active { transform: scale(.94); }
+
+    /* ── STATO INIZIALE ── */
+    .spin-wrap { padding: 60px 20px; text-align: center; }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--line2); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .75s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin-label { font-size: .82rem; color: var(--muted); }
+
+    /* ── STATO OK ── */
+    .state-ok {
+      display: none; padding: 40px 24px; text-align: center;
+    }
+    .ok-icon  { font-size: 3rem; margin-bottom: 14px; }
+    .ok-title { font-size: 1.1rem; font-weight: 800; color: var(--ferie); margin-bottom: 8px; }
+    .ok-body  { font-size: .85rem; color: var(--muted); line-height: 1.7; }
+
+    /* ── AVVISO FULLPAGE ── */
+    .avviso-full {
+      display: none; position: fixed; inset: 0;
+      background: rgba(8,13,24,.92); backdrop-filter: blur(8px);
+      z-index: 200; align-items: center; justify-content: center; padding: 24px;
+    }
+    .avviso-full.open { display: flex; }
+    .avviso-card {
+      background: var(--card); border: 1px solid rgba(239,68,68,.3);
+      border-radius: 20px; padding: 32px 24px; max-width: 360px; text-align: center;
+    }
+    .avviso-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .avviso-title { font-size: 1rem; font-weight: 800; color: #fca5a5; margin-bottom: 8px; }
+    .avviso-msg { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 20px; }
+    .avviso-close {
+      padding: 10px 28px; background: var(--card2);
+      border: 1px solid var(--line2); border-radius: 10px;
+      color: var(--text); font-family: 'Syne', sans-serif;
+      font-size: .85rem; font-weight: 700; cursor: pointer;
+    }
+
+    /* ── SELEZIONE DATE SUL CALENDARIO ── */
+    .cal-hint {
+      text-align: center; font-size: .7rem;
+      color: var(--accent); font-weight: 700;
+      letter-spacing: .08em; padding: 8px 0 4px;
+      display: none;
+    }
+    .cal-hint.visible { display: block; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header" id="mainHeader">
+  <div class="brand">My Logistic Group — Assenze</div>
+  <div class="driver-name" id="driverName">Caricamento…</div>
+  <div class="header-pills" id="headerPills"></div>
+</div>
+
+<!-- LOADING -->
+<div class="spin-wrap" id="stateLoading">
+  <div class="spinner"></div>
+  <div class="spin-label">Caricamento assenze…</div>
+</div>
+
+<!-- CONTENUTO PRINCIPALE -->
+<div id="mainContent" style="display:none">
+
+  <!-- LEGENDA -->
+  <div class="legenda">
+    <div class="leg-item"><div class="leg-dot" style="background:var(--richiesta)"></div>Richiesta</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--ferie)"></div>Ferie ok</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--permesso)"></div>Permesso ok</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--malattia)"></div>Malattia</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--riposo)"></div>Riposo</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--bloccato)"></div>Bloccato</div>
+    <div class="leg-item"><div class="leg-dot" style="background:var(--pieno)"></div>Pieno (≥3)</div>
+  </div>
+
+  <!-- CALENDARIO -->
+  <div class="cal-wrap">
+    <div class="cal-nav">
+      <button class="cal-nav-btn" onclick="cambioMese(-1)">‹</button>
+      <div>
+        <div class="cal-title" id="calTitle"></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="cal-today-btn" onclick="tornaOggi()">OGGI</button>
+        <button class="cal-nav-btn" onclick="cambioMese(1)">›</button>
+      </div>
+    </div>
+
+    <div class="cal-hint" id="calHint"></div>
+
+    <div class="cal-grid-head">
+      <div class="cal-dow">LU</div>
+      <div class="cal-dow">MA</div>
+      <div class="cal-dow">ME</div>
+      <div class="cal-dow">GI</div>
+      <div class="cal-dow">VE</div>
+      <div class="cal-dow weekend">SA</div>
+      <div class="cal-dow weekend">DO</div>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <!-- LISTA ASSENZE -->
+  <div class="lista-wrap">
+    <div class="lista-title">Le tue assenze</div>
+    <div id="listaAssenze"></div>
+  </div>
+
+</div>
+
+<!-- FAB -->
+<button class="fab" id="fabBtn" onclick="apriForm()" style="display:none" title="Nuova richiesta">＋</button>
+
+<!-- FORM OVERLAY -->
+<div class="form-overlay" id="formOverlay">
+  <div class="form-sheet">
+    <div class="form-handle"></div>
+    <div class="form-title">Nuova Richiesta</div>
+    <div class="form-subtitle" id="formSubtitle">Seleziona le date sul calendario</div>
+
+    <div class="form-field">
+      <div class="form-label">Tipo assenza</div>
+      <div class="tipo-grid">
+        <button class="tipo-btn" id="btnFerie" onclick="selTipo('Ferie')">🌴 Ferie</button>
+        <button class="tipo-btn" id="btnPermesso" onclick="selTipo('Permesso')">📋 Permesso</button>
+      </div>
+    </div>
+
+    <div class="form-field" id="fieldGiro">
+      <div class="form-label">Tipo permesso</div>
+      <div class="permesso-grid" id="permessoGrid">
+        <button class="pgiro-btn" onclick="selGiro('1 Giro')">1° Giro</button>
+        <button class="pgiro-btn" onclick="selGiro('2 Giro')">2° Giro</button>
+        <button class="pgiro-btn" onclick="selGiro('3 Giro')">3° Giro</button>
+        <button class="pgiro-btn" onclick="selGiro('4 Giro')">4° Giro</button>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <div class="form-label">Periodo</div>
+      <div class="date-row">
+        <div class="date-box" id="boxDal" onclick="chiudiFormSelDate('dal')">
+          <div class="date-box-label">Dal</div>
+          <div class="date-box-val empty" id="valDal">— / — / ——</div>
+        </div>
+        <div class="date-box" id="boxAl" onclick="chiudiFormSelDate('al')">
+          <div class="date-box-label">Al</div>
+          <div class="date-box-val empty" id="valAl">— / — / ——</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <div class="giorni-badge" id="giorniBadge"></div>
+    </div>
+
+    <div class="avviso-box" id="avvisoBox"></div>
+
+    <button class="btn-submit" id="btnSubmit" onclick="submitRichiesta()" disabled>
+      📅 &nbsp;Invia Richiesta
+    </button>
+    <button class="btn-cancel" onclick="chiudiForm()">Annulla</button>
+  </div>
+</div>
+
+<!-- AVVISO FULLPAGE -->
+<div class="avviso-full" id="avvisoFull">
+  <div class="avviso-card">
+    <div class="avviso-icon">🚫</div>
+    <div class="avviso-title" id="avvisoFullTitle">Periodo non disponibile</div>
+    <div class="avviso-msg" id="avvisoFullMsg"></div>
+    <button class="avviso-close" onclick="chiudiAvviso()">Ho capito</button>
+  </div>
+</div>
+
+<script>
+// ── CONFIG ────────────────────────────────────────────────────
+const API        = 'https://script.google.com/macros/s/AKfycbzLFTM6e_UDSsYJRFdZ6JdiStAaJodFCxV_7Idil8cFGwRgtSvWxSfCnfcPKj-TNUPz/exec';
+const SCANNER_URL = 'https://mylogisticgroup.github.io/giro/';
+const params      = new URLSearchParams(location.search);
+const DRIVER      = (params.get('driver') || '').trim();
+
+// ── STATO ────────────────────────────────────────────────────
+let tutteAssenze  = [];   // tutte le assenze (tutti i driver)
+let mioDriver     = null; // dati driver corrente
+let curYear       = new Date().getFullYear();
+let curMonth      = new Date().getMonth(); // 0-based
+let selDal        = null; // Date
+let selAl         = null; // Date
+let selTipoVal    = '';
+let selGiroVal    = '';
+let selMode       = null; // 'dal' | 'al'
+let formOpen      = false;
+
+const MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+              'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+
+// ── JSONP ────────────────────────────────────────────────────
+function apiCall(qs) {
+  return new Promise((resolve, reject) => {
+    const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
+    const tag   = document.createElement('script');
+    const timer = setTimeout(() => { delete window[cb]; tag.remove(); reject(new Error('Timeout')); }, 20000);
+    window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
+    tag.src = API + '?' + qs + '&callback=' + cb;
+    document.head.appendChild(tag);
+  });
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+window.onload = async () => {
+  if (!DRIVER) { window.location.replace(SCANNER_URL); return; }
+  try {
+    const res = await apiCall('action=assenze_init&driver=' + encodeURIComponent(DRIVER));
+    if (!res.ok) { mostraErrore(res.errore || 'Errore caricamento.'); return; }
+    mioDriver    = res.driver;
+    tutteAssenze = res.assenze || [];
+    renderHeader();
+    renderCalendario();
+    renderLista();
+    document.getElementById('stateLoading').style.display  = 'none';
+    document.getElementById('mainContent').style.display   = 'block';
+    document.getElementById('fabBtn').style.display        = 'flex';
+  } catch(e) {
+    mostraErrore('Impossibile connettersi. Controlla la connessione.');
+  }
+};
+
+// ── HEADER ───────────────────────────────────────────────────
+function renderHeader() {
+  const nome = mioDriver ? mioDriver.nome : DRIVER;
+  const parts = nome.trim().split(/\s+/);
+  const upper = parts.filter(p => p === p.toUpperCase() && p.length > 1);
+  let cognome = upper.length ? upper.join(' ') : parts[0];
+  let primo   = upper.length ? parts.filter(p => !upper.includes(p)).join(' ') : parts.slice(1).join(' ');
+  document.getElementById('driverName').innerHTML =
+    '<span>' + (cognome || nome) + '</span>' + (primo ? '<br><span style="font-size:.9rem;font-weight:400;color:rgba(240,244,255,.5)">' + primo + '</span>' : '');
+
+  const mieArr = tutteAssenze.filter(a => String(a.driver) === String(DRIVER) && a.stato !== 'Rifiutato');
+  const approvate = mieArr.filter(a => a.stato === 'Approvato').length;
+  const richieste = mieArr.filter(a => a.stato === 'Richiesta').length;
+  const pills = document.getElementById('headerPills');
+  pills.innerHTML = '';
+  if (approvate) pills.innerHTML += '<span class="pill" style="background:rgba(34,197,94,.15);color:#86efac"><span class="pill-dot" style="background:#22c55e"></span>' + approvate + ' Approvate</span>';
+  if (richieste) pills.innerHTML += '<span class="pill" style="background:rgba(59,130,246,.15);color:#93c5fd"><span class="pill-dot" style="background:#3b82f6"></span>' + richieste + ' In attesa</span>';
+}
+
+// ── CALENDARIO ───────────────────────────────────────────────
+function renderCalendario() {
+  document.getElementById('calTitle').textContent = MESI[curMonth] + ' ' + curYear;
+  const grid   = document.getElementById('calGrid');
+  grid.innerHTML = '';
+
+  const oggi   = new Date(); oggi.setHours(0,0,0,0);
+  const primo  = new Date(curYear, curMonth, 1);
+  const ultimo = new Date(curYear, curMonth + 1, 0);
+  let   dow    = primo.getDay(); // 0=dom
+  dow = dow === 0 ? 6 : dow - 1; // lunedì=0
+
+  // celle vuote iniziali
+  for (let i = 0; i < dow; i++) {
+    const el = document.createElement('div');
+    el.className = 'cal-day empty';
+    grid.appendChild(el);
+  }
+
+  for (let d = 1; d <= ultimo.getDate(); d++) {
+    const data = new Date(curYear, curMonth, d);
+    data.setHours(0,0,0,0);
+    const el = document.createElement('div');
+    el.className = 'cal-day';
+
+    const dow2 = data.getDay();
+    if (dow2 === 0 || dow2 === 6) el.classList.add('weekend');
+    if (data < oggi) el.classList.add('past');
+    if (data.getTime() === oggi.getTime()) el.classList.add('today');
+
+    // eventi del giorno
+    const eventiGiorno = tutteAssenze.filter(a => {
+      if (a.stato === 'Rifiutato') return false;
+      const dal = parseData(a.dal);
+      const al  = parseData(a.al);
+      return dal && al && data >= dal && data <= al;
+    });
+
+    // blocco
+    const bloccato = eventiGiorno.some(a => a.tipo === 'Blocco');
+    // conteggio assenti (escluso blocco e driver stesso)
+    const altriAssenti = eventiGiorno.filter(a => String(a.driver) !== String(DRIVER) && a.tipo !== 'Blocco');
+    const miei         = eventiGiorno.filter(a => String(a.driver) === String(DRIVER));
+
+    if (bloccato) el.classList.add('bloccato');
+    else if (altriAssenti.length >= 3) el.classList.add('pieno');
+    else if (altriAssenti.length === 2) el.classList.add('parziale');
+
+    // selezione
+    if (selDal && selAl) {
+      if (data.getTime() === selDal.getTime()) el.classList.add('sel-start');
+      else if (data.getTime() === selAl.getTime()) el.classList.add('sel-end');
+      else if (data > selDal && data < selAl) el.classList.add('sel-range');
+    } else if (selDal && data.getTime() === selDal.getTime()) {
+      el.classList.add('sel-start');
+    }
+
+    // numero
+    const numEl = document.createElement('div');
+    numEl.className = 'cal-day-num';
+    numEl.textContent = d;
+    el.appendChild(numEl);
+
+    // eventi visibili (max 2)
+    const evEl = document.createElement('div');
+    evEl.className = 'cal-events';
+    const eventiMostrati = [...miei, ...altriAssenti].slice(0, 2);
+    eventiMostrati.forEach(a => {
+      const ev = document.createElement('div');
+      ev.className = 'cal-event ' + classeEvento(a);
+      const isMio = String(a.driver) === String(DRIVER);
+      ev.textContent = isMio ? (a.tipoPermesso || a.tipo) : (a.nomeDriver || a.driver).split(' ')[0];
+      evEl.appendChild(ev);
+    });
+    el.appendChild(evEl);
+
+    // contatore altri
+    const totale = altriAssenti.length;
+    if (totale > 0) {
+      const cnt = document.createElement('div');
+      cnt.className = 'cal-count' + (totale >= 3 ? ' red' : totale === 2 ? ' orange' : '');
+      cnt.textContent = totale + '/3';
+      el.appendChild(cnt);
+    }
+
+    // click
+    el.addEventListener('click', () => onDayClick(data, bloccato, altriAssenti.length));
+    grid.appendChild(el);
+  }
+}
+
+function classeEvento(a) {
+  if (a.tipo === 'Blocco')    return 'bloccato';
+  if (a.tipo === 'Malattia')  return 'malattia';
+  if (a.tipo === 'Riposo')    return 'riposo';
+  if (a.stato === 'Richiesta') return 'richiesta';
+  if (a.tipo === 'Ferie')     return 'ferie-ok';
+  if (a.tipo === 'Permesso')  return 'permesso-ok';
+  return 'altri';
+}
+
+function cambioMese(delta) {
+  curMonth += delta;
+  if (curMonth > 11) { curMonth = 0; curYear++; }
+  if (curMonth < 0)  { curMonth = 11; curYear--; }
+  renderCalendario();
+}
+function tornaOggi() {
+  curYear  = new Date().getFullYear();
+  curMonth = new Date().getMonth();
+  renderCalendario();
+}
+
+// ── CLICK GIORNO ─────────────────────────────────────────────
+function onDayClick(data, bloccato, nAltri) {
+  const oggi = new Date(); oggi.setHours(0,0,0,0);
+  if (data < oggi) return;
+
+  if (bloccato) {
+    mostraAvviso('Periodo Bloccato',
+      'Questo giorno è stato bloccato dall\'amministratore. Non è possibile inserire richieste. Contatta l\'admin per maggiori informazioni.');
+    return;
+  }
+
+  if (!formOpen) {
+    // avvia selezione
+    if (!selMode) {
+      selMode = 'dal';
+      selDal  = null; selAl = null;
+      document.getElementById('calHint').textContent = 'Seleziona il giorno di inizio';
+      document.getElementById('calHint').classList.add('visible');
+    }
+    if (selMode === 'dal') {
+      selDal = data; selAl = null;
+      selMode = 'al';
+      document.getElementById('calHint').textContent = 'Ora seleziona il giorno di fine';
+      aggiornaDateForm();
+      renderCalendario();
+    } else if (selMode === 'al') {
+      if (data < selDal) { selDal = data; return; }
+      selAl = data;
+      selMode = null;
+      document.getElementById('calHint').classList.remove('visible');
+
+      // controlla disponibilità
+      const pieno = verificaDisponibilita(selDal, selAl);
+      aggiornaDateForm();
+      renderCalendario();
+      apriForm(pieno);
+    }
+  }
+}
+
+function chiudiFormSelDate(campo) {
+  chiudiForm();
+  selMode = campo;
+  document.getElementById('calHint').textContent = campo === 'dal'
+    ? 'Seleziona il giorno di inizio' : 'Seleziona il giorno di fine';
+  document.getElementById('calHint').classList.add('visible');
+}
+
+function verificaDisponibilita(dal, al) {
+  // controlla se in qualsiasi giorno del range ci sono ≥3 assenti
+  let d = new Date(dal);
+  while (d <= al) {
+    const giorno = new Date(d);
+    const n = tutteAssenze.filter(a => {
+      if (a.stato === 'Rifiutato' || a.tipo === 'Blocco') return false;
+      if (String(a.driver) === String(DRIVER)) return false;
+      const dalA = parseData(a.dal); const alA = parseData(a.al);
+      return dalA && alA && giorno >= dalA && giorno <= alA;
+    }).length;
+    if (n >= 3) return true;
+    d.setDate(d.getDate() + 1);
+  }
+  return false;
+}
+
+// ── FORM ─────────────────────────────────────────────────────
+function apriForm(avviso) {
+  formOpen = true;
+  document.getElementById('formOverlay').classList.add('open');
+  document.getElementById('fabBtn').style.display = 'none';
+  aggiornaDateForm();
+  if (avviso) {
+    document.getElementById('avvisoBox').textContent =
+      '⚠️ Nel periodo selezionato ci sono già 3 o più driver assenti. La richiesta verrà inviata all\'admin per approvazione.';
+    document.getElementById('avvisoBox').classList.add('visible');
+  } else {
+    document.getElementById('avvisoBox').classList.remove('visible');
+  }
+  aggiornaSubmit();
+}
+
+function chiudiForm() {
+  formOpen = false;
+  document.getElementById('formOverlay').classList.remove('open');
+  document.getElementById('fabBtn').style.display = 'flex';
+}
+
+function selTipo(tipo) {
+  selTipoVal = tipo;
+  document.getElementById('btnFerie').classList.remove('active-ferie');
+  document.getElementById('btnPermesso').classList.remove('active-permesso');
+  document.getElementById('btnFerie').classList.toggle('active-ferie', tipo === 'Ferie');
+  document.getElementById('btnPermesso').classList.toggle('active-permesso', tipo === 'Permesso');
+  const pg = document.getElementById('permessoGrid');
+  pg.classList.toggle('visible', tipo === 'Permesso');
+  if (tipo === 'Ferie') { selGiroVal = ''; document.querySelectorAll('.pgiro-btn').forEach(b => b.classList.remove('active')); }
+  aggiornaSubmit();
+}
+
+function selGiro(giro) {
+  selGiroVal = giro;
+  document.querySelectorAll('.pgiro-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent.replace('°','').replace(' ','') === giro.replace(' ',''));
+  });
+  aggiornaSubmit();
+}
+
+function aggiornaDateForm() {
+  const vDal = document.getElementById('valDal');
+  const vAl  = document.getElementById('valAl');
+  if (selDal) {
+    vDal.textContent = formatDataIT(selDal);
+    vDal.classList.remove('empty');
+    document.getElementById('boxDal').classList.add('filled');
+  } else {
+    vDal.textContent = '— / — / ——'; vDal.classList.add('empty');
+    document.getElementById('boxDal').classList.remove('filled');
+  }
+  if (selAl) {
+    vAl.textContent = formatDataIT(selAl);
+    vAl.classList.remove('empty');
+    document.getElementById('boxAl').classList.add('filled');
+  } else {
+    vAl.textContent = '— / — / ——'; vAl.classList.add('empty');
+    document.getElementById('boxAl').classList.remove('filled');
+  }
+  if (selDal && selAl) {
+    const giorni = Math.round((selAl - selDal) / 86400000) + 1;
+    const badge  = document.getElementById('giorniBadge');
+    badge.textContent = '📅 ' + giorni + ' giorn' + (giorni === 1 ? 'o' : 'i');
+    badge.classList.add('visible');
+  } else {
+    document.getElementById('giorniBadge').classList.remove('visible');
+  }
+}
+
+function aggiornaSubmit() {
+  const ok = selDal && selAl &&
+             selTipoVal &&
+             (selTipoVal === 'Ferie' || (selTipoVal === 'Permesso' && selGiroVal));
+  document.getElementById('btnSubmit').disabled = !ok;
+}
+
+async function submitRichiesta() {
+  const giorni = selDal && selAl ? Math.round((selAl - selDal) / 86400000) + 1 : 0;
+  document.getElementById('btnSubmit').disabled = true;
+  document.getElementById('btnSubmit').textContent = '⏳ Invio in corso…';
+  try {
+    const res = await apiCall(
+      'action=assenze_add' +
+      '&driver='   + encodeURIComponent(DRIVER) +
+      '&tipo='     + encodeURIComponent(selTipoVal) +
+      '&giro='     + encodeURIComponent(selGiroVal) +
+      '&dal='      + encodeURIComponent(formatDataISO(selDal)) +
+      '&al='       + encodeURIComponent(formatDataISO(selAl)) +
+      '&giorni='   + giorni
+    );
+    if (res.ok) {
+      chiudiForm();
+      // aggiorna lista locale
+      tutteAssenze.push({
+        id: res.id, driver: DRIVER,
+        nomeDriver: mioDriver ? mioDriver.nome : DRIVER,
+        tipo: selTipoVal, tipoPermesso: selGiroVal,
+        dal: formatDataISO(selDal), al: formatDataISO(selAl),
+        giorni: giorni, stato: 'Richiesta'
+      });
+      selDal = null; selAl = null; selTipoVal = ''; selGiroVal = '';
+      renderHeader(); renderCalendario(); renderLista();
+    } else {
+      document.getElementById('btnSubmit').disabled = false;
+      document.getElementById('btnSubmit').textContent = '📅 Invia Richiesta';
+      document.getElementById('avvisoBox').textContent = '⚠️ ' + (res.errore || 'Errore invio.');
+      document.getElementById('avvisoBox').classList.add('visible');
+    }
+  } catch(e) {
+    document.getElementById('btnSubmit').disabled = false;
+    document.getElementById('btnSubmit').textContent = '📅 Invia Richiesta';
+    document.getElementById('avvisoBox').textContent = '⚠️ Errore di connessione. Riprova.';
+    document.getElementById('avvisoBox').classList.add('visible');
+  }
+}
+
+// ── LISTA ASSENZE ────────────────────────────────────────────
+function renderLista() {
+  const mie = tutteAssenze
+    .filter(a => String(a.driver) === String(DRIVER))
+    .sort((a,b) => {
+      const da = parseData(a.dal), db = parseData(b.dal);
+      return db - da;
+    });
+  const el = document.getElementById('listaAssenze');
+  if (!mie.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:.82rem;padding:20px">Nessuna assenza registrata</div>';
+    return;
+  }
+  el.innerHTML = mie.map(a => {
+    const colore = coloreTipo(a);
+    const statoClass = a.stato === 'Approvato' ? 'stato-approvato' : a.stato === 'Rifiutato' ? 'stato-rifiutato' : 'stato-richiesta';
+    const tipoLabel = a.tipo + (a.tipoPermesso ? ' — ' + a.tipoPermesso : '');
+    return `<div class="assenza-item">
+      <div class="assenza-color" style="background:${colore}"></div>
+      <div class="assenza-info">
+        <div class="assenza-tipo" style="color:${colore}">${tipoLabel}</div>
+        <div class="assenza-date">${a.dal} → ${a.al}</div>
+        <div class="assenza-giorni">${a.giorni || ''} giorn${a.giorni === 1 ? 'o' : 'i'}</div>
+      </div>
+      <div class="assenza-stato ${statoClass}">${a.stato}</div>
+    </div>`;
+  }).join('');
+}
+
+function coloreTipo(a) {
+  if (a.tipo === 'Blocco')    return 'var(--bloccato)';
+  if (a.tipo === 'Malattia')  return 'var(--malattia)';
+  if (a.tipo === 'Riposo')    return 'var(--riposo)';
+  if (a.stato === 'Richiesta') return 'var(--richiesta)';
+  if (a.tipo === 'Ferie')     return 'var(--ferie)';
+  if (a.tipo === 'Permesso')  return 'var(--permesso)';
+  return 'var(--muted)';
+}
+
+// ── AVVISO ───────────────────────────────────────────────────
+function mostraAvviso(titolo, msg) {
+  document.getElementById('avvisoFullTitle').textContent = titolo;
+  document.getElementById('avvisoFullMsg').textContent   = msg;
+  document.getElementById('avvisoFull').classList.add('open');
+}
+function chiudiAvviso() {
+  document.getElementById('avvisoFull').classList.remove('open');
+}
+function mostraErrore(msg) {
+  document.getElementById('stateLoading').innerHTML =
+    '<div style="text-align:center;padding:60px 24px"><div style="font-size:2rem;margin-bottom:12px">⚠️</div>' +
+    '<div style="color:#fca5a5;font-weight:700;margin-bottom:8px">Errore</div>' +
+    '<div style="color:var(--muted);font-size:.85rem">' + msg + '</div></div>';
+}
+
+// ── UTILS ────────────────────────────────────────────────────
+function parseData(str) {
+  if (!str) return null;
+  // accetta dd/MM/yyyy e yyyy-MM-dd
+  if (str.includes('/')) {
+    const [d,m,y] = str.split('/');
+    const dt = new Date(Number(y), Number(m)-1, Number(d));
+    dt.setHours(0,0,0,0); return isNaN(dt) ? null : dt;
+  }
+  const dt = new Date(str); dt.setHours(0,0,0,0);
+  return isNaN(dt) ? null : dt;
+}
+function formatDataIT(d) {
+  return String(d.getDate()).padStart(2,'0') + '/' +
+         String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+}
+function formatDataISO(d) {
+  return d.getFullYear() + '-' +
+         String(d.getMonth()+1).padStart(2,'0') + '-' +
+         String(d.getDate()).padStart(2,'0');
+}
+</script>
+</body>
+</html>
