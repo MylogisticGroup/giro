@@ -1,560 +1,540 @@
-<!DOCTYPE html>
-<html lang="it">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>Giro</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --ink:    #0a0f1e;
-      --muted:  #6b7280;
-      --line:   #e5e7eb;
-      --bg:     #f3f4f6;
-      --card:   #ffffff;
-      --blue:   #2563eb;
-      --blue2:  #1d4ed8;
-      --green:  #16a34a;
-      --green2: #15803d;
-      --orange: #ea580c;
-      --red:    #dc2626;
-    }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Sora', sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-      min-height: 100dvh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 0 0 48px;
-    }
-    .wrap { width: 100%; max-width: 480px; }
+ // ============================================================
+//  CONFIGURAZIONE
+// ============================================================
+const SPREADSHEET_ID  = '1OCPrUDzg_JNj-ssxAFUkZPSSvSLy9p-NkUoryG0nFwA';
+const SHEET_GIRO      = 'Giro';
+const SHEET_VEICOLO   = 'Veicolo';
+const SHEET_DRIVER    = 'Driver';
+const SHEET_ASSENZE   = 'Assenze';
 
-    /* ── Header ── */
-    .header {
-      background: #1e2a3a;
-      border-radius: 0 0 28px 28px;
-      padding: 34px 28px 36px;
-      text-align: center;
-      margin-bottom: 20px;
-    }
-    .brand {
-      font-size: .67rem; font-weight: 600;
-      letter-spacing: .2em; text-transform: uppercase;
-      color: rgba(255,255,255,.4); margin-bottom: 14px;
-    }
-    .driver-cognome {
-      font-size: 1.75rem; font-weight: 700;
-      color: #fff; letter-spacing: .05em;
-      line-height: 1.1; margin-bottom: 4px;
-    }
-    .driver-nome {
-      font-size: 1.05rem; font-weight: 300;
-      color: rgba(255,255,255,.5);
-      letter-spacing: .06em; margin-bottom: 16px;
-    }
-    .status-pill {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(37,99,235,.2);
-      border: 1px solid rgba(37,99,235,.4);
-      border-radius: 20px; padding: 5px 14px;
-      font-size: .68rem; font-weight: 600;
-      letter-spacing: .1em; text-transform: uppercase; color: #93c5fd;
-    }
-
-    /* ── Card ── */
-    .card {
-      background: var(--card);
-      border-radius: 18px;
-      border: 1px solid var(--line);
-      overflow: hidden;
-      box-shadow: 0 2px 12px rgba(0,0,0,.06);
-      margin: 0 14px;
-    }
-    .card-body { padding: 24px 24px 26px; }
-
-    /* ── Field ── */
-    .field { margin-bottom: 16px; }
-    .field:last-child { margin-bottom: 0; }
-    .field-label {
-      font-size: .75rem; font-weight: 700;
-      color: var(--muted); text-transform: uppercase;
-      letter-spacing: .12em; margin-bottom: 10px;
-      display: block; text-align: center;
-    }
-
-    select, input[type=number] {
-      width: 100%; padding: 15px 18px;
-      border: 2px solid var(--line);
-      border-radius: 12px;
-      font-family: 'Sora', sans-serif;
-      font-size: .95rem; color: var(--ink);
-      background: var(--bg);
-      appearance: none; -webkit-appearance: none;
-      transition: border-color .15s, box-shadow .15s;
-      outline: none;
-    }
-    select:focus, input[type=number]:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 4px rgba(37,99,235,.1);
-      background: #fff;
-    }
-    .select-wrap { position: relative; }
-    .select-wrap::after {
-      content: '▾';
-      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
-      color: var(--blue); pointer-events: none; font-size: .85rem;
-    }
-    select.accented {
-      border-color: var(--blue); color: var(--blue);
-      background: #eff6ff; font-weight: 600;
-      box-shadow: 0 0 0 4px rgba(37,99,235,.08);
-    }
-
-    /* ── Chip veicolo ── */
-    .vei-chip {
-      display: none;
-      background: #f8fafc; border: 1px solid var(--line);
-      border-radius: 9px; padding: 10px 12px;
-      font-size: .8rem; color: #374151; line-height: 1.9; margin-top: 8px;
-    }
-    .vei-chip .mono {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: .78rem; color: var(--blue);
-    }
-
-    /* ── Riepilogo chiudi ── */
-    .riepilogo {
-      background: #f8fafc; border: 1px solid var(--line);
-      border-radius: 10px; padding: 12px 14px;
-      font-size: .83rem; color: #374151;
-      line-height: 2; margin-bottom: 16px;
-    }
-    .riepilogo strong { color: var(--ink); }
-    .riepilogo .mono { font-family: 'JetBrains Mono', monospace; font-size: .78rem; }
-
-    /* ── Button ── */
-    .btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; padding: 15px 14px;
-      border: none; border-radius: 12px;
-      font-family: 'Sora', sans-serif;
-      font-size: 1rem; font-weight: 700;
-      cursor: pointer;
-      transition: transform .12s, opacity .15s, background .15s;
-      letter-spacing: .02em;
-    }
-    .btn:active  { transform: scale(.96); }
-    .btn:disabled { opacity: .35; cursor: not-allowed; }
-    .btn-green  { background: var(--green); color: #fff; box-shadow: 0 4px 14px rgba(22,163,74,.35); }
-    .btn-green:hover:not(:disabled)  { background: var(--green2); }
-    .btn-orange { background: var(--orange); color: #fff; }
-    .btn-orange:hover:not(:disabled) { background: #c2410c; }
-
-    /* ── Pill dot ── */
-    .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
-    .pill-dot-blue   { background: #93c5fd; animation: blink 2s infinite; }
-    .pill-dot-orange { background: var(--orange); animation: blink 2s infinite; }
-    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
-
-    /* ── Orange pill (chiudi) ── */
-    .pill-orange {
-      display: inline-flex; align-items: center; gap: 7px;
-      background: #fff7ed; color: var(--orange);
-      border-radius: 20px; padding: 5px 14px;
-      font-size: .68rem; font-weight: 700;
-      letter-spacing: .1em; text-transform: uppercase;
-    }
-    .card-top { padding: 18px 24px 0; }
-
-    /* ── Skeleton ── */
-    .skeleton {
-      height: 52px; border-radius: 12px;
-      background: linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);
-      background-size: 200% 100%;
-      animation: shimmer 1.3s infinite;
-    }
-    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
-
-    /* ── Successo ── */
-    .state-ok {
-      display: none;
-      padding: 36px 24px;
-      text-align: center;
-    }
-    .ok-icon { font-size: 3rem; margin-bottom: 14px; }
-    .ok-title { font-size: 1.2rem; font-weight: 700; color: var(--green); margin-bottom: 8px; }
-    .ok-body  { font-size: .88rem; color: var(--muted); line-height: 1.8; margin-bottom: 18px; }
-    .ok-countdown {
-      font-size: .75rem; color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .ok-bar-wrap {
-      width: 100%; height: 3px; background: var(--line);
-      border-radius: 2px; margin-top: 16px; overflow: hidden;
-    }
-    .ok-bar {
-      height: 100%; width: 100%;
-      background: var(--green);
-      border-radius: 2px;
-      transform-origin: left;
-      animation: shrink 3s linear forwards;
-    }
-    @keyframes shrink { from{transform:scaleX(1)} to{transform:scaleX(0)} }
-
-    /* ── Errore ── */
-    .state-err {
-      display: none;
-      padding: 36px 24px;
-      text-align: center;
-    }
-    .err-icon  { font-size: 2.6rem; margin-bottom: 12px; }
-    .err-title { font-size: 1.05rem; font-weight: 700; color: var(--red); margin-bottom: 6px; }
-    .err-body  { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
-    .btn-ghost {
-      display: inline-flex; align-items: center; justify-content: center;
-      padding: 10px 24px;
-      background: transparent; color: var(--blue);
-      border: 1.5px solid var(--blue); border-radius: 10px;
-      font-family: 'Sora', sans-serif; font-size: .9rem; font-weight: 600;
-      cursor: pointer;
-    }
-    .btn-ghost:hover { background: #eff6ff; }
-
-    /* ── Spinner ── */
-    .spin-wrap { display: none; padding: 36px 20px; text-align: center; }
-    .spinner {
-      width: 30px; height: 30px;
-      border: 3px solid var(--line); border-top-color: var(--blue);
-      border-radius: 50%; animation: spin .75s linear infinite;
-      margin: 0 auto 12px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spin-label { font-size: .82rem; color: var(--muted); }
-  </style>
-</head>
-<body>
-<div class="wrap">
-
-  <!-- Header -->
-  <div class="header" id="mainHeader">
-    <div class="brand">My Logistic Group</div>
-    <div class="driver-cognome" id="driverCognome">Caricamento…</div>
-    <div class="driver-nome"    id="driverNome"></div>
-    <div class="status-pill" id="headerPill" style="display:none">
-      <span class="pill-dot pill-dot-blue" id="headerDot"></span>
-      <span id="headerPillLabel">Nuovo Giro</span>
-    </div>
-  </div>
-
-  <!-- Card -->
-  <div class="card">
-
-    <!-- Init loading -->
-    <div class="spin-wrap" id="stateInit" style="display:block">
-      <div class="spinner"></div>
-      <div class="spin-label">Verifica in corso…</div>
-    </div>
-
-    <!-- ── APRI GIRO ── -->
-    <div id="screenApri" style="display:none">
-      <div class="card-body">
-        <div class="field">
-          <label class="field-label">Veicolo</label>
-          <div class="skeleton" id="skelVeicolo"></div>
-          <div class="select-wrap" style="display:none" id="wrapSel">
-            <select id="selVeicolo" class="accented" onchange="onVeicoloChange()">
-              <option value="">— Seleziona veicolo —</option>
-            </select>
-          </div>
-          <div class="vei-chip" id="veiChip"></div>
-        </div>
-        <div class="field" id="fieldKm" style="display:none">
-          <label class="field-label">Km attuali del veicolo</label>
-          <input type="number" id="kmInizio" placeholder="es. 125430" min="0" inputmode="numeric">
-        </div>
-        <button class="btn btn-green" id="btnApri" onclick="submitApri()" disabled>
-          ✓ &nbsp;Apri Giro
-        </button>
-      </div>
-    </div>
-
-    <!-- ── CHIUDI GIRO ── -->
-    <div id="screenChiudi" style="display:none">
-      <div class="card-top">
-        <div class="pill-orange">
-          <span class="pill-dot pill-dot-orange"></span>Chiudi Giro
-        </div>
-      </div>
-      <div class="card-body">
-        <div class="riepilogo" id="riepilogo"></div>
-        <div class="field">
-          <label class="field-label">Km attuali del veicolo</label>
-          <input type="number" id="kmFine" placeholder="es. 125850" inputmode="numeric">
-        </div>
-        <button class="btn btn-orange" id="btnChiudi" onclick="submitChiudi()">
-          ⬛ &nbsp;Chiudi Giro
-        </button>
-      </div>
-    </div>
-
-    <!-- Spinner operazione -->
-    <div class="spin-wrap" id="spinnerOp">
-      <div class="spinner"></div>
-      <div class="spin-label" id="spinnerLabel">Operazione in corso…</div>
-    </div>
-
-    <!-- Successo -->
-    <div class="state-ok" id="stateOk">
-      <div class="ok-icon">✅</div>
-      <div class="ok-title" id="okTitle"></div>
-      <div class="ok-body"  id="okBody"></div>
-      <div class="ok-countdown" id="okCountdown"></div>
-      <div class="ok-bar-wrap"><div class="ok-bar" id="okBar"></div></div>
-    </div>
-
-    <!-- Errore -->
-    <div class="state-err" id="stateErr">
-      <div class="err-icon">⚠️</div>
-      <div class="err-title">Errore</div>
-      <div class="err-body" id="errMsg"></div>
-      <button class="btn-ghost" onclick="location.reload()">↩ Riprova</button>
-    </div>
-
-  </div>
-</div>
-
-<script>
-const API    = 'https://script.google.com/macros/s/AKfycbzLFTM6e_UDSsYJRFdZ6JdiStAaJodFCxV_7Idil8cFGwRgtSvWxSfCnfcPKj-TNUPz/exec';
-// URL della pagina scanner a cui tornare dopo il successo
-const SCANNER_URL = 'https://mylogisticgroup.github.io/giro/';
-
-const params      = new URLSearchParams(location.search);
-const DRIVER      = (params.get('driver') || '').trim();
-let   kmInizioVal = 0;
-
-/* ── Split cognome / nome ── */
-function splitNome(full) {
-  const parts = (full || '').trim().split(/\s+/);
-  const upper = parts.filter(p => p === p.toUpperCase() && p.length > 1);
-  if (upper.length) {
-    return { cognome: upper.join(' '), nome: parts.filter(p => !upper.includes(p)).join(' ') };
-  }
-  return { cognome: parts[0] || full, nome: parts.slice(1).join(' ') };
-}
-function setDriverHeader(fullName) {
-  const { cognome, nome } = splitNome(fullName);
-  document.getElementById('driverCognome').textContent = cognome || fullName;
-  document.getElementById('driverNome').textContent    = nome || '';
-}
-
-/* ── JSONP ── */
-function apiCall(qs) {
-  return new Promise((resolve, reject) => {
-    const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
-    const tag   = document.createElement('script');
-    const timer = setTimeout(() => { delete window[cb]; tag.remove(); reject(new Error('Timeout')); }, 18000);
-    window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
-    tag.src = API + '?' + qs + '&callback=' + cb;
-    document.head.appendChild(tag);
-  });
-}
-
-/* ── Schermate ── */
-const SCREENS = ['stateInit','screenApri','screenChiudi','spinnerOp','stateOk','stateErr'];
-function show(id) {
-  SCREENS.forEach(s => { document.getElementById(s).style.display = (s === id) ? 'block' : 'none'; });
-}
-function showErr(msg) {
-  document.getElementById('errMsg').textContent = msg;
-  show('stateErr');
-}
-
-/* ── Successo con countdown e poi redirect allo scanner ── */
-function showSuccess(title, bodyHtml) {
-  document.getElementById('okTitle').textContent = title;
-  document.getElementById('okBody').innerHTML    = bodyHtml;
-
-  // Nascondi header con nominativo
-  document.getElementById('mainHeader').style.display = 'none';
-
-  show('stateOk');
-
-  // Barra animata (3s) + countdown testuale
-  const bar       = document.getElementById('okBar');
-  const countdown = document.getElementById('okCountdown');
-  let   secs      = 3;
-
-  // Reset animazione
-  bar.style.animation = 'none';
-  bar.offsetHeight;                          // reflow
-  bar.style.animation = 'shrink 3s linear forwards';
-
-  countdown.textContent = 'Ritorno allo scanner tra ' + secs + 's…';
-  const iv = setInterval(() => {
-    secs--;
-    if (secs <= 0) {
-      clearInterval(iv);
-      window.location.href = SCANNER_URL;
-    } else {
-      countdown.textContent = 'Ritorno allo scanner tra ' + secs + 's…';
-    }
-  }, 1000);
-}
-
-/* ── INIT ── */
-window.onload = async () => {
-  if (!DRIVER) { window.location.replace(SCANNER_URL); return; }
-
-  let data;
-  try {
-    data = await apiCall('action=init&driver=' + encodeURIComponent(DRIVER));
-  } catch(e) {
-    showErr('Impossibile connettersi. Controlla la connessione e riprova.'); return;
-  }
-
-  setDriverHeader(data.nomeDriver || DRIVER);
-
-  if (data.occupato) {
-    mostraChiudi(data);
-  } else {
-    mostraApri(data.veicoli || []);
-  }
+// ── Colonne tabella GIRO (0-based) ─────────────────────────
+const G = {
+  ID             : 0,
+  DRIVER         : 1,
+  NOME_DRIVER    : 2,
+  STATO_DRIVER   : 3,
+  GIORNO         : 4,
+  TARGA          : 5,
+  VEICOLO_ENTR   : 6,
+  GIRO1          : 7,
+  GIRO2          : 8,
+  GIRO3          : 9,
+  GIRO4          : 10,
+  KM_PERCORSO    : 11,
+  ADESIVO        : 12,
+  DATA_INIZIO    : 13,
+  GPS_INIZIO     : 14,
+  KM_INIZIO      : 15,
+  DATA_FINE      : 16,
+  GPS_FINE       : 17,
+  KM_FINE        : 18,
+  DISTANZA       : 19,
+  STATO_VEICOLO  : 20,
+  CHI_RICEVE     : 21,
+  QR_CODE        : 22,
+  CAMBIO_VEI     : 23,
+  KM_TRASF       : 24,
+  KM_VEI_USCITA  : 25,
+  REF_REPORT     : 26,
+  ULTIMO_ACC     : 27,
+  EMAIL_ACC      : 28,
 };
 
-/* ── APRI ── */
-function mostraApri(veicoli) {
-  document.getElementById('headerPillLabel').textContent = 'Nuovo Giro';
-  document.getElementById('headerPill').style.display    = 'inline-flex';
-  show('screenApri');
+// ── Colonne tabella VEICOLO ──────────────────────────────────
+const V_ID         = 'IDVeicolo';
+const V_STATO_OPE  = 'Stato Veicolo';
+const V_STATO_DISP = 'Stato dello Veicolo';
+const V_MARCA      = 'Marca';
+const V_MODELLO    = 'Modello';
+const V_ADESIVO    = 'Adesivo';
+const V_TARGA      = 'Targa';
 
-  document.getElementById('skelVeicolo').style.display = 'none';
-  document.getElementById('wrapSel').style.display     = 'block';
+// ── Colonne tabella DRIVER ───────────────────────────────────
+const D_ID    = 'ID';
+const D_NOME  = 'Cognome Nome';
+const D_STATO = 'Stato';
 
-  const sel = document.getElementById('selVeicolo');
-  if (!veicoli.length) { sel.innerHTML = '<option value="">Nessun veicolo disponibile</option>'; return; }
+// ── Colonne tabella ASSENZE ──────────────────────────────────
+const A_ID         = 'ID Assenza';
+const A_DRIVER     = 'Driver';
+const A_NOME       = 'Nome Driver';
+const A_TIPO       = 'Tipo Assenza';
+const A_TIPO_PERM  = 'Tipo Permesso';
+const A_GIORNO     = 'Giorno';
+const A_DAL        = 'Dal';
+const A_AL         = 'Al';
+const A_GIORNI     = 'Giorni';
+const A_STATO      = 'Stato Richiesta';
+const A_ULT_ACC    = 'Ultimo Accesso';
+const A_EMAIL_ACC  = 'Email_Accesso';
 
-  veicoli.forEach(v => {
-    const o = document.createElement('option');
-    o.value           = v.id;
-    o.dataset.marca   = v.marca   || '';
-    o.dataset.modello = v.modello || '';
-    o.dataset.km      = v.kmFine  !== '' ? v.kmFine : '';
-    o.textContent     = v.targa + (v.marca ? ' — ' + v.marca + ' ' + v.modello : '');
-    sel.appendChild(o);
-  });
-  document.getElementById('btnApri').disabled = false;
-}
-
-function onVeicoloChange() {
-  const sel   = document.getElementById('selVeicolo');
-  const opt   = sel.options[sel.selectedIndex];
-  const chip  = document.getElementById('veiChip');
-  const fkm   = document.getElementById('fieldKm');
-  const kminp = document.getElementById('kmInizio');
-
-  if (!opt.value) {
-    sel.classList.add('accented');
-    chip.style.display = 'none';
-    fkm.style.display  = 'none';
-    kminp.value = '';
-    return;
+// ============================================================
+//  ENTRY POINT — Web App
+// ============================================================
+function doGet(e) {
+  if (!e || !e.parameter) {
+    return paginaErrore('Accedi tramite il link della Web App.');
   }
-  sel.classList.remove('accented');
-  const km = opt.dataset.km;
-  chip.innerHTML =
-    (opt.dataset.marca ? '🚗 <span class="mono">' + opt.dataset.marca + ' ' + opt.dataset.modello + '</span><br>' : '') +
-    '📏 Km ultimo giro: <span class="mono">' + (km ? Number(km).toLocaleString('it-IT') + ' km' : 'non disponibile') + '</span>';
-  chip.style.display = 'block';
-  kminp.value       = km || '';
-  fkm.style.display = 'block';
+
+  const action   = e.parameter.action  || '';
+  const driverId = (e.parameter.driver || '').trim();
+  const callback = e.parameter.callback || '';
+
+  // ── Chiamate JSON/JSONP da GitHub Pages ──────────────────
+  if (action) {
+    let result;
+    try {
+      if (action === 'stato')         result = getStatoDriver(driverId);
+      if (action === 'veicoli')       result = getVeicoliDisponibili();
+      if (action === 'apri')          result = apriGiro(driverId, e.parameter.targa, Number(e.parameter.km));
+      if (action === 'chiudi')        result = chiudiGiro(driverId, Number(e.parameter.km));
+
+      // ── action init (usata da giro.html) ─────────────────
+      if (action === 'init') {
+        const stato = getStatoDriver(driverId);
+        if (stato.occupato) {
+          result = { ok: true, occupato: true,  nomeDriver: stato.nomeDriver, targa: stato.targa, kmInizio: stato.kmInizio, dataInizio: stato.dataInizio, adesivo: stato.adesivo, veicoli: [] };
+        } else {
+          result = { ok: true, occupato: false, nomeDriver: stato.nomeDriver, veicoli: getVeicoliDisponibili() };
+        }
+      }
+
+      // ── NUOVE action assenze ──────────────────────────────
+      if (action === 'assenze_init')  result = assenzeInit(driverId);
+      if (action === 'assenze_add')   result = assenzeAdd(
+        driverId,
+        e.parameter.tipo   || '',
+        e.parameter.giro   || '',
+        e.parameter.dal    || '',
+        e.parameter.al     || '',
+        Number(e.parameter.giorni || 0)
+      );
+
+      if (!result) result = { ok: false, errore: 'Azione non riconosciuta.' };
+    } catch(err) {
+      result = { ok: false, errore: err.message };
+    }
+
+    const json = JSON.stringify(result);
+    if (callback) {
+      return ContentService
+        .createTextOutput(callback + '(' + json + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService
+      .createTextOutput(json)
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // ── Pagina HTML normale ───────────────────────────────────
+  if (!driverId) return paginaErrore('QR Code non valido o mancante.');
+  const driver = getDriver(driverId);
+  if (!driver) return paginaErrore('Driver ID "' + driverId + '" non trovato.');
+  const giroAperto = getGiroAperto(driverId);
+  return giroAperto ? buildPageChiudi(driver, giroAperto) : buildPageApri(driver);
 }
 
-async function submitApri() {
-  const targa = document.getElementById('selVeicolo').value;
-  const km    = document.getElementById('kmInizio').value;
-  if (!targa) { shakeInput('selVeicolo'); return; }
+// ============================================================
+//  AZIONI GIRO
+// ============================================================
 
-  show('spinnerOp');
-  document.getElementById('spinnerLabel').textContent = 'Apertura giro…';
-
-  let res;
+function apriGiro(driverId, targa, kmInizio) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
   try {
-    res = await apiCall(
-      'action=apri&driver=' + encodeURIComponent(DRIVER) +
-      '&targa=' + encodeURIComponent(targa) +
-      '&km='    + encodeURIComponent(km || 0)
-    );
-  } catch(e) { showErr('Timeout. Riprova tra qualche secondo.'); return; }
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const driver = getDriver(driverId, ss);
+    if (!driver) return { ok: false, errore: 'Driver non trovato.' };
 
-  if (res.ok) {
-    showSuccess('Giro aperto!',
-      '🚗 Veicolo: <strong>' + targa + '</strong><br>' +
-      '📏 Km: <strong>' + Number(km || 0).toLocaleString('it-IT') + '</strong>'
-    );
-  } else {
-    showErr(res.errore || 'Errore sconosciuto.');
+    const veicolo = getVeicolo(targa, ss);
+    if (!veicolo) return { ok: false, errore: 'Veicolo non trovato.' };
+    if (veicolo[V_STATO_OPE] === 'Occupato') return { ok: false, errore: 'Veicolo già in uso.' };
+
+    const ora  = new Date();
+    const riga = new Array(29).fill('');
+    riga[G.ID]            = Utilities.getUuid().substring(0, 8);
+    riga[G.DRIVER]        = driverId;
+    riga[G.NOME_DRIVER]   = driver[D_NOME];
+    riga[G.STATO_DRIVER]  = 'Occupato';
+    riga[G.GIORNO]        = ora;
+    riga[G.TARGA]         = targa;
+    riga[G.ADESIVO]       = veicolo[V_ADESIVO] || '';
+    riga[G.DATA_INIZIO]   = ora;
+    riga[G.KM_INIZIO]     = Number(kmInizio);
+    riga[G.STATO_VEICOLO] = 'Occupato';
+    riga[G.ULTIMO_ACC]    = ora;
+    riga[G.REF_REPORT]    = driverId + '_' + (ora.getMonth() + 1) + '_' + ora.getFullYear();
+
+    ss.getSheetByName(SHEET_GIRO).appendRow(riga);
+    aggiornaColonnaVeicolo(ss, targa, V_STATO_OPE, 'Occupato');
+    aggiornaColonnaDriver(ss, driverId, D_STATO, 'Occupato');
+
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
   }
 }
 
-/* ── CHIUDI ── */
-function mostraChiudi(stato) {
-  kmInizioVal = Number(stato.kmInizio) || 0;
-
-  const pill = document.getElementById('headerPill');
-  document.getElementById('headerPillLabel').textContent = 'Giro in corso';
-  pill.style.display     = 'inline-flex';
-  pill.style.background  = 'rgba(234,88,12,.2)';
-  pill.style.borderColor = 'rgba(234,88,12,.4)';
-  pill.style.color       = '#fb923c';
-  pill.querySelector('.pill-dot').style.background = '#fb923c';
-
-  document.getElementById('riepilogo').innerHTML =
-    '🚗 <strong>Veicolo:</strong> ' + stato.targa + '<br>' +
-    '🕐 <strong>Inizio:</strong> ' + stato.dataInizio + '<br>' +
-    '📏 <strong>Km partenza:</strong> <span class="mono">' + kmInizioVal.toLocaleString('it-IT') + '</span>';
-
-  document.getElementById('kmFine').min = kmInizioVal;
-  show('screenChiudi');
-}
-
-async function submitChiudi() {
-  const km = Number(document.getElementById('kmFine').value);
-  if (!km || km <= 0) { shakeInput('kmFine'); return; }
-  if (km < kmInizioVal) { shakeInput('kmFine'); return; }
-
-  show('spinnerOp');
-  document.getElementById('spinnerLabel').textContent = 'Chiusura giro…';
-
-  let res;
+function chiudiGiro(driverId, kmFine) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
   try {
-    res = await apiCall(
-      'action=chiudi&driver=' + encodeURIComponent(DRIVER) +
-      '&km=' + encodeURIComponent(km)
-    );
-  } catch(e) { showErr('Timeout. Riprova tra qualche secondo.'); return; }
+    const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(SHEET_GIRO);
+    const data  = sheet.getDataRange().getValues();
+    const ora   = new Date();
 
-  if (res.ok) {
-    showSuccess('Giro chiuso!',
-      '🚗 Veicolo: <strong>' + res.targa + '</strong><br>' +
-      '📏 Distanza: <strong>' + Number(res.distanza).toLocaleString('it-IT') + ' km</strong>'
-    );
-  } else {
-    showErr(res.errore || 'Errore sconosciuto.');
+    let rowIndex = -1;
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][G.DRIVER]).trim() === String(driverId).trim() &&
+          data[i][G.STATO_DRIVER] === 'Occupato') {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+    if (rowIndex === -1) return { ok: false, errore: 'Nessun giro aperto trovato.' };
+
+    const riga     = data[rowIndex - 1];
+    const kmInizio = Number(riga[G.KM_INIZIO]);
+    const km       = Number(kmFine);
+    const distanza = Math.max(0, km - kmInizio);
+    const targa    = riga[G.TARGA];
+
+    const updates = {};
+    updates[G.DATA_FINE     + 1] = ora;
+    updates[G.KM_FINE       + 1] = km;
+    updates[G.DISTANZA      + 1] = distanza;
+    updates[G.STATO_DRIVER  + 1] = 'Libero';
+    updates[G.STATO_VEICOLO + 1] = 'Libero';
+    updates[G.ULTIMO_ACC    + 1] = ora;
+
+    for (const [col, val] of Object.entries(updates)) {
+      sheet.getRange(rowIndex, Number(col)).setValue(val);
+    }
+
+    aggiornaColonnaVeicolo(ss, targa, V_STATO_OPE, 'Libero');
+    aggiornaColonnaDriver(ss, driverId, D_STATO, 'Libero');
+
+    return { ok: true, distanza: distanza, targa: targa };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
   }
 }
 
-/* ── Shake errore input ── */
-function shakeInput(id) {
-  const el = document.getElementById(id);
-  el.style.borderColor = 'var(--red)';
-  el.style.boxShadow   = '0 0 0 4px rgba(220,38,38,.15)';
-  el.focus();
-  setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1600);
+function getVeicoliDisponibili() {
+  try {
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheetV = ss.getSheetByName(SHEET_VEICOLO);
+    const dataV  = sheetV.getDataRange().getValues();
+    const hdrV   = dataV[0].map(h => h.toString().trim());
+
+    const iID    = hdrV.indexOf(V_ID);
+    const iStOpe = hdrV.indexOf(V_STATO_OPE);
+    const iStDis = hdrV.indexOf(V_STATO_DISP);
+    const iTarga = hdrV.indexOf(V_TARGA);
+    const iMarca = hdrV.indexOf(V_MARCA);
+    const iMod   = hdrV.indexOf(V_MODELLO);
+
+    const sheetG = ss.getSheetByName(SHEET_GIRO);
+    const dataG  = sheetG.getDataRange().getValues();
+    const kmMap  = {};
+    for (let i = 1; i < dataG.length; i++) {
+      const targa  = String(dataG[i][G.TARGA]).trim();
+      const kmFine = dataG[i][G.KM_FINE];
+      if (targa && kmFine !== '' && Number(kmFine) > 0) {
+        kmMap[targa] = Number(kmFine);
+      }
+    }
+
+    return dataV.slice(1)
+      .filter(r => {
+        const stOpe = r[iStOpe] ? r[iStOpe].toString().trim() : '';
+        const stDis = r[iStDis] ? r[iStDis].toString().trim() : '';
+        return stOpe === 'Libero' && stDis === 'Disponibile';
+      })
+      .map(r => {
+        const id = String(r[iID]).trim();
+        return {
+          id     : id,
+          targa  : r[iTarga] ? r[iTarga].toString().trim() : id,
+          marca  : r[iMarca] ? r[iMarca].toString().trim() : '',
+          modello: r[iMod]   ? r[iMod].toString().trim()   : '',
+          kmFine : kmMap[id] !== undefined ? kmMap[id] : '',
+        };
+      });
+  } catch (err) {
+    return [];
+  }
 }
-</script>
-</body>
-</html>
+
+function getStatoDriver(driverId) {
+  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const data = ss.getSheetByName(SHEET_GIRO).getDataRange().getValues();
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][G.DRIVER]).trim() === String(driverId).trim() &&
+        data[i][G.STATO_DRIVER] === 'Occupato') {
+      const tz = Session.getScriptTimeZone();
+      return {
+        occupato   : true,
+        targa      : data[i][G.TARGA],
+        kmInizio   : data[i][G.KM_INIZIO],
+        dataInizio : Utilities.formatDate(new Date(data[i][G.DATA_INIZIO]), tz, 'dd/MM/yyyy HH:mm'),
+        adesivo    : data[i][G.ADESIVO] || '',
+        nomeDriver : data[i][G.NOME_DRIVER],
+      };
+    }
+  }
+  const driver = getDriver(driverId, ss);
+  return {
+    occupato   : false,
+    nomeDriver : driver ? driver[D_NOME] : '',
+  };
+}
+
+// ============================================================
+//  AZIONI ASSENZE
+// ============================================================
+
+function assenzeInit(driverId) {
+  try {
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const driver = getDriver(driverId, ss);
+    if (!driver) return { ok: false, errore: 'Driver non trovato.' };
+
+    const sheetA = ss.getSheetByName(SHEET_ASSENZE);
+    const dataA  = sheetA.getDataRange().getValues();
+    const hdrA   = dataA[0].map(h => h.toString().trim());
+
+    const iID    = hdrA.indexOf(A_ID);
+    const iDrv   = hdrA.indexOf(A_DRIVER);
+    const iNome  = hdrA.indexOf(A_NOME);
+    const iTipo  = hdrA.indexOf(A_TIPO);
+    const iPerm  = hdrA.indexOf(A_TIPO_PERM);
+    const iDal   = hdrA.indexOf(A_DAL);
+    const iAl    = hdrA.indexOf(A_AL);
+    const iGior  = hdrA.indexOf(A_GIORNI);
+    const iStato = hdrA.indexOf(A_STATO);
+    const tz     = Session.getScriptTimeZone();
+
+    const assenze = dataA.slice(1)
+      .filter(r => r[iStato] && r[iStato].toString().trim() !== '')
+      .map(r => {
+        const dalRaw = r[iDal];
+        const alRaw  = r[iAl];
+        function fmtData(v) {
+          if (!v) return '';
+          if (v instanceof Date) return Utilities.formatDate(v, tz, 'dd/MM/yyyy');
+          return v.toString().trim();
+        }
+        return {
+          id          : r[iID]    ? r[iID].toString().trim()    : '',
+          driver      : r[iDrv]   ? r[iDrv].toString().trim()   : '',
+          nomeDriver  : r[iNome]  ? r[iNome].toString().trim()  : '',
+          tipo        : r[iTipo]  ? r[iTipo].toString().trim()  : '',
+          tipoPermesso: r[iPerm]  ? r[iPerm].toString().trim()  : '',
+          dal         : fmtData(dalRaw),
+          al          : fmtData(alRaw),
+          giorni      : r[iGior]  ? Number(r[iGior])            : 0,
+          stato       : r[iStato] ? r[iStato].toString().trim() : '',
+        };
+      })
+      .filter(a => a.dal !== '');
+
+    return {
+      ok      : true,
+      driver  : { id: driver[D_ID], nome: driver[D_NOME] },
+      assenze : assenze,
+    };
+  } catch(err) {
+    return { ok: false, errore: err.message };
+  }
+}
+
+function assenzeAdd(driverId, tipo, giro, dal, al, giorni) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const driver = getDriver(driverId, ss);
+    if (!driver) return { ok: false, errore: 'Driver non trovato.' };
+
+    if (!tipo) return { ok: false, errore: 'Tipo assenza mancante.' };
+    if (!dal || !al) return { ok: false, errore: 'Date mancanti.' };
+
+    const ora  = new Date();
+    const id   = Utilities.getUuid().substring(0, 8);
+    const tz   = Session.getScriptTimeZone();
+
+    // converte date ISO yyyy-MM-dd in oggetti Date
+    function isoToDate(s) {
+      const parts = s.split('-');
+      return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    }
+    const dalDate = isoToDate(dal);
+    const alDate  = isoToDate(al);
+
+    const sheetA = ss.getSheetByName(SHEET_ASSENZE);
+    const hdrA   = sheetA.getDataRange().getValues()[0].map(h => h.toString().trim());
+
+    // costruisce riga rispettando l'ordine delle colonne dello sheet
+    const riga = new Array(hdrA.length).fill('');
+    function set(col, val) {
+      const i = hdrA.indexOf(col);
+      if (i >= 0) riga[i] = val;
+    }
+
+    set(A_ID,        id);
+    set(A_DRIVER,    driverId);
+    set(A_NOME,      driver[D_NOME]);
+    set(A_TIPO,      tipo);
+    set(A_TIPO_PERM, giro || '');
+    set(A_GIORNO,    ora);
+    set(A_DAL,       dalDate);
+    set(A_AL,        alDate);
+    set(A_GIORNI,    giorni);
+    set(A_STATO,     'Richiesta');
+    set(A_ULT_ACC,   ora);
+
+    sheetA.appendRow(riga);
+
+    return {
+      ok    : true,
+      id    : id,
+      stato : 'Richiesta',
+      dal   : Utilities.formatDate(dalDate, tz, 'dd/MM/yyyy'),
+      al    : Utilities.formatDate(alDate,  tz, 'dd/MM/yyyy'),
+    };
+  } catch(err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ============================================================
+//  HELPER — lettura
+// ============================================================
+
+function getDriver(driverId, ss) {
+  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  const data = ss.getSheetByName(SHEET_DRIVER).getDataRange().getValues();
+  const hdr  = data[0].map(h => h.toString().trim());
+  const iID  = hdr.indexOf(D_ID);
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][iID]).trim() === String(driverId).trim()) {
+      const obj = {};
+      hdr.forEach((h, j) => obj[h] = data[i][j]);
+      return obj;
+    }
+  }
+  return null;
+}
+
+function getVeicolo(idVeicolo, ss) {
+  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  const data = ss.getSheetByName(SHEET_VEICOLO).getDataRange().getValues();
+  const hdr  = data[0].map(h => h.toString().trim());
+  const iID  = hdr.indexOf(V_ID);
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][iID]).trim() === String(idVeicolo).trim()) {
+      const obj = {};
+      hdr.forEach((h, j) => obj[h] = data[i][j]);
+      return obj;
+    }
+  }
+  return null;
+}
+
+function getGiroAperto(driverId, ss) {
+  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  const data = ss.getSheetByName(SHEET_GIRO).getDataRange().getValues();
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][G.DRIVER]).trim() === String(driverId).trim() &&
+        data[i][G.STATO_DRIVER] === 'Occupato') {
+      return {
+        targa      : data[i][G.TARGA],
+        kmInizio   : data[i][G.KM_INIZIO],
+        dataInizio : data[i][G.DATA_INIZIO],
+        adesivo    : data[i][G.ADESIVO],
+      };
+    }
+  }
+  return null;
+}
+
+// ============================================================
+//  HELPER — scrittura
+// ============================================================
+
+function aggiornaColonnaVeicolo(ss, idVeicolo, nomeColonna, valore) {
+  const sheet = ss.getSheetByName(SHEET_VEICOLO);
+  const data  = sheet.getDataRange().getValues();
+  const hdr   = data[0].map(h => h.toString().trim());
+  const iID   = hdr.indexOf(V_ID);
+  const iCol  = hdr.indexOf(nomeColonna);
+  if (iCol < 0) return;
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][iID]).trim() === String(idVeicolo).trim()) {
+      sheet.getRange(i + 1, iCol + 1).setValue(valore);
+      return;
+    }
+  }
+}
+
+function aggiornaColonnaDriver(ss, driverId, nomeColonna, valore) {
+  const sheet = ss.getSheetByName(SHEET_DRIVER);
+  const data  = sheet.getDataRange().getValues();
+  const hdr   = data[0].map(h => h.toString().trim());
+  const iID   = hdr.indexOf(D_ID);
+  const iCol  = hdr.indexOf(nomeColonna);
+  if (iCol < 0) return;
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][iID]).trim() === String(driverId).trim()) {
+      sheet.getRange(i + 1, iCol + 1).setValue(valore);
+      return;
+    }
+  }
+}
+
+// ============================================================
+//  PAGE BUILDERS (usati dal flusso HTML diretto)
+// ============================================================
+
+function buildPageApri(driver) {
+  const tmpl = HtmlService.createTemplateFromFile('ApriGiro');
+  tmpl.driverId   = driver[D_ID];
+  tmpl.nomeDriver = driver[D_NOME];
+  return tmpl.evaluate()
+    .setTitle('Apri Giro')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+function buildPageChiudi(driver, giro) {
+  const tz   = Session.getScriptTimeZone();
+  const tmpl = HtmlService.createTemplateFromFile('ChiudiGiro');
+  tmpl.driverId   = driver[D_ID];
+  tmpl.nomeDriver = driver[D_NOME];
+  tmpl.targa      = giro.targa;
+  tmpl.adesivo    = giro.adesivo || '';
+  tmpl.kmInizio   = giro.kmInizio || 0;
+  tmpl.dataInizio = giro.dataInizio
+    ? Utilities.formatDate(new Date(giro.dataInizio), tz, 'dd/MM/yyyy HH:mm')
+    : '';
+  return tmpl.evaluate()
+    .setTitle('Chiudi Giro')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+function paginaErrore(msg) {
+  return HtmlService.createHtmlOutput(
+    `<!DOCTYPE html><html><head><meta charset="utf-8">
+     <meta name="viewport" content="width=device-width,initial-scale=1">
+     <style>body{font-family:sans-serif;padding:2rem;text-align:center;background:#fff0f0}
+     h2{color:#c62828}p{color:#555;margin-top:.5rem}</style></head>
+     <body><h2>⚠️ Errore</h2><p>${msg}</p></body></html>`
+  );
+}
