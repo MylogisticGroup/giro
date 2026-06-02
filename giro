@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>Giro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink:    #0a0f1e;
+      --muted:  #6b7280;
+      --line:   #e5e7eb;
+      --bg:     #f3f4f6;
+      --card:   #ffffff;
+      --blue:   #2563eb;
+      --blue2:  #1d4ed8;
+      --green:  #16a34a;
+      --green2: #15803d;
+      --orange: #ea580c;
+      --red:    #dc2626;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Sora', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100dvh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 0 0 48px;
+    }
+    .wrap { width: 100%; max-width: 480px; }
+
+    /* ── Header ── */
+    .header {
+      background: #1e2a3a;
+      border-radius: 0 0 28px 28px;
+      padding: 34px 28px 36px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .brand {
+      font-size: .67rem; font-weight: 600;
+      letter-spacing: .2em; text-transform: uppercase;
+      color: rgba(255,255,255,.4); margin-bottom: 14px;
+    }
+    .driver-cognome {
+      font-size: 1.75rem; font-weight: 700;
+      color: #fff; letter-spacing: .05em;
+      line-height: 1.1; margin-bottom: 4px;
+    }
+    .driver-nome {
+      font-size: 1.05rem; font-weight: 300;
+      color: rgba(255,255,255,.5);
+      letter-spacing: .06em; margin-bottom: 16px;
+    }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(37,99,235,.2);
+      border: 1px solid rgba(37,99,235,.4);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: .68rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase; color: #93c5fd;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      margin: 0 14px;
+    }
+    .card-body { padding: 24px 24px 26px; }
+
+    /* ── Field ── */
+    .field { margin-bottom: 16px; }
+    .field:last-child { margin-bottom: 0; }
+    .field-label {
+      font-size: .75rem; font-weight: 700;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: .12em; margin-bottom: 10px;
+      display: block; text-align: center;
+    }
+
+    select, input[type=number] {
+      width: 100%; padding: 15px 18px;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      font-family: 'Sora', sans-serif;
+      font-size: .95rem; color: var(--ink);
+      background: var(--bg);
+      appearance: none; -webkit-appearance: none;
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+    }
+    select:focus, input[type=number]:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 4px rgba(37,99,235,.1);
+      background: #fff;
+    }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: '▾';
+      position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+      color: var(--blue); pointer-events: none; font-size: .85rem;
+    }
+    select.accented {
+      border-color: var(--blue); color: var(--blue);
+      background: #eff6ff; font-weight: 600;
+      box-shadow: 0 0 0 4px rgba(37,99,235,.08);
+    }
+
+    /* ── Chip veicolo ── */
+    .vei-chip {
+      display: none;
+      background: #f8fafc; border: 1px solid var(--line);
+      border-radius: 9px; padding: 10px 12px;
+      font-size: .8rem; color: #374151; line-height: 1.9; margin-top: 8px;
+    }
+    .vei-chip .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .78rem; color: var(--blue);
+    }
+
+    /* ── Riepilogo chiudi ── */
+    .riepilogo {
+      background: #f8fafc; border: 1px solid var(--line);
+      border-radius: 10px; padding: 12px 14px;
+      font-size: .83rem; color: #374151;
+      line-height: 2; margin-bottom: 16px;
+    }
+    .riepilogo strong { color: var(--ink); }
+    .riepilogo .mono { font-family: 'JetBrains Mono', monospace; font-size: .78rem; }
+
+    /* ── Button ── */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; padding: 15px 14px;
+      border: none; border-radius: 12px;
+      font-family: 'Sora', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      cursor: pointer;
+      transition: transform .12s, opacity .15s, background .15s;
+      letter-spacing: .02em;
+    }
+    .btn:active  { transform: scale(.96); }
+    .btn:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-green  { background: var(--green); color: #fff; box-shadow: 0 4px 14px rgba(22,163,74,.35); }
+    .btn-green:hover:not(:disabled)  { background: var(--green2); }
+    .btn-orange { background: var(--orange); color: #fff; }
+    .btn-orange:hover:not(:disabled) { background: #c2410c; }
+
+    /* ── Pill dot ── */
+    .pill-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .pill-dot-blue   { background: #93c5fd; animation: blink 2s infinite; }
+    .pill-dot-orange { background: var(--orange); animation: blink 2s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+
+    /* ── Orange pill (chiudi) ── */
+    .pill-orange {
+      display: inline-flex; align-items: center; gap: 7px;
+      background: #fff7ed; color: var(--orange);
+      border-radius: 20px; padding: 5px 14px;
+      font-size: .68rem; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+    }
+    .card-top { padding: 18px 24px 0; }
+
+    /* ── Skeleton ── */
+    .skeleton {
+      height: 52px; border-radius: 12px;
+      background: linear-gradient(90deg,#e5e7eb 25%,#f3f4f6 50%,#e5e7eb 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.3s infinite;
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    /* ── Successo ── */
+    .state-ok {
+      display: none;
+      padding: 36px 24px;
+      text-align: center;
+    }
+    .ok-icon { font-size: 3rem; margin-bottom: 14px; }
+    .ok-title { font-size: 1.2rem; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+    .ok-body  { font-size: .88rem; color: var(--muted); line-height: 1.8; margin-bottom: 18px; }
+    .ok-countdown {
+      font-size: .75rem; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .ok-bar-wrap {
+      width: 100%; height: 3px; background: var(--line);
+      border-radius: 2px; margin-top: 16px; overflow: hidden;
+    }
+    .ok-bar {
+      height: 100%; width: 100%;
+      background: var(--green);
+      border-radius: 2px;
+      transform-origin: left;
+      animation: shrink 3s linear forwards;
+    }
+    @keyframes shrink { from{transform:scaleX(1)} to{transform:scaleX(0)} }
+
+    /* ── Errore ── */
+    .state-err {
+      display: none;
+      padding: 36px 24px;
+      text-align: center;
+    }
+    .err-icon  { font-size: 2.6rem; margin-bottom: 12px; }
+    .err-title { font-size: 1.05rem; font-weight: 700; color: var(--red); margin-bottom: 6px; }
+    .err-body  { font-size: .85rem; color: var(--muted); line-height: 1.6; margin-bottom: 16px; }
+    .btn-ghost {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 10px 24px;
+      background: transparent; color: var(--blue);
+      border: 1.5px solid var(--blue); border-radius: 10px;
+      font-family: 'Sora', sans-serif; font-size: .9rem; font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-ghost:hover { background: #eff6ff; }
+
+    /* ── Spinner ── */
+    .spin-wrap { display: none; padding: 36px 20px; text-align: center; }
+    .spinner {
+      width: 30px; height: 30px;
+      border: 3px solid var(--line); border-top-color: var(--blue);
+      border-radius: 50%; animation: spin .75s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin-label { font-size: .82rem; color: var(--muted); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="header" id="mainHeader">
+    <div class="brand">My Logistic Group</div>
+    <div class="driver-cognome" id="driverCognome">Caricamento…</div>
+    <div class="driver-nome"    id="driverNome"></div>
+    <div class="status-pill" id="headerPill" style="display:none">
+      <span class="pill-dot pill-dot-blue" id="headerDot"></span>
+      <span id="headerPillLabel">Nuovo Giro</span>
+    </div>
+  </div>
+
+  <!-- Card -->
+  <div class="card">
+
+    <!-- Init loading -->
+    <div class="spin-wrap" id="stateInit" style="display:block">
+      <div class="spinner"></div>
+      <div class="spin-label">Verifica in corso…</div>
+    </div>
+
+    <!-- ── APRI GIRO ── -->
+    <div id="screenApri" style="display:none">
+      <div class="card-body">
+        <div class="field">
+          <label class="field-label">Veicolo</label>
+          <div class="skeleton" id="skelVeicolo"></div>
+          <div class="select-wrap" style="display:none" id="wrapSel">
+            <select id="selVeicolo" class="accented" onchange="onVeicoloChange()">
+              <option value="">— Seleziona veicolo —</option>
+            </select>
+          </div>
+          <div class="vei-chip" id="veiChip"></div>
+        </div>
+        <div class="field" id="fieldKm" style="display:none">
+          <label class="field-label">Km attuali del veicolo</label>
+          <input type="number" id="kmInizio" placeholder="es. 125430" min="0" inputmode="numeric">
+        </div>
+        <button class="btn btn-green" id="btnApri" onclick="submitApri()" disabled>
+          ✓ &nbsp;Apri Giro
+        </button>
+      </div>
+    </div>
+
+    <!-- ── CHIUDI GIRO ── -->
+    <div id="screenChiudi" style="display:none">
+      <div class="card-top">
+        <div class="pill-orange">
+          <span class="pill-dot pill-dot-orange"></span>Chiudi Giro
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="riepilogo" id="riepilogo"></div>
+        <div class="field">
+          <label class="field-label">Km attuali del veicolo</label>
+          <input type="number" id="kmFine" placeholder="es. 125850" inputmode="numeric">
+        </div>
+        <button class="btn btn-orange" id="btnChiudi" onclick="submitChiudi()">
+          ⬛ &nbsp;Chiudi Giro
+        </button>
+      </div>
+    </div>
+
+    <!-- Spinner operazione -->
+    <div class="spin-wrap" id="spinnerOp">
+      <div class="spinner"></div>
+      <div class="spin-label" id="spinnerLabel">Operazione in corso…</div>
+    </div>
+
+    <!-- Successo -->
+    <div class="state-ok" id="stateOk">
+      <div class="ok-icon">✅</div>
+      <div class="ok-title" id="okTitle"></div>
+      <div class="ok-body"  id="okBody"></div>
+      <div class="ok-countdown" id="okCountdown"></div>
+      <div class="ok-bar-wrap"><div class="ok-bar" id="okBar"></div></div>
+    </div>
+
+    <!-- Errore -->
+    <div class="state-err" id="stateErr">
+      <div class="err-icon">⚠️</div>
+      <div class="err-title">Errore</div>
+      <div class="err-body" id="errMsg"></div>
+      <button class="btn-ghost" onclick="location.reload()">↩ Riprova</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API    = 'https://script.google.com/macros/s/AKfycbzLFTM6e_UDSsYJRFdZ6JdiStAaJodFCxV_7Idil8cFGwRgtSvWxSfCnfcPKj-TNUPz/exec';
+// URL della pagina scanner a cui tornare dopo il successo
+const SCANNER_URL = 'https://mylogisticgroup.github.io/giro/';
+
+const params      = new URLSearchParams(location.search);
+const DRIVER      = (params.get('driver') || '').trim();
+let   kmInizioVal = 0;
+
+/* ── Split cognome / nome ── */
+function splitNome(full) {
+  const parts = (full || '').trim().split(/\s+/);
+  const upper = parts.filter(p => p === p.toUpperCase() && p.length > 1);
+  if (upper.length) {
+    return { cognome: upper.join(' '), nome: parts.filter(p => !upper.includes(p)).join(' ') };
+  }
+  return { cognome: parts[0] || full, nome: parts.slice(1).join(' ') };
+}
+function setDriverHeader(fullName) {
+  const { cognome, nome } = splitNome(fullName);
+  document.getElementById('driverCognome').textContent = cognome || fullName;
+  document.getElementById('driverNome').textContent    = nome || '';
+}
+
+/* ── JSONP ── */
+function apiCall(qs) {
+  return new Promise((resolve, reject) => {
+    const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
+    const tag   = document.createElement('script');
+    const timer = setTimeout(() => { delete window[cb]; tag.remove(); reject(new Error('Timeout')); }, 18000);
+    window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
+    tag.src = API + '?' + qs + '&callback=' + cb;
+    document.head.appendChild(tag);
+  });
+}
+
+/* ── Schermate ── */
+const SCREENS = ['stateInit','screenApri','screenChiudi','spinnerOp','stateOk','stateErr'];
+function show(id) {
+  SCREENS.forEach(s => { document.getElementById(s).style.display = (s === id) ? 'block' : 'none'; });
+}
+function showErr(msg) {
+  document.getElementById('errMsg').textContent = msg;
+  show('stateErr');
+}
+
+/* ── Successo con countdown e poi redirect allo scanner ── */
+function showSuccess(title, bodyHtml) {
+  document.getElementById('okTitle').textContent = title;
+  document.getElementById('okBody').innerHTML    = bodyHtml;
+
+  // Nascondi header con nominativo
+  document.getElementById('mainHeader').style.display = 'none';
+
+  show('stateOk');
+
+  // Barra animata (3s) + countdown testuale
+  const bar       = document.getElementById('okBar');
+  const countdown = document.getElementById('okCountdown');
+  let   secs      = 3;
+
+  // Reset animazione
+  bar.style.animation = 'none';
+  bar.offsetHeight;                          // reflow
+  bar.style.animation = 'shrink 3s linear forwards';
+
+  countdown.textContent = 'Ritorno allo scanner tra ' + secs + 's…';
+  const iv = setInterval(() => {
+    secs--;
+    if (secs <= 0) {
+      clearInterval(iv);
+      window.location.href = SCANNER_URL;
+    } else {
+      countdown.textContent = 'Ritorno allo scanner tra ' + secs + 's…';
+    }
+  }, 1000);
+}
+
+/* ── INIT ── */
+window.onload = async () => {
+  if (!DRIVER) { window.location.replace(SCANNER_URL); return; }
+
+  let data;
+  try {
+    data = await apiCall('action=init&driver=' + encodeURIComponent(DRIVER));
+  } catch(e) {
+    showErr('Impossibile connettersi. Controlla la connessione e riprova.'); return;
+  }
+
+  setDriverHeader(data.nomeDriver || DRIVER);
+
+  if (data.occupato) {
+    mostraChiudi(data);
+  } else {
+    mostraApri(data.veicoli || []);
+  }
+};
+
+/* ── APRI ── */
+function mostraApri(veicoli) {
+  document.getElementById('headerPillLabel').textContent = 'Nuovo Giro';
+  document.getElementById('headerPill').style.display    = 'inline-flex';
+  show('screenApri');
+
+  document.getElementById('skelVeicolo').style.display = 'none';
+  document.getElementById('wrapSel').style.display     = 'block';
+
+  const sel = document.getElementById('selVeicolo');
+  if (!veicoli.length) { sel.innerHTML = '<option value="">Nessun veicolo disponibile</option>'; return; }
+
+  veicoli.forEach(v => {
+    const o = document.createElement('option');
+    o.value           = v.id;
+    o.dataset.marca   = v.marca   || '';
+    o.dataset.modello = v.modello || '';
+    o.dataset.km      = v.kmFine  !== '' ? v.kmFine : '';
+    o.textContent     = v.targa + (v.marca ? ' — ' + v.marca + ' ' + v.modello : '');
+    sel.appendChild(o);
+  });
+  document.getElementById('btnApri').disabled = false;
+}
+
+function onVeicoloChange() {
+  const sel   = document.getElementById('selVeicolo');
+  const opt   = sel.options[sel.selectedIndex];
+  const chip  = document.getElementById('veiChip');
+  const fkm   = document.getElementById('fieldKm');
+  const kminp = document.getElementById('kmInizio');
+
+  if (!opt.value) {
+    sel.classList.add('accented');
+    chip.style.display = 'none';
+    fkm.style.display  = 'none';
+    kminp.value = '';
+    return;
+  }
+  sel.classList.remove('accented');
+  const km = opt.dataset.km;
+  chip.innerHTML =
+    (opt.dataset.marca ? '🚗 <span class="mono">' + opt.dataset.marca + ' ' + opt.dataset.modello + '</span><br>' : '') +
+    '📏 Km ultimo giro: <span class="mono">' + (km ? Number(km).toLocaleString('it-IT') + ' km' : 'non disponibile') + '</span>';
+  chip.style.display = 'block';
+  kminp.value       = km || '';
+  fkm.style.display = 'block';
+}
+
+async function submitApri() {
+  const targa = document.getElementById('selVeicolo').value;
+  const km    = document.getElementById('kmInizio').value;
+  if (!targa) { shakeInput('selVeicolo'); return; }
+
+  show('spinnerOp');
+  document.getElementById('spinnerLabel').textContent = 'Apertura giro…';
+
+  let res;
+  try {
+    res = await apiCall(
+      'action=apri&driver=' + encodeURIComponent(DRIVER) +
+      '&targa=' + encodeURIComponent(targa) +
+      '&km='    + encodeURIComponent(km || 0)
+    );
+  } catch(e) { showErr('Timeout. Riprova tra qualche secondo.'); return; }
+
+  if (res.ok) {
+    showSuccess('Giro aperto!',
+      '🚗 Veicolo: <strong>' + targa + '</strong><br>' +
+      '📏 Km: <strong>' + Number(km || 0).toLocaleString('it-IT') + '</strong>'
+    );
+  } else {
+    showErr(res.errore || 'Errore sconosciuto.');
+  }
+}
+
+/* ── CHIUDI ── */
+function mostraChiudi(stato) {
+  kmInizioVal = Number(stato.kmInizio) || 0;
+
+  const pill = document.getElementById('headerPill');
+  document.getElementById('headerPillLabel').textContent = 'Giro in corso';
+  pill.style.display     = 'inline-flex';
+  pill.style.background  = 'rgba(234,88,12,.2)';
+  pill.style.borderColor = 'rgba(234,88,12,.4)';
+  pill.style.color       = '#fb923c';
+  pill.querySelector('.pill-dot').style.background = '#fb923c';
+
+  document.getElementById('riepilogo').innerHTML =
+    '🚗 <strong>Veicolo:</strong> ' + stato.targa + '<br>' +
+    '🕐 <strong>Inizio:</strong> ' + stato.dataInizio + '<br>' +
+    '📏 <strong>Km partenza:</strong> <span class="mono">' + kmInizioVal.toLocaleString('it-IT') + '</span>';
+
+  document.getElementById('kmFine').min = kmInizioVal;
+  show('screenChiudi');
+}
+
+async function submitChiudi() {
+  const km = Number(document.getElementById('kmFine').value);
+  if (!km || km <= 0) { shakeInput('kmFine'); return; }
+  if (km < kmInizioVal) { shakeInput('kmFine'); return; }
+
+  show('spinnerOp');
+  document.getElementById('spinnerLabel').textContent = 'Chiusura giro…';
+
+  let res;
+  try {
+    res = await apiCall(
+      'action=chiudi&driver=' + encodeURIComponent(DRIVER) +
+      '&km=' + encodeURIComponent(km)
+    );
+  } catch(e) { showErr('Timeout. Riprova tra qualche secondo.'); return; }
+
+  if (res.ok) {
+    showSuccess('Giro chiuso!',
+      '🚗 Veicolo: <strong>' + res.targa + '</strong><br>' +
+      '📏 Distanza: <strong>' + Number(res.distanza).toLocaleString('it-IT') + ' km</strong>'
+    );
+  } else {
+    showErr(res.errore || 'Errore sconosciuto.');
+  }
+}
+
+/* ── Shake errore input ── */
+function shakeInput(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = 'var(--red)';
+  el.style.boxShadow   = '0 0 0 4px rgba(220,38,38,.15)';
+  el.focus();
+  setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1600);
+}
+</script>
+</body>
+</html>
