@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="utf-8">
@@ -17,6 +17,7 @@
       --muted:  #6b7280;
       --green:  #4ade80;
       --red:    #f87171;
+      --blue:   #60a5fa;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -31,7 +32,6 @@
       align-items: center;
       justify-content: center;
       padding: 24px;
-      overflow: hidden;
     }
 
     body::before {
@@ -50,7 +50,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 28px;
+      gap: 20px;
       position: relative;
       z-index: 1;
     }
@@ -174,6 +174,74 @@
     .feedback.ok  { background: rgba(74,222,128,.1);  color: var(--green); border: 1px solid rgba(74,222,128,.2); }
     .feedback.err { background: rgba(248,113,113,.1); color: var(--red);   border: 1px solid rgba(248,113,113,.2); }
 
+    /* ── Divisore modalità ── */
+    .mode-divider {
+      width: 100%;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .mode-divider::before,
+    .mode-divider::after {
+      content: ''; flex: 1;
+      height: 1px; background: var(--line);
+    }
+    .mode-divider span {
+      font-size: .65rem; font-weight: 700;
+      letter-spacing: .14em; text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    /* ── Bottone assenze ── */
+    .assenze-box {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      cursor: pointer;
+      transition: border-color .2s, background .2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .assenze-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--blue), transparent);
+      opacity: .5;
+    }
+    .assenze-box:hover {
+      border-color: var(--blue);
+      background: rgba(96,165,250,.04);
+    }
+    .assenze-icon {
+      width: 48px; height: 48px;
+      background: rgba(96,165,250,.1);
+      border: 1px solid rgba(96,165,250,.2);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; flex-shrink: 0;
+    }
+    .assenze-info { flex: 1; }
+    .assenze-title {
+      font-size: .95rem; font-weight: 700;
+      color: var(--text); margin-bottom: 3px;
+    }
+    .assenze-sub {
+      font-size: .75rem; color: var(--muted);
+      font-family: 'DM Mono', monospace;
+    }
+    .assenze-arrow {
+      color: var(--blue); font-size: 1.2rem; opacity: .7;
+    }
+
+    /* ── Buffer assenze ── */
+    .buffer-wrap-blue.active { border-color: var(--blue); }
+    .buffer-wrap-blue.active .buffer-dot { background: var(--blue); }
+
     /* ── Footer info ── */
     .last-scan { font-size: .75rem; color: var(--dim); font-family: 'DM Mono', monospace; text-align: center; min-height: 18px; }
     .clock     { font-size: .8rem;  color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: .06em; }
@@ -185,12 +253,30 @@
       cursor: pointer; transition: border-color .15s, color .15s;
     }
     .refocus-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Modalità ── */
+    .mode-pills {
+      display: flex; gap: 6px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--line);
+      border-radius: 12px; padding: 4px;
+    }
+    .mode-pill {
+      padding: 6px 16px; border-radius: 8px;
+      font-size: .7rem; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      cursor: pointer; transition: all .15s; border: none;
+      color: var(--muted); background: transparent;
+      font-family: 'Syne', sans-serif;
+    }
+    .mode-pill.active-giro    { background: var(--accent);  color: #0a0f1a; }
+    .mode-pill.active-assenze { background: var(--blue);    color: #0a0f1a; }
   </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- Link apertura rapida scanner (utile da bookmark) -->
+  <!-- Link reload -->
   <a class="scanner-link" href="https://mylogisticgroup.github.io/giro/" onclick="refocus(); return false;">
     ⟳ &nbsp;Riapri Scanner
   </a>
@@ -201,138 +287,208 @@
     <div class="title">Scanner <span>Giro</span></div>
   </div>
 
-  <!-- Box scanner -->
-  <div class="scanner-box" onclick="refocus()">
+  <!-- Selettore modalità -->
+  <div class="mode-pills">
+    <button class="mode-pill active-giro" id="pillGiro" onclick="setMode('giro')">🚚 Giro</button>
+    <button class="mode-pill" id="pillAssenze" onclick="setMode('assenze')">📅 Assenze</button>
+  </div>
 
-    <div class="scan-icon">
-      <svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="8"  y="8"  width="28" height="28" rx="4" stroke="#facc15" stroke-width="3" fill="none"/>
-        <rect x="16" y="16" width="12" height="12" rx="2" fill="#facc15" opacity=".6"/>
-        <rect x="60" y="8"  width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
-        <rect x="68" y="16" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
-        <rect x="8"  y="60" width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
-        <rect x="16" y="68" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
-        <rect x="44" y="44" width="8"  height="8"  rx="1" fill="#facc15" opacity=".5"/>
-        <rect x="56" y="44" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
-        <rect x="68" y="56" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
-        <rect x="44" y="56" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
-        <rect x="56" y="68" width="8"  height="8"  rx="1" fill="#facc15" opacity=".5"/>
-        <rect x="68" y="44" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
-        <rect x="44" y="68" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
-        <rect x="56" y="56" width="8"  height="8"  rx="1" fill="#facc15" opacity=".7"/>
-        <rect x="68" y="68" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
-      </svg>
-      <div class="scan-line"></div>
+  <!-- ── MODALITÀ GIRO ── -->
+  <div id="modeGiro" style="width:100%">
+    <div class="scanner-box" onclick="refocus()">
+      <div class="scan-icon">
+        <svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8"  y="8"  width="28" height="28" rx="4" stroke="#facc15" stroke-width="3" fill="none"/>
+          <rect x="16" y="16" width="12" height="12" rx="2" fill="#facc15" opacity=".6"/>
+          <rect x="60" y="8"  width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
+          <rect x="68" y="16" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
+          <rect x="8"  y="60" width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
+          <rect x="16" y="68" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
+          <rect x="44" y="44" width="8"  height="8"  rx="1" fill="#facc15" opacity=".5"/>
+          <rect x="56" y="44" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+          <rect x="68" y="56" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+          <rect x="44" y="56" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+          <rect x="56" y="68" width="8"  height="8"  rx="1" fill="#facc15" opacity=".5"/>
+          <rect x="68" y="44" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+          <rect x="44" y="68" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+          <rect x="56" y="56" width="8"  height="8"  rx="1" fill="#facc15" opacity=".7"/>
+          <rect x="68" y="68" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+        </svg>
+        <div class="scan-line"></div>
+      </div>
+      <div class="instruction">
+        <div class="instruction-main">Scannerizza il QR Code del driver</div>
+        <div class="instruction-sub">apertura e chiusura automatica del giro</div>
+      </div>
+      <div class="buffer-wrap" id="bufferWrapGiro">
+        <span class="buffer-dot"></span>
+        <span class="buffer-text empty" id="bufferTextGiro">In attesa scansione…</span>
+      </div>
+      <div class="feedback" id="feedbackGiro"></div>
+      <input class="hidden-input" id="scanInputGiro" type="text"
+        autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
+  </div>
 
-    <div class="instruction">
-      <div class="instruction-main">Scannerizza il QR Code del driver</div>
-      <div class="instruction-sub">apertura e chiusura automatica del giro</div>
+  <!-- ── MODALITÀ ASSENZE ── -->
+  <div id="modeAssenze" style="width:100%;display:none">
+    <div class="scanner-box" style="border-color:rgba(96,165,250,.2)" onclick="refocusAssenze()">
+      <div class="scan-icon">
+        <svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8"  y="8"  width="28" height="28" rx="4" stroke="#60a5fa" stroke-width="3" fill="none"/>
+          <rect x="16" y="16" width="12" height="12" rx="2" fill="#60a5fa" opacity=".6"/>
+          <rect x="60" y="8"  width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
+          <rect x="68" y="16" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
+          <rect x="8"  y="60" width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
+          <rect x="16" y="68" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
+          <rect x="44" y="44" width="8"  height="8"  rx="1" fill="#60a5fa" opacity=".5"/>
+          <rect x="56" y="44" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+          <rect x="68" y="56" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+          <rect x="44" y="56" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+          <rect x="56" y="68" width="8"  height="8"  rx="1" fill="#60a5fa" opacity=".5"/>
+          <rect x="68" y="44" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+          <rect x="44" y="68" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+          <rect x="56" y="56" width="8"  height="8"  rx="1" fill="#60a5fa" opacity=".7"/>
+          <rect x="68" y="68" width="8"  height="8"  rx="1" fill="#4b5563" opacity=".3"/>
+        </svg>
+        <div class="scan-line" style="background:var(--blue);box-shadow:0 0 8px var(--blue),0 0 20px var(--blue)"></div>
+      </div>
+      <div class="instruction">
+        <div class="instruction-main">Scannerizza il QR Code del driver</div>
+        <div class="instruction-sub">accesso al calendario ferie e permessi</div>
+      </div>
+      <div class="buffer-wrap buffer-wrap-blue" id="bufferWrapAssenze">
+        <span class="buffer-dot"></span>
+        <span class="buffer-text empty" id="bufferTextAssenze">In attesa scansione…</span>
+      </div>
+      <div class="feedback" id="feedbackAssenze"></div>
+      <input class="hidden-input" id="scanInputAssenze" type="text"
+        autocomplete="off" autocorrect="off" spellcheck="false">
     </div>
-
-    <div class="buffer-wrap" id="bufferWrap">
-      <span class="buffer-dot"></span>
-      <span class="buffer-text empty" id="bufferText">In attesa scansione…</span>
-    </div>
-
-    <div class="feedback" id="feedback"></div>
-
-    <input class="hidden-input" id="scanInput" type="text"
-      autocomplete="off" autocorrect="off" spellcheck="false">
-
   </div>
 
   <div class="last-scan" id="lastScan">Nessuna scansione ancora</div>
   <div class="clock" id="clock"></div>
-  <button class="refocus-btn" onclick="refocus()">↺ Riattiva scanner</button>
+  <button class="refocus-btn" onclick="refocusAttivo()">↺ Riattiva scanner</button>
 
 </div>
 
 <script>
-// ── Config ────────────────────────────────────────────────────
-const BASE_URL    = 'https://mylogisticgroup.github.io/giro/giro.html';
+const BASE_GIRO    = 'https://mylogisticgroup.github.io/giro/giro.html';
+const BASE_ASSENZE = 'https://mylogisticgroup.github.io/giro/assenze.html';
 const SCAN_TIMEOUT = 300;
 
-// ── Elementi ──────────────────────────────────────────────────
-const input      = document.getElementById('scanInput');
-const bufferWrap = document.getElementById('bufferWrap');
-const bufferText = document.getElementById('bufferText');
-const feedback   = document.getElementById('feedback');
-const lastScan   = document.getElementById('lastScan');
+let modoAttivo = 'giro';
 
-let buffer = '';
-let timer  = null;
+// ── Modalità ─────────────────────────────────────────────────
+function setMode(modo) {
+  modoAttivo = modo;
+  document.getElementById('modeGiro').style.display    = modo === 'giro'    ? 'block' : 'none';
+  document.getElementById('modeAssenze').style.display = modo === 'assenze' ? 'block' : 'none';
+  document.getElementById('pillGiro').className    = 'mode-pill' + (modo === 'giro'    ? ' active-giro'    : '');
+  document.getElementById('pillAssenze').className = 'mode-pill' + (modo === 'assenze' ? ' active-assenze' : '');
+  resetGiro(); resetAssenze();
+  setTimeout(refocusAttivo, 100);
+}
 
-// ── Focus permanente ──────────────────────────────────────────
-function refocus() { input.focus(); }
-input.addEventListener('blur', () => setTimeout(refocus, 100));
-document.addEventListener('click', refocus);
-document.addEventListener('keydown', refocus);
-window.addEventListener('load', refocus);
+// ── Focus ────────────────────────────────────────────────────
+function refocus()        { document.getElementById('scanInputGiro').focus(); }
+function refocusAssenze() { document.getElementById('scanInputAssenze').focus(); }
+function refocusAttivo()  { modoAttivo === 'giro' ? refocus() : refocusAssenze(); }
 
-// ── Lettura scanner ───────────────────────────────────────────
-input.addEventListener('input', () => {
-  buffer = input.value.trim();
-  if (buffer) {
-    bufferText.textContent = buffer;
-    bufferText.classList.remove('empty');
-    bufferWrap.classList.add('active');
+document.getElementById('scanInputGiro').addEventListener('blur',    () => { if (modoAttivo === 'giro')    setTimeout(refocus, 100); });
+document.getElementById('scanInputAssenze').addEventListener('blur', () => { if (modoAttivo === 'assenze') setTimeout(refocusAssenze, 100); });
+document.addEventListener('click',   refocusAttivo);
+document.addEventListener('keydown', refocusAttivo);
+window.addEventListener('load', () => { setTimeout(refocusAttivo, 200); });
+
+// ── Scanner GIRO ─────────────────────────────────────────────
+let bufferGiro = '', timerGiro = null;
+
+document.getElementById('scanInputGiro').addEventListener('input', () => {
+  bufferGiro = document.getElementById('scanInputGiro').value.trim();
+  if (bufferGiro) {
+    document.getElementById('bufferTextGiro').textContent = bufferGiro;
+    document.getElementById('bufferTextGiro').classList.remove('empty');
+    document.getElementById('bufferWrapGiro').classList.add('active');
   }
-  clearTimeout(timer);
-  timer = setTimeout(() => elabora(buffer), SCAN_TIMEOUT);
+  clearTimeout(timerGiro);
+  timerGiro = setTimeout(() => elaboraGiro(bufferGiro), SCAN_TIMEOUT);
+});
+document.getElementById('scanInputGiro').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { clearTimeout(timerGiro); elaboraGiro(document.getElementById('scanInputGiro').value.trim()); }
 });
 
-input.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    clearTimeout(timer);
-    const val = input.value.trim();
-    if (val) elabora(val);
-  }
-});
-
-// ── Elaborazione codice ───────────────────────────────────────
-function elabora(codice) {
+function elaboraGiro(codice) {
   if (!codice) return;
+  let driverId = estraiDriver(codice);
+  if (!driverId) { mostraFeedback('feedbackGiro', 'QR Code non riconosciuto.', false); resetGiro(); return; }
+  const ora = new Date().toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('lastScan').textContent = 'Ultima scansione: Driver ' + driverId + ' — ' + ora;
+  mostraFeedback('feedbackGiro', '✓ Driver ' + driverId + ' — apertura giro…', true);
+  setTimeout(() => { window.location.href = BASE_GIRO + '?driver=' + encodeURIComponent(driverId); }, 600);
+}
 
-  let driverId = codice;
+// ── Scanner ASSENZE ──────────────────────────────────────────
+let bufferAssenze = '', timerAssenze = null;
+
+document.getElementById('scanInputAssenze').addEventListener('input', () => {
+  bufferAssenze = document.getElementById('scanInputAssenze').value.trim();
+  if (bufferAssenze) {
+    document.getElementById('bufferTextAssenze').textContent = bufferAssenze;
+    document.getElementById('bufferTextAssenze').classList.remove('empty');
+    document.getElementById('bufferWrapAssenze').classList.add('active');
+  }
+  clearTimeout(timerAssenze);
+  timerAssenze = setTimeout(() => elaboraAssenze(bufferAssenze), SCAN_TIMEOUT);
+});
+document.getElementById('scanInputAssenze').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { clearTimeout(timerAssenze); elaboraAssenze(document.getElementById('scanInputAssenze').value.trim()); }
+});
+
+function elaboraAssenze(codice) {
+  if (!codice) return;
+  let driverId = estraiDriver(codice);
+  if (!driverId) { mostraFeedback('feedbackAssenze', 'QR Code non riconosciuto.', false); resetAssenze(); return; }
+  const ora = new Date().toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('lastScan').textContent = 'Ultima scansione: Driver ' + driverId + ' — ' + ora;
+  mostraFeedback('feedbackAssenze', '📅 Driver ' + driverId + ' — apertura assenze…', true);
+  setTimeout(() => { window.location.href = BASE_ASSENZE + '?driver=' + encodeURIComponent(driverId); }, 600);
+}
+
+// ── Utils ────────────────────────────────────────────────────
+function estraiDriver(codice) {
   try {
     const url = new URL(codice);
     const d   = url.searchParams.get('driver');
-    if (d) driverId = d.trim();
-  } catch(e) {
-    driverId = codice.trim();
-  }
-
-  if (!driverId) {
-    mostraFeedback('QR Code non riconosciuto.', false);
-    reset();
-    return;
-  }
-
-  const ora = new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  lastScan.textContent = 'Ultima scansione: Driver ' + driverId + ' — ' + ora;
-  mostraFeedback('✓ Driver ' + driverId + ' — apertura pagina…', true);
-
-  setTimeout(() => {
-    window.location.href = BASE_URL + '?driver=' + encodeURIComponent(driverId);
-  }, 600);
+    if (d) return d.trim();
+  } catch(e) {}
+  return codice.trim() || null;
 }
 
-// ── Feedback ─────────────────────────────────────────────────
-function mostraFeedback(msg, ok) {
-  feedback.textContent   = msg;
-  feedback.className     = 'feedback ' + (ok ? 'ok' : 'err');
-  feedback.style.display = 'block';
-  if (!ok) setTimeout(() => { feedback.style.display = 'none'; reset(); }, 2500);
+function mostraFeedback(id, msg, ok) {
+  const el = document.getElementById(id);
+  el.textContent   = msg;
+  el.className     = 'feedback ' + (ok ? 'ok' : 'err');
+  el.style.display = 'block';
+  if (!ok) setTimeout(() => { el.style.display = 'none'; }, 2500);
 }
 
-function reset() {
-  buffer = '';
-  input.value = '';
-  bufferText.textContent = 'In attesa scansione…';
-  bufferText.classList.add('empty');
-  bufferWrap.classList.remove('active');
-  setTimeout(refocus, 50);
+function resetGiro() {
+  bufferGiro = '';
+  document.getElementById('scanInputGiro').value = '';
+  document.getElementById('bufferTextGiro').textContent = 'In attesa scansione…';
+  document.getElementById('bufferTextGiro').classList.add('empty');
+  document.getElementById('bufferWrapGiro').classList.remove('active');
+  document.getElementById('feedbackGiro').style.display = 'none';
+}
+function resetAssenze() {
+  bufferAssenze = '';
+  document.getElementById('scanInputAssenze').value = '';
+  document.getElementById('bufferTextAssenze').textContent = 'In attesa scansione…';
+  document.getElementById('bufferTextAssenze').classList.add('empty');
+  document.getElementById('bufferWrapAssenze').classList.remove('active');
+  document.getElementById('feedbackAssenze').style.display = 'none';
 }
 
 // ── Orologio ─────────────────────────────────────────────────
@@ -343,8 +499,7 @@ function aggiornaClock() {
 aggiornaClock();
 setInterval(aggiornaClock, 1000);
 
-// ── Reset automatico al ritorno sulla pagina ──────────────────
-window.addEventListener('pageshow', () => { reset(); refocus(); });
+window.addEventListener('pageshow', () => { resetGiro(); resetAssenze(); refocusAttivo(); });
 </script>
 </body>
 </html>
