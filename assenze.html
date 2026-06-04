@@ -1103,7 +1103,7 @@ async function submitRichiesta() {
 // ── LISTA ASSENZE ────────────────────────────────────────────
 function renderLista() {
   const mie = tutteAssenze
-    .filter(a => String(a.driver) === String(DRIVER) && a.stato !== 'Annullata')
+    .filter(a => String(a.driver) === String(DRIVER))
     .sort((a,b) => {
       const da = parseData(a.dal), db = parseData(b.dal);
       return db - da;
@@ -1160,9 +1160,8 @@ async function eseguiAnnulla(id) {
       '&id=' + encodeURIComponent(id)
     );
     if (res.ok) {
-      // aggiorna localmente
-      const a = tutteAssenze.find(x => x.id === id);
-      if (a) a.stato = 'Annullata';
+      // rimuove dalla lista locale
+      tutteAssenze = tutteAssenze.filter(x => x.id !== id);
       renderHeader(); renderCalendario(); renderLista();
     } else {
       mostraAvviso('Errore', res.errore || 'Impossibile annullare.');
