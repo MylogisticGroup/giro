@@ -825,9 +825,13 @@ function renderCalendario() {
       el.appendChild(cnt);
     }
 
-    // click: se ci sono eventi mostra popup, altrimenti avvia selezione
+    // click: se siamo in modalità selezione date, avvia selezione
+    // altrimenti mostra popup se ci sono eventi
     el.addEventListener('click', (ev) => {
-      if (tuttiGiorno.length > 0 && !formOpen && !el.classList.contains('past')) {
+      if (el.classList.contains('past')) return;
+      if (selMode || formOpen) {
+        onDayClick(data, bloccato, altriAssenti.length);
+      } else if (tuttiGiorno.length > 0) {
         mostraPopupGiorno(ev, data, tuttiGiorno, bloccato, altriAssenti.length);
       } else {
         onDayClick(data, bloccato, altriAssenti.length);
