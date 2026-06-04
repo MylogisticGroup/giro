@@ -1125,10 +1125,18 @@ function renderLista() {
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
         <div class="assenza-stato ${statoClass}">${a.stato}</div>
-        ${puoAnnullare ? `<button class="btn-annulla" onclick="confermaAnnulla('${a.id}','${tipoLabel}','${a.dal}','${a.al}')">✕ Annulla</button>` : ''}
+        ${puoAnnullare ? `<button class="btn-annulla" data-id="${a.id}" data-tipo="${tipoLabel}" data-dal="${a.dal}" data-al="${a.al}" onclick="confermaAnnullaBtn(this)">✕ Annulla</button>` : ''}
       </div>
     </div>`;
   }).join('');
+}
+
+function confermaAnnullaBtn(btn) {
+  const id   = btn.getAttribute('data-id');
+  const tipo = btn.getAttribute('data-tipo');
+  const dal  = btn.getAttribute('data-dal');
+  const al   = btn.getAttribute('data-al');
+  confermaAnnulla(id, tipo, dal, al);
 }
 
 async function confermaAnnulla(id, tipo, dal, al) {
