@@ -434,6 +434,22 @@
     .stato-richiesta { background: rgba(59,130,246,.15); color: #93c5fd; }
     .stato-rifiutato { background: rgba(239,68,68,.15);  color: #fca5a5; }
 
+    .assenza-nome {
+      font-size: .72rem; color: var(--text); font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .btn-annulla {
+      font-size: .6rem; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 20px;
+      background: rgba(239,68,68,.12);
+      border: 1px solid rgba(239,68,68,.3);
+      color: #fca5a5; cursor: pointer;
+      transition: background .15s, border-color .15s;
+      font-family: 'Syne', sans-serif;
+    }
+    .btn-annulla:hover { background: rgba(239,68,68,.25); border-color: #ef4444; }
+
     /* ── FAB ── */
     .fab {
       position: fixed; bottom: 24px; right: 20px;
@@ -622,7 +638,13 @@
     <div class="avviso-icon">🚫</div>
     <div class="avviso-title" id="avvisoFullTitle">Periodo non disponibile</div>
     <div class="avviso-msg" id="avvisoFullMsg"></div>
-    <button class="avviso-close" onclick="chiudiAvviso()">Ho capito</button>
+    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="avviso-close" onclick="chiudiAvviso()">Annulla</button>
+      <button class="avviso-close" id="avvisoBtnConferma" onclick="confermaAvviso()"
+        style="display:none;background:#ef4444;border-color:#ef4444;color:#fff">
+        Conferma
+      </button>
+    </div>
   </div>
 </div>
 
@@ -636,7 +658,7 @@
 
 <script>
 // ── CONFIG ────────────────────────────────────────────────────
-const API         = 'https://script.google.com/macros/s/AKfycby0Tt5tmqyUgkY9e_-G6En89W3ASvmxmbeb9M8krPQVXgtKpP5p2_QDUJXcC70H9AKE/exec';
+const API         = 'https://script.google.com/macros/s/AKfycbx0n_9OFS0TVqtvyLLdUItMXJ9wMW_pwfYkA-oF3Hz_0VU0Ystl5kiCERcTuNeK1ejS/exec';
 const SCANNER_URL = 'https://mylogisticgroup.github.io/giro/';
 const params      = new URLSearchParams(location.search);
 const DRIVER      = (params.get('driver') || '').trim();
@@ -781,10 +803,7 @@ function renderCalendario() {
     tuttiGiorno.slice(0, 2).forEach(a => {
       const ev = document.createElement('div');
       ev.className = 'cal-event ' + classeEvento(a);
-      const isMio = String(a.driver) === String(DRIVER);
-      ev.textContent = isMio
-        ? (a.tipoPermesso || a.tipo)
-        : (a.nomeDriver || a.driver).split(' ')[0];
+      ev.textContent = (a.nomeDriver || a.driver).split(' ')[0];
       evEl.appendChild(ev);
     });
 
@@ -1080,7 +1099,7 @@ async function submitRichiesta() {
 // ── LISTA ASSENZE ────────────────────────────────────────────
 function renderLista() {
   const mie = tutteAssenze
-    .filter(a => String(a.driver) === String(DRIVER))
+    .filter(a => String(a.driver) === String(DRIVER) && a.stato !== 'Annullata')
     .sort((a,b) => {
       const da = parseData(a.dal), db = parseData(b.dal);
       return db - da;
@@ -1094,26 +1113,73 @@ function renderLista() {
     const colore     = COLORI_TIPO[a.tipo] || 'var(--muted)';
     const statoClass = a.stato === 'Approvato' ? 'stato-approvato' : a.stato === 'Rifiutato' ? 'stato-rifiutato' : 'stato-richiesta';
     const tipoLabel  = a.tipo + (a.tipoPermesso ? ' — ' + a.tipoPermesso : '');
-    return `<div class="assenza-item">
+    const nomeBreve  = (a.nomeDriver || '').split(' ')[0];
+    const puoAnnullare = a.stato === 'Richiesta';
+    return `<div class="assenza-item" id="ass-${a.id}">
       <div class="assenza-color" style="background:${colore}"></div>
       <div class="assenza-info">
         <div class="assenza-tipo" style="color:${colore}">${tipoLabel}</div>
+        <div class="assenza-nome">${a.nomeDriver || ''}</div>
         <div class="assenza-date">${a.dal} → ${a.al}</div>
         <div class="assenza-giorni">${a.giorni || ''} giorn${a.giorni === 1 ? 'o' : 'i'}</div>
       </div>
-      <div class="assenza-stato ${statoClass}">${a.stato}</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+        <div class="assenza-stato ${statoClass}">${a.stato}</div>
+        ${puoAnnullare ? `<button class="btn-annulla" onclick="confermaAnnulla('${a.id}','${tipoLabel}','${a.dal}','${a.al}')">✕ Annulla</button>` : ''}
+      </div>
     </div>`;
   }).join('');
 }
 
+async function confermaAnnulla(id, tipo, dal, al) {
+  mostraAvviso(
+    'Annullare la richiesta?',
+    tipo + '\n' + dal + ' → ' + al + '\n\nConfermi l\'annullamento?',
+    true,
+    () => eseguiAnnulla(id)
+  );
+}
+
+async function eseguiAnnulla(id) {
+  chiudiAvviso();
+  try {
+    const res = await apiCall(
+      'action=assenze_annulla&driver=' + encodeURIComponent(DRIVER) +
+      '&id=' + encodeURIComponent(id)
+    );
+    if (res.ok) {
+      // aggiorna localmente
+      const a = tutteAssenze.find(x => x.id === id);
+      if (a) a.stato = 'Annullata';
+      renderHeader(); renderCalendario(); renderLista();
+    } else {
+      mostraAvviso('Errore', res.errore || 'Impossibile annullare.');
+    }
+  } catch(e) {
+    mostraAvviso('Errore', 'Errore di connessione.');
+  }
+}
+
 // ── AVVISI ───────────────────────────────────────────────────
-function mostraAvviso(titolo, msg) {
+let _avvisoCallback = null;
+function mostraAvviso(titolo, msg, conConferma, callback) {
   document.getElementById('avvisoFullTitle').textContent = titolo;
   document.getElementById('avvisoFullMsg').textContent   = msg;
+  _avvisoCallback = callback || null;
+  const btnConf = document.getElementById('avvisoBtnConferma');
+  if (conConferma && callback) {
+    btnConf.style.display = 'inline-block';
+  } else {
+    btnConf.style.display = 'none';
+  }
   document.getElementById('avvisoFull').classList.add('open');
 }
 function chiudiAvviso() {
   document.getElementById('avvisoFull').classList.remove('open');
+  _avvisoCallback = null;
+}
+function confermaAvviso() {
+  if (_avvisoCallback) _avvisoCallback();
 }
 function mostraErrore(msg) {
   document.getElementById('stateLoading').innerHTML =
