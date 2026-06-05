@@ -550,6 +550,7 @@
         <div class="cal-title" id="calTitle"></div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
+        <button class="cal-today-btn" onclick="tornaHome()">🏠 HOME</button>
         <button class="cal-today-btn" onclick="tornaOggi()">OGGI</button>
         <button class="cal-nav-btn" onclick="cambioMese(1)">›</button>
       </div>
@@ -857,6 +858,9 @@ function cambioMese(delta) {
   if (curMonth > 11) { curMonth = 0; curYear++; }
   if (curMonth < 0)  { curMonth = 11; curYear--; }
   renderCalendario();
+}
+function tornaHome() {
+  window.location.href = 'https://mylogisticgroup.github.io/giro/';
 }
 function tornaOggi() {
   curYear  = new Date().getFullYear();
