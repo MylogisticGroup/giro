@@ -1102,8 +1102,13 @@ async function submitRichiesta() {
 
 // ── LISTA ASSENZE ────────────────────────────────────────────
 function renderLista() {
+  const annoCorrente = new Date().getFullYear();
   const mie = tutteAssenze
-    .filter(a => String(a.driver) === String(DRIVER))
+    .filter(a => {
+      if (String(a.driver) !== String(DRIVER)) return false;
+      const dal = parseData(a.dal);
+      return dal && dal.getFullYear() === annoCorrente;
+    })
     .sort((a,b) => {
       const da = parseData(a.dal), db = parseData(b.dal);
       return db - da;
@@ -1129,7 +1134,6 @@ function renderLista() {
       </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
         <div class="assenza-stato ${statoClass}">${a.stato}</div>
-        ${puoAnnullare ? `<button class="btn-annulla" data-id="${a.id}" data-tipo="${tipoLabel}" data-dal="${a.dal}" data-al="${a.al}" onclick="confermaAnnullaBtn(this)">✕ Annulla</button>` : ''}
       </div>
     </div>`;
   }).join('');
