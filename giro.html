@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="utf-8">
@@ -272,10 +272,6 @@
           </div>
           <div class="vei-chip" id="veiChip"></div>
         </div>
-        <div class="field" id="fieldKm" style="display:none">
-          <label class="field-label">Km attuali del veicolo</label>
-          <input type="number" id="kmInizio" placeholder="es. 125430" min="0" inputmode="numeric">
-        </div>
         <button class="btn btn-green" id="btnApri" onclick="submitApri()" disabled>
           ✓ &nbsp;Apri Giro
         </button>
@@ -328,15 +324,14 @@
 </div>
 
 <script>
-const API    = 'https://script.google.com/macros/s/AKfycby0Tt5tmqyUgkY9e_-G6En89W3ASvmxmbeb9M8krPQVXgtKpP5p2_QDUJXcC70H9AKE/exec';
-// URL della pagina scanner a cui tornare dopo il successo
+const API         = 'https://script.google.com/macros/s/AKfycby0Tt5tmqyUgkY9e_-G6En89W3ASvmxmbeb9M8krPQVXgtKpP5p2_QDUJXcC70H9AKE/exec';
 const SCANNER_URL = 'https://mylogisticgroup.github.io/giro/';
 
 const params      = new URLSearchParams(location.search);
 const DRIVER      = (params.get('driver') || '').trim();
 let   kmInizioVal = 0;
+let   targaAttiva = '';
 
-/* ── Split cognome / nome ── */
 function splitNome(full) {
   const parts = (full || '').trim().split(/\s+/);
   const upper = parts.filter(p => p === p.toUpperCase() && p.length > 1);
@@ -351,7 +346,6 @@ function setDriverHeader(fullName) {
   document.getElementById('driverNome').textContent    = nome || '';
 }
 
-/* ── JSONP ── */
 function apiCall(qs) {
   return new Promise((resolve, reject) => {
     const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
@@ -363,7 +357,6 @@ function apiCall(qs) {
   });
 }
 
-/* ── Schermate ── */
 const SCREENS = ['stateInit','screenApri','screenChiudi','spinnerOp','stateOk','stateErr'];
 function show(id) {
   SCREENS.forEach(s => { document.getElementById(s).style.display = (s === id) ? 'block' : 'none'; });
@@ -373,51 +366,35 @@ function showErr(msg) {
   show('stateErr');
 }
 
-/* ── Successo con countdown e poi redirect allo scanner ── */
 function showSuccess(title, bodyHtml) {
   document.getElementById('okTitle').textContent = title;
   document.getElementById('okBody').innerHTML    = bodyHtml;
-
-  // Nascondi header con nominativo
   document.getElementById('mainHeader').style.display = 'none';
-
   show('stateOk');
 
-  // Barra animata (3s) + countdown testuale
   const bar       = document.getElementById('okBar');
   const countdown = document.getElementById('okCountdown');
   let   secs      = 3;
-
-  // Reset animazione
   bar.style.animation = 'none';
-  bar.offsetHeight;                          // reflow
+  bar.offsetHeight;
   bar.style.animation = 'shrink 3s linear forwards';
-
   countdown.textContent = 'Ritorno allo scanner tra ' + secs + 's…';
   const iv = setInterval(() => {
     secs--;
-    if (secs <= 0) {
-      clearInterval(iv);
-      window.location.href = SCANNER_URL;
-    } else {
-      countdown.textContent = 'Ritorno allo scanner tra ' + secs + 's…';
-    }
+    if (secs <= 0) { clearInterval(iv); window.location.href = SCANNER_URL; }
+    else countdown.textContent = 'Ritorno allo scanner tra ' + secs + 's…';
   }, 1000);
 }
 
-/* ── INIT ── */
 window.onload = async () => {
   if (!DRIVER) { window.location.replace(SCANNER_URL); return; }
-
   let data;
   try {
     data = await apiCall('action=init&driver=' + encodeURIComponent(DRIVER));
   } catch(e) {
     showErr('Impossibile connettersi. Controlla la connessione e riprova.'); return;
   }
-
   setDriverHeader(data.nomeDriver || DRIVER);
-
   if (data.occupato) {
     mostraChiudi(data);
   } else {
@@ -425,12 +402,10 @@ window.onload = async () => {
   }
 };
 
-/* ── APRI ── */
 function mostraApri(veicoli) {
   document.getElementById('headerPillLabel').textContent = 'Nuovo Giro';
   document.getElementById('headerPill').style.display    = 'inline-flex';
   show('screenApri');
-
   document.getElementById('skelVeicolo').style.display = 'none';
   document.getElementById('wrapSel').style.display     = 'block';
 
@@ -450,32 +425,30 @@ function mostraApri(veicoli) {
 }
 
 function onVeicoloChange() {
-  const sel   = document.getElementById('selVeicolo');
-  const opt   = sel.options[sel.selectedIndex];
-  const chip  = document.getElementById('veiChip');
-  const fkm   = document.getElementById('fieldKm');
-  const kminp = document.getElementById('kmInizio');
+  const sel  = document.getElementById('selVeicolo');
+  const opt  = sel.options[sel.selectedIndex];
+  const chip = document.getElementById('veiChip');
 
   if (!opt.value) {
     sel.classList.add('accented');
     chip.style.display = 'none';
-    fkm.style.display  = 'none';
-    kminp.value = '';
+    targaAttiva = '';
+    kmInizioVal = 0;
     return;
   }
   sel.classList.remove('accented');
+  targaAttiva = opt.value;
+  kmInizioVal = opt.dataset.km ? Number(opt.dataset.km) : 0;
+
   const km = opt.dataset.km;
   chip.innerHTML =
     (opt.dataset.marca ? '🚗 <span class="mono">' + opt.dataset.marca + ' ' + opt.dataset.modello + '</span><br>' : '') +
     '📏 Km ultimo giro: <span class="mono">' + (km ? Number(km).toLocaleString('it-IT') + ' km' : 'non disponibile') + '</span>';
   chip.style.display = 'block';
-  kminp.value       = km || '';
-  fkm.style.display = 'block';
 }
 
 async function submitApri() {
   const targa = document.getElementById('selVeicolo').value;
-  const km    = document.getElementById('kmInizio').value;
   if (!targa) { shakeInput('selVeicolo'); return; }
 
   show('spinnerOp');
@@ -486,24 +459,22 @@ async function submitApri() {
     res = await apiCall(
       'action=apri&driver=' + encodeURIComponent(DRIVER) +
       '&targa=' + encodeURIComponent(targa) +
-      '&km='    + encodeURIComponent(km || 0)
+      '&km='    + encodeURIComponent(kmInizioVal || 0)
     );
   } catch(e) { showErr('Timeout. Riprova tra qualche secondo.'); return; }
 
   if (res.ok) {
     showSuccess('Giro aperto!',
       '🚗 Veicolo: <strong>' + targa + '</strong><br>' +
-      '📏 Km: <strong>' + Number(km || 0).toLocaleString('it-IT') + '</strong>'
+      '📏 Km: <strong>' + Number(kmInizioVal || 0).toLocaleString('it-IT') + '</strong>'
     );
   } else {
     showErr(res.errore || 'Errore sconosciuto.');
   }
 }
 
-/* ── CHIUDI ── */
 function mostraChiudi(stato) {
   kmInizioVal = Number(stato.kmInizio) || 0;
-
   const pill = document.getElementById('headerPill');
   document.getElementById('headerPillLabel').textContent = 'Giro in corso';
   pill.style.display     = 'inline-flex';
@@ -547,7 +518,6 @@ async function submitChiudi() {
   }
 }
 
-/* ── Shake errore input ── */
 function shakeInput(id) {
   const el = document.getElementById(id);
   el.style.borderColor = 'var(--red)';
