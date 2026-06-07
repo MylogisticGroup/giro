@@ -2,298 +2,333 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <title>My Logistic Group</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scanner Giro — My Logistic Group</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg:     #080d18;
-      --card:   #141d2e;
-      --line:   #1f2d45;
+      --bg:     #0a0f1a;
+      --card:   #111827;
+      --line:   #1f2937;
       --accent: #facc15;
-      --text:   #f0f4ff;
-      --muted:  #6b7a99;
-      --green:  #22c55e;
-      --blue:   #3b82f6;
+      --dim:    #4b5563;
+      --text:   #f9fafb;
+      --muted:  #6b7280;
+      --green:  #4ade80;
+      --red:    #f87171;
+      --blue:   #60a5fa;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Syne', sans-serif;
       background: var(--bg);
       color: var(--text);
-      min-height: 100dvh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 24px;
     }
-
-    /* ── SCANNER (pagina senza driver) ── */
-    .scanner-wrap {
-      width: 100%; max-width: 420px;
-      display: flex; flex-direction: column;
-      align-items: center; gap: 24px;
-    }
-    .brand {
-      font-size: .65rem; font-weight: 700;
-      letter-spacing: .25em; text-transform: uppercase;
-      color: var(--muted);
-    }
-    .scanner-title {
-      font-size: 2rem; font-weight: 800;
-      text-align: center; line-height: 1.1;
-    }
-    .scanner-title span { color: var(--accent); }
-
-    /* ── HUB (pagina con driver) ── */
-    .hub-wrap {
-      width: 100%; max-width: 360px;
-      display: flex; flex-direction: column;
-      align-items: center; gap: 0;
-    }
-
-    .hub-header {
-      width: 100%;
-      background: linear-gradient(160deg, #0f1e38 0%, #0a1220 100%);
-      border: 1px solid var(--line);
-      border-radius: 20px 20px 0 0;
-      padding: 32px 24px 28px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .hub-header::before {
+    body::before {
       content: '';
-      position: absolute;
-      bottom: 0; left: 10%; right: 10%; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-      opacity: .3;
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 40% at 20% 50%, rgba(250,204,21,.04) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 60% at 80% 30%, rgba(74,222,128,.03) 0%, transparent 70%);
+      pointer-events: none;
     }
-    .hub-brand {
-      font-size: .6rem; font-weight: 700;
-      letter-spacing: .25em; text-transform: uppercase;
-      color: var(--muted); margin-bottom: 14px;
+    .wrap {
+      width: 100%; max-width: 580px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 20px;
+      position: relative; z-index: 1;
     }
-    .hub-avatar {
-      width: 64px; height: 64px;
-      background: linear-gradient(135deg, rgba(250,204,21,.2), rgba(250,204,21,.05));
-      border: 1.5px solid rgba(250,204,21,.3);
-      border-radius: 16px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem; font-weight: 800;
-      color: var(--accent); margin: 0 auto 14px;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    .hub-name {
-      font-size: 1.5rem; font-weight: 800;
-      color: var(--text); line-height: 1.1;
-      letter-spacing: .03em;
-    }
-    .hub-name .cognome { color: var(--accent); }
-    .hub-id {
-      font-size: .7rem; color: var(--muted);
-      font-family: 'JetBrains Mono', monospace;
-      margin-top: 6px;
-    }
-
-    .hub-buttons {
-      width: 100%;
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-top: none;
-      border-radius: 0 0 20px 20px;
-      padding: 20px;
-      display: flex; flex-direction: column; gap: 12px;
-    }
-
-    .hub-btn {
-      display: flex; align-items: center; gap: 16px;
-      padding: 20px 22px;
-      border-radius: 14px; border: none;
-      text-decoration: none; cursor: pointer;
-      transition: transform .15s, opacity .15s;
-      position: relative; overflow: hidden;
-    }
-    .hub-btn:active { transform: scale(.97); }
-
-    .hub-btn-giro {
-      background: linear-gradient(135deg, #166534, #15803d);
-      box-shadow: 0 4px 20px rgba(22,163,74,.3);
-    }
-    .hub-btn-giro:hover { opacity: .9; }
-
-    .hub-btn-assenze {
-      background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
-      box-shadow: 0 4px 20px rgba(59,130,246,.3);
-    }
-    .hub-btn-assenze:hover { opacity: .9; }
-
-    .hub-btn-icon {
-      font-size: 2rem; flex-shrink: 0;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,.3));
-    }
-    .hub-btn-info { flex: 1; text-align: left; }
-    .hub-btn-title {
-      font-size: 1.1rem; font-weight: 800;
-      color: #fff; letter-spacing: .02em;
-    }
-    .hub-btn-sub {
-      font-size: .72rem; color: rgba(255,255,255,.6);
-      margin-top: 2px;
-    }
-    .hub-btn-arrow {
-      font-size: 1.2rem; color: rgba(255,255,255,.4);
-    }
-
-    /* ── LOADING ── */
-    .hub-loading {
-      width: 100%; max-width: 360px;
-      text-align: center; padding: 40px;
-    }
-    .spinner {
-      width: 32px; height: 32px;
-      border: 3px solid var(--line); border-top-color: var(--accent);
-      border-radius: 50%; animation: spin .75s linear infinite;
-      margin: 0 auto 14px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spin-label { font-size: .85rem; color: var(--muted); }
-
-    /* ── ERRORE ── */
-    .hub-error {
-      width: 100%; max-width: 360px;
-      background: var(--card); border: 1px solid rgba(239,68,68,.3);
-      border-radius: 20px; padding: 32px 24px; text-align: center;
-      display: none;
-    }
-    .hub-error-icon { font-size: 2.5rem; margin-bottom: 12px; }
-    .hub-error-title { font-size: 1rem; font-weight: 800; color: #fca5a5; margin-bottom: 8px; }
-    .hub-error-msg { font-size: .85rem; color: var(--muted); }
-
-    /* ── FOOTER ── */
-    .hub-footer {
-      margin-top: 20px;
-      font-size: .65rem; color: var(--muted);
+    .scanner-link {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent); color: #0a0f1a;
+      font-family: 'Syne', sans-serif; font-size: .8rem; font-weight: 700;
       letter-spacing: .08em; text-transform: uppercase;
+      text-decoration: none; padding: 9px 20px;
+      border-radius: 10px; align-self: flex-end;
+      transition: opacity .15s;
     }
+    .scanner-link:hover { opacity: .85; }
+    .header { text-align: center; }
+    .brand { font-size: .7rem; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .title { font-size: 2.2rem; font-weight: 800; color: var(--text); line-height: 1.1; }
+    .title span { color: var(--accent); }
+    .scanner-box {
+      width: 100%; background: var(--card);
+      border: 1px solid var(--line); border-radius: 20px;
+      padding: 40px 36px;
+      display: flex; flex-direction: column; align-items: center; gap: 28px;
+      position: relative; overflow: hidden; cursor: pointer;
+    }
+    .scanner-box::before, .scanner-box::after {
+      content: ''; position: absolute;
+      width: 24px; height: 24px;
+      border-color: var(--accent); border-style: solid; opacity: .5;
+    }
+    .scanner-box::before { top: 16px; left: 16px; border-width: 2px 0 0 2px; border-radius: 4px 0 0 0; }
+    .scanner-box::after  { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; border-radius: 0 0 4px 0; }
+    .scan-icon { position: relative; width: 96px; height: 96px; }
+    .scan-icon svg { width: 100%; height: 100%; opacity: .9; }
+    .scan-line {
+      position: absolute; left: 12px; right: 12px; height: 2px;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent), 0 0 20px var(--accent);
+      border-radius: 2px; top: 12px;
+      animation: scanMove 2s ease-in-out infinite;
+    }
+    @keyframes scanMove { 0%{top:12px} 50%{top:calc(100% - 14px)} 100%{top:12px} }
+    .instruction { text-align: center; }
+    .instruction-main { font-size: 1.15rem; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+    .instruction-sub  { font-size: .82rem; color: var(--muted); font-family: 'DM Mono', monospace; }
+    .hidden-input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+    .buffer-wrap {
+      width: 100%; background: var(--bg);
+      border: 1.5px solid var(--line); border-radius: 12px;
+      padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+      min-height: 52px; transition: border-color .2s;
+    }
+    .buffer-wrap.active { border-color: var(--accent); }
+    .buffer-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); flex-shrink: 0; transition: background .2s; }
+    .buffer-wrap.active .buffer-dot { background: var(--accent); animation: blink .6s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+    .buffer-text { font-family: 'DM Mono', monospace; font-size: 1rem; color: var(--text); letter-spacing: .08em; flex: 1; }
+    .buffer-text.empty { color: var(--dim); font-size: .82rem; font-family: 'Syne', sans-serif; }
+    .feedback {
+      width: 100%; border-radius: 12px; padding: 14px 18px;
+      font-size: .9rem; font-weight: 700; text-align: center;
+      display: none; animation: fadeIn .25s ease;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+    .feedback.ok  { background: rgba(74,222,128,.1);  color: var(--green); border: 1px solid rgba(74,222,128,.2); }
+    .feedback.err { background: rgba(248,113,113,.1); color: var(--red);   border: 1px solid rgba(248,113,113,.2); }
+    .mode-divider { width: 100%; display: flex; align-items: center; gap: 12px; }
+    .mode-divider::before, .mode-divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+    .mode-divider span { font-size: .65rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+    .buffer-wrap-blue.active { border-color: var(--blue); }
+    .buffer-wrap-blue.active .buffer-dot { background: var(--blue); }
+    .last-scan { font-size: .75rem; color: var(--dim); font-family: 'DM Mono', monospace; text-align: center; min-height: 18px; }
+    .clock { font-size: .8rem; color: var(--muted); font-family: 'DM Mono', monospace; letter-spacing: .06em; }
+    .refocus-btn {
+      background: transparent; border: 1px solid var(--line);
+      color: var(--muted); font-family: 'Syne', sans-serif;
+      font-size: .75rem; padding: 7px 16px; border-radius: 8px;
+      cursor: pointer; transition: border-color .15s, color .15s;
+    }
+    .refocus-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .mode-pills {
+      display: flex; gap: 6px;
+      background: rgba(255,255,255,.04); border: 1px solid var(--line);
+      border-radius: 12px; padding: 4px;
+    }
+    .mode-pill {
+      padding: 6px 16px; border-radius: 8px;
+      font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      cursor: pointer; transition: all .15s; border: none;
+      color: var(--muted); background: transparent; font-family: 'Syne', sans-serif;
+    }
+    .mode-pill.active-giro    { background: var(--accent); color: #0a0f1a; }
+    .mode-pill.active-assenze { background: var(--blue);   color: #0a0f1a; }
   </style>
 </head>
 <body>
-
-<!-- LOADING -->
-<div class="hub-loading" id="stateLoading">
-  <div class="spinner"></div>
-  <div class="spin-label">Caricamento…</div>
-</div>
-
-<!-- HUB DRIVER -->
-<div class="hub-wrap" id="stateHub" style="display:none">
-  <div class="hub-header">
-    <div class="hub-brand">My Logistic Group</div>
-    <div class="hub-avatar" id="hubAvatar"></div>
-    <div class="hub-name" id="hubName"></div>
-    <div class="hub-id" id="hubId"></div>
+<div class="wrap">
+  <a class="scanner-link" href="https://mylogisticgroup.github.io/giro/" onclick="refocus(); return false;">⟳ &nbsp;Riapri Scanner</a>
+  <div class="header">
+    <div class="brand">My Logistic Group</div>
+    <div class="title">Scanner <span>Giro</span></div>
   </div>
-  <div class="hub-buttons">
-    <a class="hub-btn hub-btn-giro" id="btnGiro" href="#">
-      <div class="hub-btn-icon">🚚</div>
-      <div class="hub-btn-info">
-        <div class="hub-btn-title">Giro</div>
-        <div class="hub-btn-sub">Apri o chiudi il tuo giro</div>
-      </div>
-      <div class="hub-btn-arrow">›</div>
-    </a>
-    <a class="hub-btn hub-btn-assenze" id="btnAssenze" href="#">
-      <div class="hub-btn-icon">📅</div>
-      <div class="hub-btn-info">
-        <div class="hub-btn-title">Assenze</div>
-        <div class="hub-btn-sub">Ferie, permessi e calendario</div>
-      </div>
-      <div class="hub-btn-arrow">›</div>
-    </a>
+  <div class="mode-pills">
+    <button class="mode-pill active-giro" id="pillGiro" onclick="setMode('giro')">🚚 Giro</button>
+    <button class="mode-pill" id="pillAssenze" onclick="setMode('assenze')">📅 Assenze</button>
   </div>
-</div>
 
-<!-- ERRORE -->
-<div class="hub-error" id="stateError">
-  <div class="hub-error-icon">⚠️</div>
-  <div class="hub-error-title">Link non valido</div>
-  <div class="hub-error-msg">Contatta l'amministratore per ricevere il tuo link personale.</div>
-</div>
+  <!-- MODALITÀ GIRO -->
+  <div id="modeGiro" style="width:100%">
+    <div class="scanner-box" onclick="refocus()">
+      <div class="scan-icon">
+        <svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8"  y="8"  width="28" height="28" rx="4" stroke="#facc15" stroke-width="3" fill="none"/>
+          <rect x="16" y="16" width="12" height="12" rx="2" fill="#facc15" opacity=".6"/>
+          <rect x="60" y="8"  width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
+          <rect x="68" y="16" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
+          <rect x="8"  y="60" width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
+          <rect x="16" y="68" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
+          <rect x="44" y="44" width="8" height="8" rx="1" fill="#facc15" opacity=".5"/>
+          <rect x="56" y="44" width="8" height="8" rx="1" fill="#4b5563" opacity=".3"/>
+          <rect x="56" y="56" width="8" height="8" rx="1" fill="#facc15" opacity=".7"/>
+        </svg>
+        <div class="scan-line"></div>
+      </div>
+      <div class="instruction">
+        <div class="instruction-main">Scannerizza il QR Code del driver</div>
+        <div class="instruction-sub">apertura e chiusura automatica del giro</div>
+      </div>
+      <div class="buffer-wrap" id="bufferWrapGiro">
+        <span class="buffer-dot"></span>
+        <span class="buffer-text empty" id="bufferTextGiro">In attesa scansione…</span>
+      </div>
+      <div class="feedback" id="feedbackGiro"></div>
+      <input class="hidden-input" id="scanInputGiro" type="text" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+  </div>
 
-<div class="hub-footer" id="hubFooter" style="display:none">My Logistic Group © 2026</div>
+  <!-- MODALITÀ ASSENZE -->
+  <div id="modeAssenze" style="width:100%;display:none">
+    <div class="scanner-box" style="border-color:rgba(96,165,250,.2)" onclick="refocusAssenze()">
+      <div class="scan-icon">
+        <svg viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="8"  y="8"  width="28" height="28" rx="4" stroke="#60a5fa" stroke-width="3" fill="none"/>
+          <rect x="16" y="16" width="12" height="12" rx="2" fill="#60a5fa" opacity=".6"/>
+          <rect x="60" y="8"  width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
+          <rect x="68" y="16" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
+          <rect x="8"  y="60" width="28" height="28" rx="4" stroke="#4b5563" stroke-width="3" fill="none"/>
+          <rect x="16" y="68" width="12" height="12" rx="2" fill="#4b5563" opacity=".4"/>
+          <rect x="44" y="44" width="8" height="8" rx="1" fill="#60a5fa" opacity=".5"/>
+          <rect x="56" y="56" width="8" height="8" rx="1" fill="#60a5fa" opacity=".7"/>
+        </svg>
+        <div class="scan-line" style="background:var(--blue);box-shadow:0 0 8px var(--blue),0 0 20px var(--blue)"></div>
+      </div>
+      <div class="instruction">
+        <div class="instruction-main">Scannerizza il QR Code del driver</div>
+        <div class="instruction-sub">accesso al calendario ferie e permessi</div>
+      </div>
+      <div class="buffer-wrap buffer-wrap-blue" id="bufferWrapAssenze">
+        <span class="buffer-dot"></span>
+        <span class="buffer-text empty" id="bufferTextAssenze">In attesa scansione…</span>
+      </div>
+      <div class="feedback" id="feedbackAssenze"></div>
+      <input class="hidden-input" id="scanInputAssenze" type="text" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+  </div>
+
+  <div class="last-scan" id="lastScan">Nessuna scansione ancora</div>
+  <div class="clock" id="clock"></div>
+  <button class="refocus-btn" onclick="refocusAttivo()">↺ Riattiva scanner</button>
+</div>
 
 <script>
-const BASE    = 'https://mylogisticgroup.github.io/giro';
-const API     = 'https://giro.groupmylogistich.workers.dev';
-const params  = new URLSearchParams(location.search);
-const DRIVER  = (params.get('driver') || '').trim();
+const BASE_GIRO    = 'https://mylogisticgroup.github.io/giro/giro.html';
+const BASE_ASSENZE = 'https://mylogisticgroup.github.io/giro/assenze.html';
+const SCAN_TIMEOUT = 300;
+let modoAttivo = 'giro';
 
-function iniziali(nome) {
-  const parts = nome.trim().split(/\s+/);
-  return parts.slice(0, 2).map(p => p[0]).join('');
+function setMode(modo) {
+  modoAttivo = modo;
+  document.getElementById('modeGiro').style.display    = modo === 'giro'    ? 'block' : 'none';
+  document.getElementById('modeAssenze').style.display = modo === 'assenze' ? 'block' : 'none';
+  document.getElementById('pillGiro').className    = 'mode-pill' + (modo === 'giro'    ? ' active-giro'    : '');
+  document.getElementById('pillAssenze').className = 'mode-pill' + (modo === 'assenze' ? ' active-assenze' : '');
+  resetGiro(); resetAssenze();
+  setTimeout(refocusAttivo, 100);
 }
 
-function splitNome(full) {
-  const parts = full.trim().split(/\s+/);
-  const upper = parts.filter(p => p === p.toUpperCase() && p.length > 1);
-  if (upper.length) {
-    return {
-      cognome: upper.join(' '),
-      nome: parts.filter(p => !upper.includes(p)).join(' ')
-    };
+function refocus()        { document.getElementById('scanInputGiro').focus(); }
+function refocusAssenze() { document.getElementById('scanInputAssenze').focus(); }
+function refocusAttivo()  { modoAttivo === 'giro' ? refocus() : refocusAssenze(); }
+
+document.getElementById('scanInputGiro').addEventListener('blur',    () => { if (modoAttivo === 'giro')    setTimeout(refocus, 100); });
+document.getElementById('scanInputAssenze').addEventListener('blur', () => { if (modoAttivo === 'assenze') setTimeout(refocusAssenze, 100); });
+document.addEventListener('click',   refocusAttivo);
+document.addEventListener('keydown', refocusAttivo);
+window.addEventListener('load', () => { setTimeout(refocusAttivo, 200); });
+
+let bufferGiro = '', timerGiro = null;
+document.getElementById('scanInputGiro').addEventListener('input', () => {
+  bufferGiro = document.getElementById('scanInputGiro').value.trim();
+  if (bufferGiro) {
+    document.getElementById('bufferTextGiro').textContent = bufferGiro;
+    document.getElementById('bufferTextGiro').classList.remove('empty');
+    document.getElementById('bufferWrapGiro').classList.add('active');
   }
-  return { cognome: parts[0] || full, nome: parts.slice(1).join(' ') };
+  clearTimeout(timerGiro);
+  timerGiro = setTimeout(() => elaboraGiro(bufferGiro), SCAN_TIMEOUT);
+});
+document.getElementById('scanInputGiro').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { clearTimeout(timerGiro); elaboraGiro(document.getElementById('scanInputGiro').value.trim()); }
+});
+
+function elaboraGiro(codice) {
+  if (!codice) return;
+  const driverId = estraiDriver(codice);
+  if (!driverId) { mostraFeedback('feedbackGiro', 'QR Code non riconosciuto.', false); resetGiro(); return; }
+  const ora = new Date().toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('lastScan').textContent = 'Ultima scansione: Driver ' + driverId + ' — ' + ora;
+  mostraFeedback('feedbackGiro', '✓ Driver ' + driverId + ' — apertura giro…', true);
+  setTimeout(() => { window.location.href = BASE_GIRO + '?driver=' + encodeURIComponent(driverId); }, 600);
 }
 
-function apiCall(qs) {
-  return new Promise((resolve, reject) => {
-    const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
-    const tag   = document.createElement('script');
-    const timer = setTimeout(() => { delete window[cb]; tag.remove(); reject(new Error('Timeout')); }, 15000);
-    window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
-    tag.src = API + '?action=stato&driver=' + encodeURIComponent(DRIVER) + '&callback=' + cb;
-    document.head.appendChild(tag);
-  });
-}
-
-function show(id) {
-  ['stateLoading','stateHub','stateError'].forEach(s => {
-    document.getElementById(s).style.display = s === id ? (s === 'stateHub' ? 'flex' : 'block') : 'none';
-  });
-}
-
-window.onload = async () => {
-  if (!DRIVER) {
-    // nessun driver — mostra errore
-    document.getElementById('stateLoading').style.display = 'none';
-    document.getElementById('stateError').style.display = 'block';
-    return;
+let bufferAssenze = '', timerAssenze = null;
+document.getElementById('scanInputAssenze').addEventListener('input', () => {
+  bufferAssenze = document.getElementById('scanInputAssenze').value.trim();
+  if (bufferAssenze) {
+    document.getElementById('bufferTextAssenze').textContent = bufferAssenze;
+    document.getElementById('bufferTextAssenze').classList.remove('empty');
+    document.getElementById('bufferWrapAssenze').classList.add('active');
   }
+  clearTimeout(timerAssenze);
+  timerAssenze = setTimeout(() => elaboraAssenze(bufferAssenze), SCAN_TIMEOUT);
+});
+document.getElementById('scanInputAssenze').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { clearTimeout(timerAssenze); elaboraAssenze(document.getElementById('scanInputAssenze').value.trim()); }
+});
 
+function elaboraAssenze(codice) {
+  if (!codice) return;
+  const driverId = estraiDriver(codice);
+  if (!driverId) { mostraFeedback('feedbackAssenze', 'QR Code non riconosciuto.', false); resetAssenze(); return; }
+  const ora = new Date().toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  document.getElementById('lastScan').textContent = 'Ultima scansione: Driver ' + driverId + ' — ' + ora;
+  mostraFeedback('feedbackAssenze', '📅 Driver ' + driverId + ' — apertura assenze…', true);
+  setTimeout(() => { window.location.href = BASE_ASSENZE + '?driver=' + encodeURIComponent(driverId); }, 600);
+}
+
+function estraiDriver(codice) {
   try {
-    const res = await apiCall('action=stato&driver=' + encodeURIComponent(DRIVER));
-    const nome = res.nomeDriver || DRIVER;
-    const { cognome, nome: primoNome } = splitNome(nome);
+    const url = new URL(codice);
+    const d   = url.searchParams.get('driver');
+    if (d) return d.trim();
+  } catch(e) {}
+  return codice.trim() || null;
+}
 
-    document.getElementById('hubAvatar').textContent = iniziali(nome);
-    document.getElementById('hubName').innerHTML =
-      '<span class="cognome">' + cognome + '</span>' +
-      (primoNome ? '<br><span style="font-size:.9rem;font-weight:400;color:rgba(240,244,255,.5)">' + primoNome + '</span>' : '');
-    document.getElementById('hubId').textContent = 'ID: ' + DRIVER;
+function mostraFeedback(id, msg, ok) {
+  const el = document.getElementById(id);
+  el.textContent   = msg;
+  el.className     = 'feedback ' + (ok ? 'ok' : 'err');
+  el.style.display = 'block';
+  if (!ok) setTimeout(() => { el.style.display = 'none'; }, 2500);
+}
 
-    document.getElementById('btnGiro').href    = BASE + '/giro.html?driver='    + DRIVER;
-    document.getElementById('btnAssenze').href = BASE + '/assenze.html?driver=' + DRIVER;
+function resetGiro() {
+  bufferGiro = '';
+  document.getElementById('scanInputGiro').value = '';
+  document.getElementById('bufferTextGiro').textContent = 'In attesa scansione…';
+  document.getElementById('bufferTextGiro').classList.add('empty');
+  document.getElementById('bufferWrapGiro').classList.remove('active');
+  document.getElementById('feedbackGiro').style.display = 'none';
+}
+function resetAssenze() {
+  bufferAssenze = '';
+  document.getElementById('scanInputAssenze').value = '';
+  document.getElementById('bufferTextAssenze').textContent = 'In attesa scansione…';
+  document.getElementById('bufferTextAssenze').classList.add('empty');
+  document.getElementById('bufferWrapAssenze').classList.remove('active');
+  document.getElementById('feedbackAssenze').style.display = 'none';
+}
 
-    show('stateHub');
-    document.getElementById('hubFooter').style.display = 'block';
-
-  } catch(e) {
-    document.getElementById('stateLoading').style.display = 'none';
-    document.getElementById('stateError').style.display = 'block';
-  }
-};
+function aggiornaClock() {
+  document.getElementById('clock').textContent =
+    new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+aggiornaClock();
+setInterval(aggiornaClock, 1000);
+window.addEventListener('pageshow', () => { resetGiro(); resetAssenze(); refocusAttivo(); });
 </script>
 </body>
 </html>
