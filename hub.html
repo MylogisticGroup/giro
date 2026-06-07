@@ -326,8 +326,8 @@ async function installApp() {
   }
 }
 
+window.onload = async () => {
   if (!DRIVER) {
-    // nessun driver — mostra errore
     document.getElementById('stateLoading').style.display = 'none';
     document.getElementById('stateError').style.display = 'block';
     return;
@@ -368,8 +368,7 @@ async function installApp() {
       ]
     };
     const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-    const manifestURL = URL.createObjectURL(blob);
-    document.getElementById('manifestLink').href = manifestURL;
+    document.getElementById('manifestLink').href = URL.createObjectURL(blob);
 
     show('stateHub');
     document.getElementById('hubFooter').style.display = 'block';
