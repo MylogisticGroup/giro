@@ -283,8 +283,8 @@ window.onload = async () => {
       (primoNome ? '<br><span style="font-size:.9rem;font-weight:400;color:rgba(240,244,255,.5)">' + primoNome + '</span>' : '');
     document.getElementById('hubId').textContent = 'ID: ' + DRIVER;
 
-    document.getElementById('btnGiro').href    = BASE + '/giro.html?driver='    + DRIVER;
-    document.getElementById('btnAssenze').href = BASE + '/assenze.html?driver=' + DRIVER;
+    document.getElementById('btnGiro').href    = BASE + '/giro.html?driver='    + DRIVER + '&from=hub';
+    document.getElementById('btnAssenze').href = BASE + '/assenze.html?driver=' + DRIVER + '&from=hub';
 
     show('stateHub');
     document.getElementById('hubFooter').style.display = 'block';
