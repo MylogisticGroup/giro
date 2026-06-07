@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="utf-8">
@@ -245,6 +245,83 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
     .spin-label { font-size: .82rem; color: var(--muted); }
+    /* ── Custom vehicle picker ── */
+    .picker-btn {
+      width: 100%; padding: 15px 18px;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      font-family: 'Sora', sans-serif;
+      font-size: .95rem; color: var(--ink);
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; text-align: left;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .picker-btn.accented {
+      border-color: var(--blue); color: var(--blue);
+      background: #eff6ff; font-weight: 600;
+      box-shadow: 0 0 0 4px rgba(37,99,235,.08);
+    }
+    .picker-btn.selected {
+      border-color: var(--line); color: var(--ink);
+      background: var(--bg); font-weight: 400;
+      box-shadow: none;
+    }
+    .picker-arrow { color: var(--blue); font-size: .85rem; flex-shrink: 0; margin-left: 8px; }
+
+    /* Bottom sheet overlay */
+    .picker-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.45); z-index: 500;
+      align-items: flex-end; justify-content: center;
+    }
+    .picker-overlay.open { display: flex; }
+    .picker-sheet {
+      background: #fff; border-radius: 20px 20px 0 0;
+      width: 100%; max-width: 480px;
+      max-height: 70dvh; display: flex; flex-direction: column;
+      animation: slideUp .22s ease;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(100%); opacity: 0; }
+      to   { transform: translateY(0);   opacity: 1; }
+    }
+    .picker-sheet-handle {
+      width: 40px; height: 4px; background: #e5e7eb;
+      border-radius: 2px; margin: 14px auto 0;
+      flex-shrink: 0;
+    }
+    .picker-sheet-title {
+      font-family: 'Sora', sans-serif;
+      font-size: .75rem; font-weight: 700;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: .12em; text-align: center;
+      padding: 12px 20px 10px; flex-shrink: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .picker-list {
+      overflow-y: auto; flex: 1;
+      padding: 8px 0 24px;
+    }
+    .picker-item {
+      display: flex; align-items: center;
+      padding: 14px 20px; gap: 14px;
+      cursor: pointer; border: none;
+      background: transparent; width: 100%;
+      text-align: left; font-family: 'Sora', sans-serif;
+      transition: background .1s;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .picker-item:active { background: #eff6ff; }
+    .picker-item-targa {
+      font-size: 1rem; font-weight: 700;
+      color: var(--ink); letter-spacing: .04em;
+      flex-shrink: 0; min-width: 110px;
+    }
+    .picker-item-info {
+      font-size: .78rem; color: var(--muted);
+      line-height: 1.4;
+    }
   </style>
 </head>
 <body>
@@ -276,9 +353,15 @@
           <label class="field-label">Veicolo</label>
           <div class="skeleton" id="skelVeicolo"></div>
           <div class="select-wrap" style="display:none" id="wrapSel">
-            <select id="selVeicolo" class="accented" onchange="onVeicoloChange()">
+            <!-- Hidden real select for form value only -->
+            <select id="selVeicolo" style="display:none" onchange="onVeicoloChange()">
               <option value="">— Seleziona veicolo —</option>
             </select>
+            <!-- Custom picker trigger -->
+            <button type="button" id="pickerBtn" class="picker-btn accented" onclick="apriPicker()">
+              <span id="pickerLabel">— Seleziona veicolo —</span>
+              <span class="picker-arrow">▾</span>
+            </button>
           </div>
           <div class="vei-chip" id="veiChip"></div>
         </div>
@@ -427,7 +510,10 @@ window.onload = async () => {
   }
 };
 
+let _veicoli = [];
+
 function mostraApri(veicoli) {
+  _veicoli = veicoli;
   document.getElementById('headerPillLabel').textContent = 'Nuovo Giro';
   document.getElementById('headerPill').style.display    = 'inline-flex';
   show('screenApri');
@@ -435,8 +521,13 @@ function mostraApri(veicoli) {
   document.getElementById('wrapSel').style.display     = 'block';
 
   const sel = document.getElementById('selVeicolo');
-  if (!veicoli.length) { sel.innerHTML = '<option value="">Nessun veicolo disponibile</option>'; return; }
+  if (!veicoli.length) {
+    document.getElementById('pickerLabel').textContent = 'Nessun veicolo disponibile';
+    document.getElementById('pickerBtn').disabled = true;
+    return;
+  }
 
+  // popola il select nascosto (per compatibilità con submitApri)
   veicoli.forEach(v => {
     const o = document.createElement('option');
     o.value           = v.id;
@@ -446,22 +537,65 @@ function mostraApri(veicoli) {
     o.textContent     = v.targa;
     sel.appendChild(o);
   });
+
+  // popola la lista del picker
+  const list = document.getElementById('pickerList');
+  list.innerHTML = '';
+  veicoli.forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'picker-item';
+    btn.type = 'button';
+    const km = v.kmFine !== '' ? Number(v.kmFine).toLocaleString('it-IT') + ' km' : 'km n/d';
+    btn.innerHTML =
+      '<div class="picker-item-targa">' + v.targa + '</div>' +
+      '<div class="picker-item-info">' +
+        (v.marca ? v.marca + ' ' + v.modello + '<br>' : '') +
+        '📏 ' + km +
+      '</div>';
+    btn.onclick = () => selezionaVeicolo(v.id);
+    list.appendChild(btn);
+  });
+
   document.getElementById('btnApri').disabled = false;
+}
+
+function apriPicker() {
+  document.getElementById('pickerOverlay').classList.add('open');
+}
+function chiudiPicker() {
+  document.getElementById('pickerOverlay').classList.remove('open');
+}
+function chiudiPickerOut(e) {
+  if (e.target === document.getElementById('pickerOverlay')) chiudiPicker();
+}
+
+function selezionaVeicolo(id) {
+  chiudiPicker();
+  const sel = document.getElementById('selVeicolo');
+  sel.value = id;
+  onVeicoloChange();
 }
 
 function onVeicoloChange() {
   const sel  = document.getElementById('selVeicolo');
   const opt  = sel.options[sel.selectedIndex];
   const chip = document.getElementById('veiChip');
+  const btn  = document.getElementById('pickerBtn');
 
   if (!opt.value) {
-    sel.classList.add('accented');
+    btn.classList.add('accented');
+    btn.classList.remove('selected');
+    document.getElementById('pickerLabel').textContent = '— Seleziona veicolo —';
     chip.style.display = 'none';
     targaAttiva = '';
     kmInizioVal = 0;
     return;
   }
-  sel.classList.remove('accented');
+
+  btn.classList.remove('accented');
+  btn.classList.add('selected');
+  document.getElementById('pickerLabel').textContent = opt.textContent;
+
   targaAttiva = opt.value;
   kmInizioVal = opt.dataset.km ? Number(opt.dataset.km) : 0;
 
@@ -551,5 +685,14 @@ function shakeInput(id) {
   setTimeout(() => { el.style.borderColor = ''; el.style.boxShadow = ''; }, 1600);
 }
 </script>
+<!-- PICKER VEICOLO -->
+<div class="picker-overlay" id="pickerOverlay" onclick="chiudiPickerOut(event)">
+  <div class="picker-sheet">
+    <div class="picker-sheet-handle"></div>
+    <div class="picker-sheet-title">Seleziona veicolo</div>
+    <div class="picker-list" id="pickerList"></div>
+  </div>
+</div>
+
 </body>
 </html>
