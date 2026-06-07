@@ -338,9 +338,14 @@
 <script>
 const API         = 'https://giro.groupmylogistich.workers.dev';
 const SCANNER_URL = 'https://mylogisticgroup.github.io/giro/';
+const HUB_URL     = 'https://mylogisticgroup.github.io/giro/hub.html';
 
 const params      = new URLSearchParams(location.search);
 const DRIVER      = (params.get('driver') || '').trim();
+const FROM_HUB    = params.get('from') === 'hub';
+const RETURN_URL  = FROM_HUB
+  ? HUB_URL + '?driver=' + encodeURIComponent(DRIVER)
+  : SCANNER_URL;
 let   kmInizioVal = 0;
 let   targaAttiva = '';
 
@@ -386,15 +391,16 @@ function showSuccess(title, bodyHtml) {
 
   const bar       = document.getElementById('okBar');
   const countdown = document.getElementById('okCountdown');
+  const returnLabel = FROM_HUB ? 'all\'hub' : 'allo scanner';
   let   secs      = 3;
   bar.style.animation = 'none';
   bar.offsetHeight;
   bar.style.animation = 'shrink 3s linear forwards';
-  countdown.textContent = 'Ritorno allo scanner tra ' + secs + 's…';
+  countdown.textContent = 'Ritorno ' + returnLabel + ' tra ' + secs + 's…';
   const iv = setInterval(() => {
     secs--;
-    if (secs <= 0) { clearInterval(iv); window.location.href = SCANNER_URL; }
-    else countdown.textContent = 'Ritorno allo scanner tra ' + secs + 's…';
+    if (secs <= 0) { clearInterval(iv); window.location.href = RETURN_URL; }
+    else countdown.textContent = 'Ritorno ' + returnLabel + ' tra ' + secs + 's…';
   }, 1000);
 }
 
@@ -407,7 +413,7 @@ window.onload = async () => {
     showErr('Impossibile connettersi. Controlla la connessione e riprova.'); return;
   }
   setDriverHeader(data.nomeDriver || DRIVER);
-  document.getElementById('linkHome').href = 'https://mylogisticgroup.github.io/giro/hub.html?driver=' + DRIVER;
+  document.getElementById('linkHome').href = RETURN_URL;
   if (data.occupato) {
     mostraChiudi(data);
   } else {
