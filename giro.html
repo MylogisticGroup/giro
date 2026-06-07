@@ -255,6 +255,9 @@
     <div class="brand">My Logistic Group</div>
     <div class="driver-cognome" id="driverCognome">Caricamento…</div>
     <div class="driver-nome"    id="driverNome"></div>
+    <div id="headerSpinner" style="margin-top:14px">
+      <div class="spinner" style="border-top-color:#fff;opacity:.5;margin:0 auto"></div>
+    </div>
     <div class="status-pill" id="headerPill" style="display:none">
       <span class="pill-dot pill-dot-blue" id="headerDot"></span>
       <span id="headerPillLabel">Nuovo Giro</span>
@@ -262,13 +265,9 @@
   </div>
 
   <!-- Card -->
-  <div class="card">
+  <div class="card" id="mainCard" style="display:none">
 
-    <!-- Init loading -->
-    <div class="spin-wrap" id="stateInit" style="display:block">
-      <div class="spinner"></div>
-      <div class="spin-label">Verifica in corso…</div>
-    </div>
+    <!-- Init loading: rimosso, la card è nascosta durante il caricamento -->
 
     <!-- ── APRI GIRO ── -->
     <div id="screenApri" style="display:none">
@@ -374,12 +373,13 @@ function apiCall(qs) {
   });
 }
 
-const SCREENS = ['stateInit','screenApri','screenChiudi','spinnerOp','stateOk','stateErr'];
+const SCREENS = ['screenApri','screenChiudi','spinnerOp','stateOk','stateErr'];
 function show(id) {
   SCREENS.forEach(s => { document.getElementById(s).style.display = (s === id) ? 'block' : 'none'; });
 }
 function showErr(msg) {
   document.getElementById('errMsg').textContent = msg;
+  document.getElementById('mainCard').style.display = 'block';
   show('stateErr');
 }
 
@@ -410,8 +410,14 @@ window.onload = async () => {
   try {
     data = await apiCall('action=init&driver=' + encodeURIComponent(DRIVER));
   } catch(e) {
+    document.getElementById('headerSpinner').style.display = 'none';
+    document.getElementById('driverCognome').textContent = 'Errore';
+    document.getElementById('mainCard').style.display = 'block';
     showErr('Impossibile connettersi. Controlla la connessione e riprova.'); return;
   }
+  // nasconde lo spinner dell'header e mostra la card
+  document.getElementById('headerSpinner').style.display = 'none';
+  document.getElementById('mainCard').style.display = 'block';
   setDriverHeader(data.nomeDriver || DRIVER);
   document.getElementById('linkHome').href = RETURN_URL;
   if (data.occupato) {
