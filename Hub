@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <title>My Logistic Group — Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:     #080d18;
+      --card:   #141d2e;
+      --line:   #1f2d45;
+      --accent: #facc15;
+      --text:   #f0f4ff;
+      --muted:  #6b7a99;
+      --green:  #22c55e;
+      --blue:   #3b82f6;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    /* ── SCANNER (pagina senza driver) ── */
+    .scanner-wrap {
+      width: 100%; max-width: 420px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 24px;
+    }
+    .brand {
+      font-size: .65rem; font-weight: 700;
+      letter-spacing: .25em; text-transform: uppercase;
+      color: var(--muted);
+    }
+    .scanner-title {
+      font-size: 2rem; font-weight: 800;
+      text-align: center; line-height: 1.1;
+    }
+    .scanner-title span { color: var(--accent); }
+
+    /* ── HUB (pagina con driver) ── */
+    .hub-wrap {
+      width: 100%; max-width: 360px;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 0;
+    }
+
+    .hub-header {
+      width: 100%;
+      background: linear-gradient(160deg, #0f1e38 0%, #0a1220 100%);
+      border: 1px solid var(--line);
+      border-radius: 20px 20px 0 0;
+      padding: 32px 24px 28px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hub-header::before {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 10%; right: 10%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+      opacity: .3;
+    }
+    .hub-brand {
+      font-size: .6rem; font-weight: 700;
+      letter-spacing: .25em; text-transform: uppercase;
+      color: var(--muted); margin-bottom: 14px;
+    }
+    .hub-avatar {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, rgba(250,204,21,.2), rgba(250,204,21,.05));
+      border: 1.5px solid rgba(250,204,21,.3);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem; font-weight: 800;
+      color: var(--accent); margin: 0 auto 14px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .hub-name {
+      font-size: 1.5rem; font-weight: 800;
+      color: var(--text); line-height: 1.1;
+      letter-spacing: .03em;
+    }
+    .hub-name .cognome { color: var(--accent); }
+    .hub-id {
+      font-size: .7rem; color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 6px;
+    }
+
+    .hub-buttons {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-top: none;
+      border-radius: 0 0 20px 20px;
+      padding: 20px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+
+    .hub-btn {
+      display: flex; align-items: center; gap: 16px;
+      padding: 20px 22px;
+      border-radius: 14px; border: none;
+      text-decoration: none; cursor: pointer;
+      transition: transform .15s, opacity .15s;
+      position: relative; overflow: hidden;
+    }
+    .hub-btn:active { transform: scale(.97); }
+
+    .hub-btn-giro {
+      background: linear-gradient(135deg, #166534, #15803d);
+      box-shadow: 0 4px 20px rgba(22,163,74,.3);
+    }
+    .hub-btn-giro:hover { opacity: .9; }
+
+    .hub-btn-assenze {
+      background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+      box-shadow: 0 4px 20px rgba(59,130,246,.3);
+    }
+    .hub-btn-assenze:hover { opacity: .9; }
+
+    .hub-btn-icon {
+      font-size: 2rem; flex-shrink: 0;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.3));
+    }
+    .hub-btn-info { flex: 1; text-align: left; }
+    .hub-btn-title {
+      font-size: 1.1rem; font-weight: 800;
+      color: #fff; letter-spacing: .02em;
+    }
+    .hub-btn-sub {
+      font-size: .72rem; color: rgba(255,255,255,.6);
+      margin-top: 2px;
+    }
+    .hub-btn-arrow {
+      font-size: 1.2rem; color: rgba(255,255,255,.4);
+    }
+
+    /* ── LOADING ── */
+    .hub-loading {
+      width: 100%; max-width: 360px;
+      text-align: center; padding: 40px;
+    }
+    .spinner {
+      width: 32px; height: 32px;
+      border: 3px solid var(--line); border-top-color: var(--accent);
+      border-radius: 50%; animation: spin .75s linear infinite;
+      margin: 0 auto 14px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin-label { font-size: .85rem; color: var(--muted); }
+
+    /* ── ERRORE ── */
+    .hub-error {
+      width: 100%; max-width: 360px;
+      background: var(--card); border: 1px solid rgba(239,68,68,.3);
+      border-radius: 20px; padding: 32px 24px; text-align: center;
+      display: none;
+    }
+    .hub-error-icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .hub-error-title { font-size: 1rem; font-weight: 800; color: #fca5a5; margin-bottom: 8px; }
+    .hub-error-msg { font-size: .85rem; color: var(--muted); }
+
+    /* ── FOOTER ── */
+    .hub-footer {
+      margin-top: 20px;
+      font-size: .65rem; color: var(--muted);
+      letter-spacing: .08em; text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="hub-loading" id="stateLoading">
+  <div class="spinner"></div>
+  <div class="spin-label">Caricamento…</div>
+</div>
+
+<!-- HUB DRIVER -->
+<div class="hub-wrap" id="stateHub" style="display:none">
+  <div class="hub-header">
+    <div class="hub-brand">My Logistic Group</div>
+    <div class="hub-avatar" id="hubAvatar"></div>
+    <div class="hub-name" id="hubName"></div>
+    <div class="hub-id" id="hubId"></div>
+  </div>
+  <div class="hub-buttons">
+    <a class="hub-btn hub-btn-giro" id="btnGiro" href="#">
+      <div class="hub-btn-icon">🚚</div>
+      <div class="hub-btn-info">
+        <div class="hub-btn-title">Giro</div>
+        <div class="hub-btn-sub">Apri o chiudi il tuo giro</div>
+      </div>
+      <div class="hub-btn-arrow">›</div>
+    </a>
+    <a class="hub-btn hub-btn-assenze" id="btnAssenze" href="#">
+      <div class="hub-btn-icon">📅</div>
+      <div class="hub-btn-info">
+        <div class="hub-btn-title">Assenze</div>
+        <div class="hub-btn-sub">Ferie, permessi e calendario</div>
+      </div>
+      <div class="hub-btn-arrow">›</div>
+    </a>
+  </div>
+</div>
+
+<!-- ERRORE -->
+<div class="hub-error" id="stateError">
+  <div class="hub-error-icon">⚠️</div>
+  <div class="hub-error-title">Link non valido</div>
+  <div class="hub-error-msg">Contatta l'amministratore per ricevere il tuo link personale.</div>
+</div>
+
+<div class="hub-footer" id="hubFooter" style="display:none">My Logistic Group © 2026</div>
+
+<script>
+const BASE    = 'https://mylogisticgroup.github.io/giro';
+const API     = 'https://giro.groupmylogistich.workers.dev';
+const params  = new URLSearchParams(location.search);
+const DRIVER  = (params.get('driver') || '').trim();
+
+function iniziali(nome) {
+  const parts = nome.trim().split(/\s+/);
+  return parts.slice(0, 2).map(p => p[0]).join('');
+}
+
+function splitNome(full) {
+  const parts = full.trim().split(/\s+/);
+  const upper = parts.filter(p => p === p.toUpperCase() && p.length > 1);
+  if (upper.length) {
+    return {
+      cognome: upper.join(' '),
+      nome: parts.filter(p => !upper.includes(p)).join(' ')
+    };
+  }
+  return { cognome: parts[0] || full, nome: parts.slice(1).join(' ') };
+}
+
+function apiCall(qs) {
+  return new Promise((resolve, reject) => {
+    const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
+    const tag   = document.createElement('script');
+    const timer = setTimeout(() => { delete window[cb]; tag.remove(); reject(new Error('Timeout')); }, 15000);
+    window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
+    tag.src = API + '?action=stato&driver=' + encodeURIComponent(DRIVER) + '&callback=' + cb;
+    document.head.appendChild(tag);
+  });
+}
+
+function show(id) {
+  ['stateLoading','stateHub','stateError'].forEach(s => {
+    document.getElementById(s).style.display = s === id ? (s === 'stateHub' ? 'flex' : 'block') : 'none';
+  });
+}
+
+window.onload = async () => {
+  if (!DRIVER) {
+    // nessun driver — mostra errore
+    document.getElementById('stateLoading').style.display = 'none';
+    document.getElementById('stateError').style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await apiCall('action=stato&driver=' + encodeURIComponent(DRIVER));
+    const nome = res.nomeDriver || DRIVER;
+    const { cognome, nome: primoNome } = splitNome(nome);
+
+    document.getElementById('hubAvatar').textContent = iniziali(nome);
+    document.getElementById('hubName').innerHTML =
+      '<span class="cognome">' + cognome + '</span>' +
+      (primoNome ? '<br><span style="font-size:.9rem;font-weight:400;color:rgba(240,244,255,.5)">' + primoNome + '</span>' : '');
+    document.getElementById('hubId').textContent = 'ID: ' + DRIVER;
+
+    document.getElementById('btnGiro').href    = BASE + '/giro.html?driver='    + DRIVER;
+    document.getElementById('btnAssenze').href = BASE + '/assenze.html?driver=' + DRIVER;
+
+    show('stateHub');
+    document.getElementById('hubFooter').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('stateLoading').style.display = 'none';
+    document.getElementById('stateError').style.display = 'block';
+  }
+};
+</script>
+</body>
+</html>
