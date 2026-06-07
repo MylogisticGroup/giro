@@ -3,7 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="My Logistic">
+  <meta name="theme-color" content="#080d18">
   <title>My Logistic Group — Hub</title>
+  <link id="manifestLink" rel="manifest" href="#">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%23080d18'/%3E%3Ctext x='256' y='340' font-size='260' text-anchor='middle' font-family='Arial Black,sans-serif' fill='%23facc15'%3E🚚%3C/text%3E%3C/svg%3E">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -171,7 +178,29 @@
     .hub-error-title { font-size: 1rem; font-weight: 800; color: #fca5a5; margin-bottom: 8px; }
     .hub-error-msg { font-size: .85rem; color: var(--muted); }
 
-    /* ── FOOTER ── */
+    /* ── INSTALL BANNER ── */
+    .install-banner {
+      display: none;
+      width: 100%; max-width: 360px;
+      background: linear-gradient(135deg, rgba(250,204,21,.15), rgba(250,204,21,.05));
+      border: 1px solid rgba(250,204,21,.3);
+      border-radius: 14px;
+      padding: 14px 18px;
+      align-items: center; gap: 12px;
+      margin-top: 4px;
+      cursor: pointer;
+    }
+    .install-banner.visible { display: flex; }
+    .install-banner-icon { font-size: 1.6rem; flex-shrink: 0; }
+    .install-banner-text { flex: 1; }
+    .install-banner-title {
+      font-size: .85rem; font-weight: 800;
+      color: var(--accent); margin-bottom: 2px;
+    }
+    .install-banner-sub {
+      font-size: .68rem; color: var(--muted);
+    }
+    .install-banner-arrow { color: var(--accent); font-size: 1.1rem; }
     .hub-footer {
       margin-top: 20px;
       font-size: .65rem; color: var(--muted);
@@ -222,6 +251,15 @@
   <div class="hub-error-msg">Contatta l'amministratore per ricevere il tuo link personale.</div>
 </div>
 
+<div class="install-banner" id="installBanner" onclick="installApp()">
+  <div class="install-banner-icon">📲</div>
+  <div class="install-banner-text">
+    <div class="install-banner-title">Aggiungi alla schermata Home</div>
+    <div class="install-banner-sub">Accedi con un tap come un'app</div>
+  </div>
+  <div class="install-banner-arrow">›</div>
+</div>
+
 <div class="hub-footer" id="hubFooter" style="display:none">My Logistic Group © 2026</div>
 
 <script>
@@ -264,7 +302,30 @@ function show(id) {
   });
 }
 
-window.onload = async () => {
+// ── PWA INSTALL PROMPT ──────────────────────────────────────
+let _installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  _installPrompt = e;
+  document.getElementById('installBanner').classList.add('visible');
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('installBanner').classList.remove('visible');
+});
+
+async function installApp() {
+  if (_installPrompt) {
+    _installPrompt.prompt();
+    const { outcome } = await _installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      document.getElementById('installBanner').classList.remove('visible');
+    }
+    _installPrompt = null;
+  }
+}
+
   if (!DRIVER) {
     // nessun driver — mostra errore
     document.getElementById('stateLoading').style.display = 'none';
@@ -285,6 +346,30 @@ window.onload = async () => {
 
     document.getElementById('btnGiro').href    = BASE + '/giro.html?driver='    + DRIVER + '&from=hub';
     document.getElementById('btnAssenze').href = BASE + '/assenze.html?driver=' + DRIVER + '&from=hub';
+
+    // ── PWA manifest dinamico per questo driver ──
+    const manifest = {
+      name: 'MLG — ' + cognome,
+      short_name: cognome,
+      description: 'My Logistic Group — Hub driver',
+      start_url: BASE + '/hub.html?driver=' + encodeURIComponent(DRIVER),
+      scope: BASE + '/',
+      display: 'standalone',
+      background_color: '#080d18',
+      theme_color: '#080d18',
+      orientation: 'portrait',
+      icons: [
+        {
+          src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='80' fill='%23080d18'/%3E%3Ctext x='256' y='360' font-size='280' text-anchor='middle' font-family='Arial,sans-serif' fill='%23facc15'%3E🚚%3C/text%3E%3C/svg%3E",
+          sizes: '512x512',
+          type: 'image/svg+xml',
+          purpose: 'any maskable'
+        }
+      ]
+    };
+    const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+    const manifestURL = URL.createObjectURL(blob);
+    document.getElementById('manifestLink').href = manifestURL;
 
     show('stateHub');
     document.getElementById('hubFooter').style.display = 'block';
