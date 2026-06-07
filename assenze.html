@@ -661,8 +661,13 @@
 // ── CONFIG ────────────────────────────────────────────────────
 const API         = 'https://script.google.com/macros/s/AKfycbx0n_9OFS0TVqtvyLLdUItMXJ9wMW_pwfYkA-oF3Hz_0VU0Ystl5kiCERcTuNeK1ejS/exec';
 const SCANNER_URL = 'https://mylogisticgroup.github.io/giro/';
+const HUB_URL     = 'https://mylogisticgroup.github.io/giro/hub.html';
 const params      = new URLSearchParams(location.search);
 const DRIVER      = (params.get('driver') || '').trim();
+const FROM_HUB    = params.get('from') === 'hub';
+const RETURN_URL  = FROM_HUB
+  ? HUB_URL + '?driver=' + encodeURIComponent(DRIVER)
+  : SCANNER_URL;
 
 // ── STATO ────────────────────────────────────────────────────
 let tutteAssenze  = [];
@@ -860,7 +865,7 @@ function cambioMese(delta) {
   renderCalendario();
 }
 function tornaHome() {
-  window.location.href = 'https://mylogisticgroup.github.io/giro/hub.html?driver=' + DRIVER;
+  window.location.href = RETURN_URL;
 }
 function tornaOggi() {
   curYear  = new Date().getFullYear();
@@ -1203,9 +1208,12 @@ function confermaAvviso() {
 function mostraErrore(msg) {
   document.getElementById('stateLoading').innerHTML =
     '<div style="text-align:center;padding:60px 24px">' +
-    '<div style="font-size:2rem;margin-bottom:12px">⚠️</div>' +
-    '<div style="color:#fca5a5;font-weight:700;margin-bottom:8px">Errore</div>' +
-    '<div style="color:var(--muted);font-size:.85rem">' + msg + '</div></div>';
+    '<div style="font-size:2.5rem;margin-bottom:16px">⚠️</div>' +
+    '<div style="color:#fca5a5;font-weight:700;font-size:1rem;margin-bottom:10px">Errore di caricamento</div>' +
+    '<div style="color:var(--muted);font-size:.85rem;line-height:1.6;margin-bottom:28px">' + msg + '</div>' +
+    '<button onclick="location.reload()" style="display:block;width:100%;max-width:240px;margin:0 auto 12px;padding:13px 0;border-radius:12px;border:none;cursor:pointer;background:rgba(250,204,21,.15);color:#facc15;font-family:Syne,sans-serif;font-size:.9rem;font-weight:700;letter-spacing:.04em;">↩ Riprova</button>' +
+    '<a href="' + RETURN_URL + '" style="display:block;text-align:center;padding:10px;color:var(--muted);font-family:Syne,sans-serif;font-size:.82rem;font-weight:600;text-decoration:none;">🏠 Torna indietro</a>' +
+    '</div>';
 }
 
 // ── UTILS ────────────────────────────────────────────────────
