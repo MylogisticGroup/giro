@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="utf-8">
@@ -314,12 +314,12 @@
     }
     .picker-item:active { background: #eff6ff; }
     .picker-item-targa {
-      font-size: 1rem; font-weight: 700;
-      color: var(--ink); letter-spacing: .04em;
-      flex-shrink: 0; min-width: 110px;
+      font-size: 1.25rem; font-weight: 700;
+      color: var(--ink); letter-spacing: .06em;
+      flex-shrink: 0; min-width: 120px;
     }
     .picker-item-info {
-      font-size: .78rem; color: var(--muted);
+      font-size: .68rem; color: var(--muted);
       line-height: 1.4;
     }
   </style>
@@ -538,20 +538,16 @@ function mostraApri(veicoli) {
     sel.appendChild(o);
   });
 
-  // popola la lista del picker
+  // popola la lista del picker (ordine alfabetico per targa)
   const list = document.getElementById('pickerList');
   list.innerHTML = '';
-  veicoli.forEach(v => {
+  [...veicoli].sort((a, b) => a.targa.localeCompare(b.targa)).forEach(v => {
     const btn = document.createElement('button');
     btn.className = 'picker-item';
     btn.type = 'button';
-    const km = v.kmFine !== '' ? Number(v.kmFine).toLocaleString('it-IT') + ' km' : 'km n/d';
     btn.innerHTML =
       '<div class="picker-item-targa">' + v.targa + '</div>' +
-      '<div class="picker-item-info">' +
-        (v.marca ? v.marca + ' ' + v.modello + '<br>' : '') +
-        '📏 ' + km +
-      '</div>';
+      (v.marca ? '<div class="picker-item-info">' + v.marca + ' ' + v.modello + '</div>' : '');
     btn.onclick = () => selezionaVeicolo(v.id);
     list.appendChild(btn);
   });
