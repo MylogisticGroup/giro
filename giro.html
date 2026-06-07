@@ -407,7 +407,7 @@ window.onload = async () => {
     showErr('Impossibile connettersi. Controlla la connessione e riprova.'); return;
   }
   setDriverHeader(data.nomeDriver || DRIVER);
-  document.getElementById('linkHome').href = 'https://mylogisticgroup.github.io/giro/?driver=' + DRIVER;
+  document.getElementById('linkHome').href = 'https://mylogisticgroup.github.io/giro/hub.html?driver=' + DRIVER;
   if (data.occupato) {
     mostraChiudi(data);
   } else {
