@@ -443,7 +443,7 @@ function mostraApri(veicoli) {
     o.dataset.marca   = v.marca   || '';
     o.dataset.modello = v.modello || '';
     o.dataset.km      = v.kmFine  !== '' ? v.kmFine : '';
-    o.textContent     = v.targa + (v.marca ? ' — ' + v.marca + ' ' + v.modello : '');
+    o.textContent     = v.targa;
     sel.appendChild(o);
   });
   document.getElementById('btnApri').disabled = false;
