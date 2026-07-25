@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>MyLogAdmin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:      #080d18;
+    --panel:   #141d2e;
+    --panel2:  #182238;
+    --line:    #1f2d45;
+    --ink:     #f0f4ff;
+    --muted:   #6b7a99;
+    --yellow:  #facc15;
+    --yellow-dim: rgba(250,204,21,.14);
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Syne',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100dvh;
+    padding:28px 20px 60px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  /* ── Topbar ── */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:34px; gap:16px;
+  }
+  .brandmark{display:flex; align-items:center; gap:12px;}
+  .brand-badge{
+    width:38px; height:38px; border-radius:10px;
+    background:var(--yellow);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'JetBrains Mono',monospace; font-weight:600;
+    font-size:.85rem; color:#161200; letter-spacing:-.02em;
+    flex-shrink:0;
+  }
+  .brand-text .eyebrow{
+    font-size:.62rem; font-weight:600; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:2px;
+  }
+  .brand-text .title{
+    font-size:1.15rem; font-weight:700; letter-spacing:.01em;
+  }
+  .brand-text .title em{color:var(--yellow); font-style:normal;}
+  .topbar-right{
+    font-family:'JetBrains Mono',monospace; font-size:.72rem;
+    color:var(--muted); text-align:right; line-height:1.5;
+  }
+  .topbar-right .clock{color:var(--ink); font-weight:600; font-size:.85rem;}
+
+  /* ── Section label ── */
+  .section-row{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .section-title{font-size:1rem; font-weight:700;}
+  .section-count{
+    font-family:'JetBrains Mono',monospace; font-size:.7rem;
+    color:var(--muted);
+  }
+
+  /* ── Grid ── */
+  .grid{
+    display:grid; grid-template-columns:repeat(3,1fr);
+    gap:14px; margin-bottom:36px;
+  }
+  @media(max-width:820px){ .grid{grid-template-columns:repeat(2,1fr);} }
+  @media(max-width:520px){ .grid{grid-template-columns:1fr;} }
+
+  /* ── Card ── */
+  .card{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:20px 20px 22px;
+    display:flex; flex-direction:column; gap:14px;
+    text-decoration:none; color:inherit;
+    cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease;
+    overflow:hidden;
+  }
+  .card::before{
+    content:'';
+    position:absolute; inset:0 0 auto 0; height:2px;
+    background:var(--yellow);
+    transform:scaleX(0); transform-origin:left;
+    transition:transform .2s ease;
+  }
+  .card:hover{ transform:translateY(-3px); border-color:rgba(242,194,48,.35); background:var(--panel2); }
+  .card:hover::before{ transform:scaleX(1); }
+  .card:active{ transform:translateY(-1px) scale(.99); }
+
+  .card-top{ display:flex; align-items:flex-start; justify-content:space-between; }
+  .plate{
+    font-family:'JetBrains Mono',monospace; font-size:.66rem; font-weight:600;
+    letter-spacing:.08em; color:#161200;
+    background:var(--yellow); border-radius:5px;
+    padding:3px 7px;
+  }
+  .icon-box{
+    width:42px; height:42px; border-radius:11px;
+    background:var(--yellow-dim);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--yellow); flex-shrink:0;
+  }
+  .icon-box svg{ width:22px; height:22px; }
+
+  .card-body .name{ font-size:1.02rem; font-weight:700; margin-bottom:4px; }
+  .card-body .desc{ font-size:.78rem; color:var(--muted); line-height:1.5; }
+
+  .card-foot{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:auto; padding-top:2px;
+    font-family:'JetBrains Mono',monospace; font-size:.68rem; color:var(--muted);
+  }
+  .card-foot .go{ color:var(--yellow); font-weight:600; display:flex; align-items:center; gap:4px; }
+
+  /* ── Ghost / coming soon cards ── */
+  .card.ghost{
+    background:transparent; border-style:dashed; border-color:var(--line);
+    cursor:default; opacity:.55;
+  }
+  .card.ghost:hover{ transform:none; border-color:var(--line); background:transparent; }
+  .card.ghost:hover::before{ transform:scaleX(0); }
+  .card.ghost .icon-box{ background:rgba(255,255,255,.05); color:var(--muted); }
+  .card.ghost .plate{ background:rgba(255,255,255,.08); color:var(--muted); }
+  .card.ghost .name{ color:var(--muted); }
+
+  .footnote{
+    text-align:center; font-family:'JetBrains Mono',monospace;
+    font-size:.68rem; color:var(--muted); letter-spacing:.04em;
+    margin-top:8px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brandmark">
+      <div class="brand-badge">ML</div>
+      <div class="brand-text">
+        <div class="eyebrow">My Logistic Group</div>
+        <div class="title">MyLog<em>Admin</em></div>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="clock" id="clock">--:--:--</div>
+      <div id="dateLabel">—</div>
+    </div>
+  </div>
+
+  <div class="section-row">
+    <div class="section-title">Moduli attivi</div>
+    <div class="section-count" id="activeCount">2 disponibili</div>
+  </div>
+
+  <div class="grid">
+
+    <!-- DRIVER -->
+    <a class="card" href="#" id="cardDriver">
+      <div class="card-top">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="3.4"></circle>
+            <path d="M4.5 20.2c1.2-3.6 4-5.6 7.5-5.6s6.3 2 7.5 5.6"></path>
+          </svg>
+        </div>
+        <span class="plate">DR · 01</span>
+      </div>
+      <div class="card-body">
+        <div class="name">Driver</div>
+        <div class="desc">Anagrafica autisti, contatti, stato disponibilità e storico giri assegnati.</div>
+      </div>
+      <div class="card-foot">
+        <span id="driverMeta">— voci</span>
+        <span class="go">Apri →</span>
+      </div>
+    </a>
+
+    <!-- PARCO VEICOLI -->
+    <a class="card" href="#" id="cardVeicoli">
+      <div class="card-top">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 16.2 4.4 11a2 2 0 0 1 1.9-1.4h11.4A2 2 0 0 1 19.6 11l1.4 5.2"></path>
+            <rect x="2.6" y="16.2" width="18.8" height="4" rx="1.2"></rect>
+            <circle cx="7" cy="20.4" r="1.4"></circle>
+            <circle cx="17" cy="20.4" r="1.4"></circle>
+          </svg>
+        </div>
+        <span class="plate">PV · 02</span>
+      </div>
+      <div class="card-body">
+        <div class="name">Parco Veicoli</div>
+        <div class="desc">Flotta mezzi, targhe, km, assegnazioni e stato manutentivo di ciascun veicolo.</div>
+      </div>
+      <div class="card-foot">
+        <span id="veicoliMeta">— voci</span>
+        <span class="go">Apri →</span>
+      </div>
+    </a>
+
+    <!-- GHOST: prossimi moduli -->
+    <div class="card ghost">
+      <div class="card-top">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3v3M12 18v3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M3 12h3M18 12h3M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"></path>
+            <circle cx="12" cy="12" r="3.2"></circle>
+          </svg>
+        </div>
+        <span class="plate">· · ·</span>
+      </div>
+      <div class="card-body">
+        <div class="name">Prossimo modulo</div>
+        <div class="desc">Manutenzione, Scadenze, Assenze e altro in arrivo qui, uno alla volta.</div>
+      </div>
+      <div class="card-foot"><span>&nbsp;</span></div>
+    </div>
+
+  </div>
+
+  <div class="footnote">MyLogAdmin — pannello in costruzione, 2 / molti moduli attivi</div>
+</div>
+
+<script>
+  function tick(){
+    const d = new Date();
+    document.getElementById('clock').textContent = d.toLocaleTimeString('it-IT');
+    document.getElementById('dateLabel').textContent = d.toLocaleDateString('it-IT', { weekday:'short', day:'2-digit', month:'short' });
+  }
+  tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>
