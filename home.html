@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -326,6 +326,55 @@
     document.getElementById('dateLabel').textContent = d.toLocaleDateString('it-IT', { weekday:'short', day:'2-digit', month:'short' });
   }
   tick(); setInterval(tick, 1000);
+
+  // ── Banner Scadenze: conteggio reale dal Worker (stesso pattern JSONP di giro.html) ──
+  const API = 'https://giro.groupmylogistich.workers.dev';
+
+  function apiCall(qs) {
+    return new Promise((resolve, reject) => {
+      const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
+      const tag   = document.createElement('script');
+      const timer = setTimeout(() => { delete window[cb]; tag.remove(); reject(new Error('Timeout')); }, 15000);
+      window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
+      tag.onerror = () => { clearTimeout(timer); delete window[cb]; tag.remove(); reject(new Error('Errore di rete')); };
+      tag.src = API + '?' + qs + '&callback=' + cb;
+      document.head.appendChild(tag);
+    });
+  }
+
+  async function caricaBannerScadenze(){
+    try {
+      const dati = await apiCall('action=scadenze');
+      let scaduto = 0, critico = 0, urgente = 0, totale = 0;
+
+      Object.values(dati).forEach(righe => {
+        righe.forEach(r => {
+          totale++;
+          const sem = (r.semaforo || '').toUpperCase();
+          if (sem.includes('SCADUTO'))      scaduto++;
+          else if (sem.includes('CRITICO')) critico++;
+          else if (sem.includes('URGENTE')) urgente++;
+        });
+      });
+
+      document.getElementById('bannerCount').textContent = totale;
+
+      const chipsHtml = [
+        scaduto ? `<span class="chip scaduto"><span class="dot"></span>${scaduto} scaduto</span>` : '',
+        critico ? `<span class="chip critico"><span class="dot"></span>${critico} critico</span>` : '',
+        urgente ? `<span class="chip urgente"><span class="dot"></span>${urgente} urgente</span>` : '',
+      ].join('');
+      document.getElementById('bannerChips').innerHTML = chipsHtml || '<span class="chip">tutto in ordine</span>';
+
+      // se non ci sono scadenze critiche, il banner si smorza (meno "allarme")
+      const banner = document.querySelector('.alert-banner');
+      if (!scaduto && !critico) banner.style.borderColor = 'var(--line)';
+    } catch (e) {
+      // se il Worker non risponde, il banner resta con i valori statici già presenti nell'HTML
+    }
+  }
+
+  caricaBannerScadenze();
 </script>
 </body>
 </html>
