@@ -123,6 +123,51 @@
   }
   .card-foot .go{ color:var(--yellow); font-weight:600; display:flex; align-items:center; gap:4px; }
 
+  /* ── Banner Scadenze (prima vista) ── */
+  .alert-banner{
+    display:flex; align-items:center; gap:16px;
+    background:linear-gradient(135deg, rgba(239,83,80,.12), var(--panel) 55%);
+    border:1px solid rgba(239,83,80,.35);
+    border-radius:16px;
+    padding:16px 20px;
+    margin-bottom:28px;
+    text-decoration:none; color:inherit;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .alert-banner:hover{ transform:translateY(-2px); border-color:rgba(239,83,80,.6); }
+  .alert-icon{
+    width:44px; height:44px; border-radius:12px; flex-shrink:0;
+    background:rgba(239,83,80,.16);
+    display:flex; align-items:center; justify-content:center;
+    color:#ef5350;
+  }
+  .alert-icon svg{ width:24px; height:24px; }
+  .alert-body{ flex:1; min-width:0; }
+  .alert-title{
+    font-size:.95rem; font-weight:700; margin-bottom:3px;
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  }
+  .alert-title .n{ color:#ef5350; }
+  .alert-chips{
+    display:flex; gap:6px; flex-wrap:wrap;
+    font-family:'JetBrains Mono',monospace; font-size:.66rem; font-weight:600;
+  }
+  .chip{
+    padding:3px 9px; border-radius:20px;
+    display:inline-flex; align-items:center; gap:5px;
+    background:rgba(255,255,255,.04); color:var(--muted);
+    border:1px solid var(--line);
+  }
+  .chip .dot{ width:6px; height:6px; border-radius:50%; }
+  .chip.scaduto .dot{ background:#ef5350; }
+  .chip.critico .dot{ background:#ff9152; }
+  .chip.urgente .dot{ background:#ffca28; }
+  .alert-go{
+    font-family:'JetBrains Mono',monospace; font-size:.72rem; font-weight:600;
+    color:#ef5350; white-space:nowrap; flex-shrink:0;
+  }
+  @media(max-width:560px){ .alert-banner{ flex-wrap:wrap; } .alert-go{ width:100%; text-align:right; } }
+
   /* ── Ghost / coming soon cards ── */
   .card.ghost{
     background:transparent; border-style:dashed; border-color:var(--line);
@@ -157,6 +202,25 @@
       <div id="dateLabel">—</div>
     </div>
   </div>
+
+  <a class="alert-banner" href="scadenze.html">
+    <div class="alert-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2.5 20.5 20h-17z"></path>
+        <path d="M12 9v4.2"></path>
+        <circle cx="12" cy="16.3" r=".4" fill="currentColor" stroke="none"></circle>
+      </svg>
+    </div>
+    <div class="alert-body">
+      <div class="alert-title"><span class="n" id="bannerCount">10</span> scadenze da verificare</div>
+      <div class="alert-chips" id="bannerChips">
+        <span class="chip scaduto"><span class="dot"></span>6 scaduto</span>
+        <span class="chip critico"><span class="dot"></span>3 critico</span>
+        <span class="chip urgente"><span class="dot"></span>1 urgente</span>
+      </div>
+    </div>
+    <div class="alert-go">Vedi tutte →</div>
+  </a>
 
   <div class="section-row">
     <div class="section-title">Moduli attivi</div>
