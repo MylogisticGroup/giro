@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Scadenze — MyLogAdmin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:      #080d18;
+    --panel:   #141d2e;
+    --panel2:  #182238;
+    --line:    #1f2d45;
+    --ink:     #f0f4ff;
+    --muted:   #6b7a99;
+    --yellow:  #facc15;
+    --yellow-dim: rgba(250,204,21,.14);
+
+    /* colori categoria — mantengono l'hue originale dello script, adattati al dark */
+    --c-revisione:    #64b5f6;
+    --c-multa:        #ef5350;
+    --c-manutenzione: #ff9152;
+    --c-tagliando:    #bcaaa4;
+    --c-bollo:        #ffd54f;
+    --c-assicurazione:#4fc3f7;
+    --c-carte:        #4db6ac;
+    --c-assenza:       #ba68c8;
+    --c-permesso:      #f06292;
+
+    /* semafori */
+    --s-scaduto:  #ef5350;
+    --s-critico:  #ff9152;
+    --s-urgente:  #ffca28;
+    --s-attenzione:#ffe082;
+    --s-ok:       #66bb6a;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Syne',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100dvh;
+    padding:28px 20px 60px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:8px; gap:16px;
+  }
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'JetBrains Mono',monospace; font-size:.72rem;
+    color:var(--muted); text-decoration:none;
+    letter-spacing:.05em; text-transform:uppercase;
+    transition:color .15s;
+  }
+  .back-link:hover{ color:var(--yellow); }
+  .topbar-right{
+    font-family:'JetBrains Mono',monospace; font-size:.72rem;
+    color:var(--muted); text-align:right; line-height:1.5;
+  }
+  .topbar-right .clock{color:var(--ink); font-weight:600; font-size:.85rem;}
+
+  .module-head{
+    display:flex; align-items:center; gap:14px;
+    margin:22px 0 26px;
+  }
+  .module-icon{
+    width:48px; height:48px; border-radius:12px;
+    background:var(--yellow-dim);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--yellow); flex-shrink:0;
+  }
+  .module-icon svg{ width:26px; height:26px; }
+  .module-head .eyebrow{
+    font-size:.62rem; font-weight:600; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:3px;
+  }
+  .module-head .title{ font-size:1.4rem; font-weight:700; }
+  .module-head .count{
+    margin-left:auto; font-family:'JetBrains Mono',monospace;
+    font-size:.72rem; color:var(--muted);
+  }
+  .module-head .count b{ color:var(--yellow); font-size:.95rem; }
+
+  /* ── Blocco categoria ── */
+  .cat-block{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    margin-bottom:16px;
+  }
+  .cat-head{
+    display:flex; align-items:baseline; gap:10px;
+    padding:12px 18px;
+    border-left:4px solid var(--cat-color, var(--yellow));
+    background:var(--panel2);
+  }
+  .cat-head .name{
+    font-size:.85rem; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--cat-color, var(--yellow));
+  }
+  .cat-head .n{ font-family:'JetBrains Mono',monospace; font-size:.72rem; color:var(--muted); }
+  .cat-head .note{ font-size:.68rem; color:var(--muted); margin-left:auto; text-align:right; }
+
+  table{ width:100%; border-collapse:collapse; }
+  thead th{
+    font-family:'JetBrains Mono',monospace; font-size:.64rem; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--muted);
+    text-align:left; padding:10px 18px 8px;
+    border-bottom:1px solid var(--line);
+  }
+  thead th.num{ text-align:center; }
+  tbody td{
+    padding:12px 18px; font-size:.82rem; color:var(--ink);
+    border-bottom:1px solid var(--line);
+  }
+  tbody tr:last-child td{ border-bottom:none; }
+  td.riferimento{ font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--ink); white-space:nowrap; }
+  td.num{ text-align:center; font-family:'JetBrains Mono',monospace; color:var(--muted); }
+  .desc-stato{ font-weight:700; }
+
+  .semaforo{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'JetBrains Mono',monospace; font-size:.72rem; font-weight:600;
+    white-space:nowrap;
+  }
+  .dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .dot.scaduto{ background:var(--s-scaduto); box-shadow:0 0 8px var(--s-scaduto); }
+  .dot.critico{ background:var(--s-critico); }
+  .dot.urgente{ background:var(--s-urgente); }
+  .dot.attenzione{ background:var(--s-attenzione); }
+  .dot.ok{ background:var(--s-ok); }
+  .txt-scaduto{ color:var(--s-scaduto); }
+  .txt-critico{ color:var(--s-critico); }
+  .txt-urgente{ color:var(--s-urgente); }
+  .txt-attenzione{ color:var(--s-attenzione); }
+  .txt-ok{ color:var(--s-ok); }
+  .txt-rientro{ color:var(--muted); font-weight:400; }
+
+  @media(max-width:640px){
+    thead{ display:none; }
+    tbody td{ display:block; padding:4px 18px; border-bottom:none; }
+    tbody tr{ display:block; padding:10px 0; border-bottom:1px solid var(--line); }
+    tbody tr:last-child{ border-bottom:none; }
+    td.riferimento{ padding-top:12px; font-size:.9rem; }
+    td.num::before{ content:attr(data-label) ": "; color:var(--muted); font-weight:400; }
+  }
+
+  .empty-state{
+    text-align:center; padding:50px 20px; color:var(--muted);
+    font-family:'JetBrains Mono',monospace; font-size:.8rem;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a class="back-link" href="home.html">← Home</a>
+    <div class="topbar-right">
+      <div class="clock" id="clock">--:--:--</div>
+      <div id="dateLabel">—</div>
+    </div>
+  </div>
+
+  <div class="module-head">
+    <div class="module-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2.5 20.5 20h-17z"></path>
+        <path d="M12 9v4.2"></path>
+        <circle cx="12" cy="16.3" r=".4" fill="currentColor" stroke="none"></circle>
+      </svg>
+    </div>
+    <div>
+      <div class="eyebrow">Modulo · SC</div>
+      <div class="title">Scadenze Flotta</div>
+    </div>
+    <div class="count"><b id="totCount">—</b> da verificare</div>
+  </div>
+
+  <div id="categorie"></div>
+
+</div>
+
+<script>
+  // ── Config colori/etichette per categoria (stesso hue dello script Apps Script, adattato al dark) ──
+  const CATEGORIE_INFO = {
+    "REVISIONE":      { colore:"var(--c-revisione)" },
+    "MULTA":          { colore:"var(--c-multa)" },
+    "MANUTENZIONE":   { colore:"var(--c-manutenzione)", nota:"URGENTE sempre in cima" },
+    "TAGLIANDO KM":    { colore:"var(--c-tagliando)", nota:"veicoli sotto soglia km", nascondi:["scadenza","giorni"] },
+    "BOLLO":          { colore:"var(--c-bollo)", nota:"finestra ±15gg" },
+    "ASSICURAZIONE":  { colore:"var(--c-assicurazione)", nota:"finestra ±15gg" },
+    "SCADENZA CARTE": { colore:"var(--c-carte)" },
+    "ASSENZA":        { colore:"var(--c-assenza)", ultimaColonna:"RIENTRO" },
+    "PERMESSO":       { colore:"var(--c-permesso)", ultimaColonna:"RIENTRO" },
+  };
+
+  function semaforoParts(sem){
+    if (!sem) return { cls:'', label:'—' };
+    if (sem.includes('SCADUTO'))    return { cls:'scaduto',    label: sem };
+    if (sem.includes('CRITICO'))    return { cls:'critico',    label: sem };
+    if (sem.includes('URGENTE'))    return { cls:'urgente',    label: sem };
+    if (sem.includes('ATTENZIONE')) return { cls:'attenzione', label: sem };
+    if (sem.includes('OK'))         return { cls:'ok',         label: sem };
+    return { cls:'', label: sem }; // es. "↩ Rientro dd/mm/yyyy"
+  }
+
+  function renderCategorie(data){
+    const cont = document.getElementById('categorie');
+    cont.innerHTML = '';
+    let totale = 0;
+
+    Object.keys(CATEGORIE_INFO).forEach(cat => {
+      const righe = data[cat];
+      if (!righe || !righe.length) return;
+      totale += righe.length;
+      const info = CATEGORIE_INFO[cat];
+      const nascoste = info.nascondi || [];
+
+      const block = document.createElement('div');
+      block.className = 'cat-block';
+      block.style.setProperty('--cat-color', info.colore);
+
+      block.innerHTML = `
+        <div class="cat-head">
+          <span class="name">${cat}</span>
+          <span class="n">(${righe.length})</span>
+          ${info.nota ? `<span class="note">${info.nota}</span>` : ''}
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Riferimento</th>
+              <th>Descrizione</th>
+              ${!nascoste.includes('scadenza') ? '<th class="num">Scadenza</th>' : ''}
+              ${!nascoste.includes('giorni') ? '<th class="num">Giorni</th>' : ''}
+              <th class="num">${info.ultimaColonna || 'Semaforo'}</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>`;
+
+      const tbody = block.querySelector('tbody');
+      righe.forEach(r => {
+        const sem = semaforoParts(r.semaforo);
+        const isRientro = r.semaforo && r.semaforo.includes('Rientro');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="riferimento">${r.riferimento}</td>
+          <td>${r.descrizione}</td>
+          ${!nascoste.includes('scadenza') ? `<td class="num" data-label="Scadenza">${r.data || '—'}</td>` : ''}
+          ${!nascoste.includes('giorni') ? `<td class="num" data-label="Giorni">${r.gg ?? '—'}</td>` : ''}
+          <td class="num" data-label="${info.ultimaColonna || 'Semaforo'}">
+            <span class="semaforo ${isRientro ? 'txt-rientro' : 'txt-' + sem.cls}">
+              ${!isRientro ? `<span class="dot ${sem.cls}"></span>` : ''}${sem.label}
+            </span>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+
+      cont.appendChild(block);
+    });
+
+    document.getElementById('totCount').textContent = totale;
+    if (!totale){
+      cont.innerHTML = '<div class="empty-state">Nessuna scadenza da verificare al momento 🎉</div>';
+    }
+  }
+
+  // ── DATI DI ESEMPIO (dallo screenshot) — da sostituire con la chiamata reale al Worker ──
+  const SAMPLE_DATA = {
+    "REVISIONE": [
+      { riferimento:"FP 229 YY", descrizione:"Revisione veicolo", data:"30/06/2026", gg:-27, semaforo:"🔴 SCADUTO" },
+    ],
+    "MANUTENZIONE": [
+      { riferimento:"GJ 818 XZ", descrizione:"DA ESEGUIRE — Tagliando @ MAFFIOLINI — MANUTENZIONE A", data:"29/07/2026", gg:2, semaforo:"🟠 CRITICO" },
+      { riferimento:"GP 929 TS", descrizione:"DA ESEGUIRE — Tagliando @ Maffiolini", data:"31/07/2026", gg:4, semaforo:"🟠 CRITICO" },
+    ],
+    "TAGLIANDO KM": [
+      { riferimento:"GJ 818 XZ", descrizione:"Tagliando previsto a 676.800 km (attuali 676.039 km)", semaforo:"🟡 URGENTE" },
+    ],
+    "BOLLO": [
+      { riferimento:"GD 482 RD", descrizione:"Bollo — Art Logistic", data:"29/07/2026", gg:2, semaforo:"🟠 CRITICO" },
+    ],
+    "ASSICURAZIONE": [
+      { riferimento:"GD 482 RD", descrizione:"Assicurazione RCA — Art Logistic", data:"30/07/2026", gg:3, semaforo:"🟠 CRITICO" },
+    ],
+    "SCADENZA CARTE": [
+      { riferimento:"GE 623 DK", descrizione:"Scadenza carta carburante", data:"01/06/2026", gg:-56, semaforo:"🔴 SCADUTO" },
+      { riferimento:"FZ 372 LP", descrizione:"Scadenza carta carburante", data:"01/07/2026", gg:-26, semaforo:"🔴 SCADUTO" },
+      { riferimento:"GJ 818 XZ", descrizione:"Scadenza carta carburante", data:"01/07/2026", gg:-26, semaforo:"🔴 SCADUTO" },
+      { riferimento:"GX 918 MW", descrizione:"Scadenza carta carburante", data:"01/07/2026", gg:-26, semaforo:"🔴 SCADUTO" },
+    ],
+  };
+
+  renderCategorie(SAMPLE_DATA);
+
+  function tick(){
+    const d = new Date();
+    document.getElementById('clock').textContent = d.toLocaleTimeString('it-IT');
+    document.getElementById('dateLabel').textContent = d.toLocaleDateString('it-IT', { weekday:'short', day:'2-digit', month:'short' });
+  }
+  tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>
