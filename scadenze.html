@@ -272,7 +272,23 @@
     }
   }
 
-  // ── DATI DI ESEMPIO (dallo screenshot) — da sostituire con la chiamata reale al Worker ──
+  // ── Chiamata reale al Worker (stesso pattern JSONP di giro.html) ──
+  const API = 'https://giro.groupmylogistich.workers.dev';
+
+  function apiCall(qs) {
+    return new Promise((resolve, reject) => {
+      const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
+      const tag   = document.createElement('script');
+      const timer = setTimeout(() => { delete window[cb]; tag.remove(); reject(new Error('Timeout')); }, 25000);
+      window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
+      tag.onerror = () => { clearTimeout(timer); delete window[cb]; tag.remove(); reject(new Error('Errore di rete')); };
+      tag.src = API + '?' + qs + '&callback=' + cb;
+      document.head.appendChild(tag);
+    });
+  }
+
+  // Dati di esempio (dallo screenshot) — usati solo se la chiamata reale fallisce,
+  // così la pagina resta leggibile finché non colleghi action=scadenze sull'Apps Script.
   const SAMPLE_DATA = {
     "REVISIONE": [
       { riferimento:"FP 229 YY", descrizione:"Revisione veicolo", data:"30/06/2026", gg:-27, semaforo:"🔴 SCADUTO" },
@@ -298,7 +314,29 @@
     ],
   };
 
-  renderCategorie(SAMPLE_DATA);
+  async function caricaScadenze(){
+    document.getElementById('categorie').innerHTML =
+      '<div class="empty-state">Caricamento scadenze…</div>';
+    try {
+      const dati = await apiCall('action=scadenze');
+      renderCategorie(dati);
+    } catch (e) {
+      // Connessione lenta o Apps Script "a freddo": mostro i dati di esempio
+      // ma AVVISO chiaramente, invece di farli passare per dati reali.
+      renderCategorie(SAMPLE_DATA);
+      const cont = document.getElementById('categorie');
+      const avviso = document.createElement('div');
+      avviso.style.cssText = 'background:rgba(239,83,80,.12);border:1px solid rgba(239,83,80,.4);' +
+        'border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:.78rem;color:#ef9a9a;' +
+        'font-family:JetBrains Mono,monospace;display:flex;align-items:center;justify-content:space-between;gap:12px;';
+      avviso.innerHTML = '<span>⚠️ Impossibile contattare il server in tempo — questi sono dati di esempio, non reali.</span>' +
+        '<button onclick="caricaScadenze()" style="background:transparent;border:1px solid #ef9a9a;color:#ef9a9a;' +
+        'border-radius:6px;padding:4px 10px;font-family:inherit;font-size:.7rem;cursor:pointer;flex-shrink:0;">Riprova</button>';
+      cont.prepend(avviso);
+    }
+  }
+
+  caricaScadenze();
 
   function tick(){
     const d = new Date();
