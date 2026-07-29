@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -168,115 +168,6 @@
   }
   @media(max-width:560px){ .alert-banner{ flex-wrap:wrap; } .alert-go{ width:100%; text-align:right; } }
 
-  /* ── Calendario Assenze ── */
-  .cal-panel{
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:16px;
-    padding:16px 20px 18px;
-    margin-top:28px;
-  }
-  .cal-head{
-    display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:12px; flex-wrap:wrap; gap:12px;
-  }
-  .cal-head-left{ display:flex; align-items:center; gap:12px; }
-  .cal-title{ font-size:1.05rem; font-weight:700; }
-  .cal-title .eyebrow{
-    display:block; font-size:.6rem; font-weight:600; letter-spacing:.2em;
-    text-transform:uppercase; color:var(--muted); margin-bottom:2px;
-  }
-  .cal-nav{ display:flex; align-items:center; gap:6px; }
-  .cal-nav button{
-    width:30px; height:30px; border-radius:8px; border:1px solid var(--line);
-    background:var(--panel2); color:var(--ink); cursor:pointer;
-    display:flex; align-items:center; justify-content:center; font-size:.85rem;
-    transition:border-color .15s, color .15s;
-  }
-  .cal-nav button:hover{ border-color:var(--yellow); color:var(--yellow); }
-  .cal-nav .cal-month-label{
-    font-family:'JetBrains Mono',monospace; font-size:.78rem; color:var(--ink);
-    min-width:110px; text-align:center; text-transform:capitalize;
-  }
-  .cal-legend{ display:flex; gap:14px; flex-wrap:wrap; }
-  .cal-legend span{
-    display:inline-flex; align-items:center; gap:6px;
-    font-size:.68rem; color:var(--muted);
-    font-family:'JetBrains Mono',monospace;
-  }
-  .cal-legend i{ width:9px; height:9px; border-radius:3px; display:inline-block; }
-
-  .cal-weekdays{
-    display:grid; grid-template-columns:repeat(7,1fr);
-    gap:4px; margin-bottom:4px;
-  }
-  .cal-weekdays span{
-    text-align:center; font-size:.62rem; font-weight:600; letter-spacing:.06em;
-    text-transform:uppercase; color:var(--muted); padding-bottom:2px;
-  }
-
-  .cal-week{
-    border-top:1px solid var(--line);
-    padding-top:3px; margin-bottom:1px;
-  }
-  .cal-daynums{
-    display:grid; grid-template-columns:repeat(7,1fr);
-    gap:4px; margin-bottom:2px;
-  }
-  .cal-daynums span{
-    font-family:'JetBrains Mono',monospace; font-size:.64rem;
-    color:var(--muted); padding:1px 4px; line-height:1.2; display:block;
-  }
-  .cal-daynums span.today{ color:var(--yellow); font-weight:700; }
-  .cal-daynums span.out{ opacity:.3; }
-
-  .cal-lane{
-    display:grid; grid-template-columns:repeat(7,1fr);
-    gap:4px; margin-bottom:2px; min-height:15px;
-  }
-  .cal-bar{
-    border-radius:4px; padding:1px 8px;
-    font-size:.62rem; font-weight:600; color:#0b0e14;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    cursor:pointer; display:flex; align-items:center; line-height:1.4;
-    transition:filter .15s;
-  }
-  .cal-bar:hover{ filter:brightness(1.12); }
-  .cal-bar.tipo-malattia{ background:#ba68c8; }
-  .cal-bar.tipo-ferie{ background:#66bb6a; }
-  .cal-bar.tipo-permesso{ background:#facc15; }
-
-  /* ── Modal dettaglio assenza ── */
-  .cal-modal-overlay{
-    display:none; position:fixed; inset:0; z-index:200;
-    background:rgba(0,0,0,.55);
-    align-items:center; justify-content:center; padding:20px;
-  }
-  .cal-modal-overlay.open{ display:flex; }
-  .cal-modal{
-    background:var(--panel2); border:1px solid var(--line); border-radius:16px;
-    padding:22px 24px; max-width:360px; width:100%;
-  }
-  .cal-modal-tipo{
-    display:inline-flex; align-items:center; gap:6px;
-    font-size:.66rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-    padding:4px 10px; border-radius:20px; margin-bottom:12px; color:#0b0e14;
-  }
-  .cal-modal-nome{ font-size:1.15rem; font-weight:700; margin-bottom:14px; }
-  .cal-modal-row{
-    display:flex; justify-content:space-between; align-items:center;
-    padding:8px 0; border-top:1px solid var(--line);
-    font-size:.82rem;
-  }
-  .cal-modal-row .k{ color:var(--muted); }
-  .cal-modal-row .v{ font-family:'JetBrains Mono',monospace; }
-  .cal-modal-close{
-    margin-top:16px; width:100%; padding:10px; border-radius:10px;
-    border:1px solid var(--line); background:transparent; color:var(--muted);
-    font-family:'Syne',sans-serif; font-weight:600; cursor:pointer;
-  }
-  .cal-modal-close:hover{ border-color:var(--yellow); color:var(--yellow); }
-
   /* ── Ghost / coming soon cards ── */
   .card.ghost{
     background:transparent; border-style:dashed; border-color:var(--line);
@@ -381,7 +272,7 @@
     </a>
 
     <!-- ASSENZE -->
-    <a class="card" href="#" id="cardAssenze">
+    <a class="card" href="assenze.html" id="cardAssenze">
       <div class="card-top">
         <div class="icon-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -423,48 +314,7 @@
 
   </div>
 
-  <!-- ── Calendario Assenze ── -->
-  <div class="cal-panel">
-    <div class="cal-head">
-      <div class="cal-head-left">
-        <div class="cal-title">
-          <span class="eyebrow">Modulo · AS</span>
-          Assenze — anteprima
-        </div>
-        <div class="cal-nav">
-          <button id="calPrev" aria-label="Mese precedente">←</button>
-          <span class="cal-month-label" id="calMonthLabel">—</span>
-          <button id="calNext" aria-label="Mese successivo">→</button>
-        </div>
-      </div>
-      <div class="cal-legend">
-        <span><i style="background:#ba68c8"></i>Malattia</span>
-        <span><i style="background:#66bb6a"></i>Ferie</span>
-        <span><i style="background:#facc15"></i>Permesso</span>
-      </div>
-    </div>
-
-    <div class="cal-weekdays">
-      <span>Lu</span><span>Ma</span><span>Me</span><span>Gi</span><span>Ve</span><span>Sa</span><span>Do</span>
-    </div>
-
-    <div id="calWeeks"><!-- generato via JS --></div>
-  </div>
-
   <div class="footnote">MyLogAdmin — pannello in costruzione, 3 / molti moduli attivi</div>
-</div>
-
-<!-- Modal dettaglio assenza -->
-<div class="cal-modal-overlay" id="calModalOverlay" onclick="if(event.target===this) chiudiCalModal()">
-  <div class="cal-modal">
-    <div class="cal-modal-tipo" id="calModalTipo"></div>
-    <div class="cal-modal-nome" id="calModalNome"></div>
-    <div class="cal-modal-row"><span class="k">Dal</span><span class="v" id="calModalDal"></span></div>
-    <div class="cal-modal-row"><span class="k">Al</span><span class="v" id="calModalAl"></span></div>
-    <div class="cal-modal-row"><span class="k">Giorni</span><span class="v" id="calModalGiorni"></span></div>
-    <div class="cal-modal-row"><span class="k">Stato</span><span class="v" id="calModalStato"></span></div>
-    <button class="cal-modal-close" onclick="chiudiCalModal()">Chiudi</button>
-  </div>
 </div>
 
 <script>
@@ -527,141 +377,6 @@
   }
 
   caricaBannerScadenze();
-
-  // ── Calendario Assenze (dati di esempio — da collegare al foglio "Assenze Driver") ──
-  // ogni voce: driver, tipo (malattia|ferie|permesso), dal/al in formato YYYY-MM-DD, stato
-  const ASSENZE_SAMPLE = [
-    { driver:'CACCIAPAGLIA ALESSANDRO', tipo:'malattia', dal:'2026-07-01', al:'2026-07-31', stato:'APPROVATO' },
-    { driver:'BUSHATI ERMIR',           tipo:'ferie',    dal:'2026-07-01', al:'2026-07-03', stato:'APPROVATO' },
-    { driver:'MARINELLI MARIO',         tipo:'ferie',    dal:'2026-07-01', al:'2026-07-04', stato:'APPROVATO' },
-    { driver:'VASI DELFIO',             tipo:'ferie',    dal:'2026-07-01', al:'2026-07-06', stato:'APPROVATO' },
-    { driver:'PAGANI MAURIZIO',         tipo:'permesso', dal:'2026-07-01', al:'2026-07-01', stato:'APPROVATO' },
-    { driver:'PAVIA FABRIZIO',          tipo:'permesso', dal:'2026-07-02', al:'2026-07-03', stato:'APPROVATO' },
-    { driver:'MINUSSO SIMONE',          tipo:'permesso', dal:'2026-07-01', al:'2026-07-01', stato:'APPROVATO' },
-    { driver:'LO VECCHIO SALVATORE GIULIO', tipo:'permesso', dal:'2026-07-03', al:'2026-07-03', stato:'APPROVATO' },
-    { driver:'GHIRALDI JURI',           tipo:'ferie',    dal:'2026-07-07', al:'2026-07-14', stato:'APPROVATO' },
-    { driver:'MENTASTI MARCO',          tipo:'ferie',    dal:'2026-07-07', al:'2026-07-15', stato:'APPROVATO' },
-    { driver:'CIVITILLO MARCO',         tipo:'ferie',    dal:'2026-07-07', al:'2026-07-08', stato:'APPROVATO' },
-    { driver:'LEONE MATTIA',            tipo:'permesso', dal:'2026-07-09', al:'2026-07-09', stato:'APPROVATO' },
-    { driver:'MONACELLI EMANUELE',      tipo:'permesso', dal:'2026-07-10', al:'2026-07-10', stato:'APPROVATO' },
-    { driver:'ROVERA LUCA',             tipo:'ferie',    dal:'2026-07-12', al:'2026-07-17', stato:'APPROVATO' },
-    { driver:'GALVALISI ALBERTO',       tipo:'ferie',    dal:'2026-07-19', al:'2026-07-27', stato:'APPROVATO' },
-    { driver:'BOLOGNA MAURO',           tipo:'malattia', dal:'2026-07-19', al:'2026-07-19', stato:'APPROVATO' },
-    { driver:'ZANCANELLA CLAUDIO',      tipo:'permesso', dal:'2026-07-19', al:'2026-07-19', stato:'APPROVATO' },
-    { driver:'IZZO GIANCARMINE JOSEPH', tipo:'permesso', dal:'2026-07-20', al:'2026-07-20', stato:'APPROVATO' },
-    { driver:'ANTONI FABIO',            tipo:'permesso', dal:'2026-07-22', al:'2026-07-22', stato:'APPROVATO' },
-    { driver:'DALLA BENETTA NICOLO\'',  tipo:'ferie',    dal:'2026-07-20', al:'2026-07-26', stato:'APPROVATO' },
-    { driver:'TERRAPIENO MASSIMO',      tipo:'ferie',    dal:'2026-07-20', al:'2026-07-26', stato:'APPROVATO' },
-    { driver:'MOLLO TULLIO',            tipo:'permesso', dal:'2026-07-25', al:'2026-07-25', stato:'APPROVATO' },
-    { driver:'VESCOVI CLAUDIO',         tipo:'ferie',    dal:'2026-07-27', al:'2026-07-31', stato:'APPROVATO' },
-    { driver:'MINOTTI MARCO',           tipo:'permesso', dal:'2026-07-30', al:'2026-07-30', stato:'APPROVATO' },
-    { driver:'MRKAJIC ZELJKO GERRY',    tipo:'ferie',    dal:'2026-07-31', al:'2026-07-31', stato:'APPROVATO' },
-  ];
-
-  let calAnno = new Date().getFullYear();
-  let calMese = new Date().getMonth(); // 0-based
-
-  function calParseISO(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
-  function calFmtIt(d){ return d.toLocaleDateString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric' }); }
-
-  function renderCalendario(){
-    const primoDelMese = new Date(calAnno, calMese, 1);
-    const ultimoDelMese = new Date(calAnno, calMese + 1, 0);
-
-    // Lunedì della settimana che contiene il 1° del mese
-    const inizioGriglia = new Date(primoDelMese);
-    const offsetInizio = (primoDelMese.getDay() + 6) % 7; // 0=lunedì
-    inizioGriglia.setDate(primoDelMese.getDate() - offsetInizio);
-
-    // Domenica della settimana che contiene l'ultimo giorno del mese
-    const fineGriglia = new Date(ultimoDelMese);
-    const offsetFine = (7 - ((ultimoDelMese.getDay() + 6) % 7) - 1);
-    fineGriglia.setDate(ultimoDelMese.getDate() + offsetFine);
-
-    document.getElementById('calMonthLabel').textContent =
-      primoDelMese.toLocaleDateString('it-IT', { month:'long', year:'numeric' });
-
-    const oggi = new Date(); oggi.setHours(0,0,0,0);
-    const weeksContainer = document.getElementById('calWeeks');
-    weeksContainer.innerHTML = '';
-
-    let cursore = new Date(inizioGriglia);
-    while (cursore <= fineGriglia) {
-      const settimanaInizio = new Date(cursore);
-      const settimanaFine = new Date(cursore); settimanaFine.setDate(settimanaFine.getDate() + 6);
-
-      const weekEl = document.createElement('div');
-      weekEl.className = 'cal-week';
-
-      // numeri dei giorni
-      const daynums = document.createElement('div');
-      daynums.className = 'cal-daynums';
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(settimanaInizio); d.setDate(d.getDate() + i);
-        const span = document.createElement('span');
-        span.textContent = d.getDate();
-        if (d.getMonth() !== calMese) span.classList.add('out');
-        if (d.getTime() === oggi.getTime()) span.classList.add('today');
-        daynums.appendChild(span);
-      }
-      weekEl.appendChild(daynums);
-
-      // eventi che si sovrappongono a questa settimana
-      const eventiSettimana = ASSENZE_SAMPLE
-        .map(a => ({ ...a, dalD: calParseISO(a.dal), alD: calParseISO(a.al) }))
-        .filter(a => a.alD >= settimanaInizio && a.dalD <= settimanaFine)
-        .sort((a,b) => a.dalD - b.dalD);
-
-      eventiSettimana.forEach(ev => {
-        const lane = document.createElement('div');
-        lane.className = 'cal-lane';
-
-        const startCol = Math.max(0, Math.round((ev.dalD - settimanaInizio) / 86400000)) + 1;
-        const endCol = Math.min(6, Math.round((ev.alD - settimanaInizio) / 86400000)) + 2; // +1 per fine esclusiva grid
-
-        const bar = document.createElement('div');
-        bar.className = 'cal-bar tipo-' + ev.tipo;
-        bar.style.gridColumn = startCol + ' / ' + endCol;
-        bar.textContent = (ev.tipo === 'malattia' ? 'Malattia' : ev.tipo === 'ferie' ? 'Ferie' : 'Permesso') + ' — ' + ev.driver;
-        bar.onclick = () => apriCalModal(ev);
-        lane.appendChild(bar);
-
-        weekEl.appendChild(lane);
-      });
-
-      weeksContainer.appendChild(weekEl);
-      cursore.setDate(cursore.getDate() + 7);
-    }
-  }
-
-  function apriCalModal(ev){
-    const coloriTipo = { malattia:'#ba68c8', ferie:'#66bb6a', permesso:'#facc15' };
-    const labelTipo = { malattia:'Malattia', ferie:'Ferie', permesso:'Permesso' };
-    const tipoEl = document.getElementById('calModalTipo');
-    tipoEl.textContent = labelTipo[ev.tipo];
-    tipoEl.style.background = coloriTipo[ev.tipo];
-    document.getElementById('calModalNome').textContent = ev.driver;
-    document.getElementById('calModalDal').textContent = calFmtIt(ev.dalD);
-    document.getElementById('calModalAl').textContent = calFmtIt(ev.alD);
-    const giorni = Math.round((ev.alD - ev.dalD) / 86400000) + 1;
-    document.getElementById('calModalGiorni').textContent = giorni;
-    document.getElementById('calModalStato').textContent = ev.stato;
-    document.getElementById('calModalOverlay').classList.add('open');
-  }
-  function chiudiCalModal(){
-    document.getElementById('calModalOverlay').classList.remove('open');
-  }
-
-  document.getElementById('calPrev').onclick = () => {
-    calMese--; if (calMese < 0) { calMese = 11; calAnno--; }
-    renderCalendario();
-  };
-  document.getElementById('calNext').onclick = () => {
-    calMese++; if (calMese > 11) { calMese = 0; calAnno++; }
-    renderCalendario();
-  };
-
-  renderCalendario();
 </script>
 </body>
 </html>
