@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -23,9 +23,9 @@
     background:var(--bg);
     color:var(--ink);
     min-height:100dvh;
-    padding:28px 20px 60px;
+    padding:28px clamp(20px, 4vw, 64px) 60px;
   }
-  .wrap{max-width:1080px;margin:0 auto;}
+  .wrap{width:100%; max-width:1800px; margin:0 auto;}
 
   /* ── Topbar ── */
   .topbar{
@@ -66,10 +66,9 @@
 
   /* ── Grid ── */
   .grid{
-    display:grid; grid-template-columns:repeat(3,1fr);
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
     gap:14px;
   }
-  @media(max-width:820px){ .grid{grid-template-columns:repeat(2,1fr);} }
   @media(max-width:520px){ .grid{grid-template-columns:1fr;} }
 
   /* ── Card (stesso pattern della home) ── */
@@ -216,7 +215,7 @@
     </a>
 
     <!-- MULTE -->
-    <a class="card" href="https://www.appsheet.com/start/99b162dc-bdb6-4aa9-b0ee-3b46d36401c6?platform=desktop#appName=My_NEW_Logistic-716983141&vss=H4sIAAAAAAAAA52PsU7DMBRF_-XNbhWFliRegaGqygARA7iDaV6kqIkd1S9AFfnfeS6NqkoMaUZf32Of28NXhd-vpHd7kB_95bTGI0joFeTHFhVIBQ_W0MHWCoSCZ938hRs0nQIPXkxgu5rwBG_FABM6kP34f-V0ZQFVgYaqssJDeCdQzJ8Zvg4EB6HP-6DpSH_WeJLkvudo_MQpngM7WjQA_5gOzauagBdriY-ldpSHOkePmjRTTct5HMX3syiZxUkepXKxlHfZfJlmizTJ3sGH9aXddQ6LN9516x63Mk8_rTbFxhbsVOraof8F3sPoiowCAAA=&view=Multe" id="cardMulte">
+    <a class="card" href="#" id="cardMulte">
       <div class="card-top">
         <div class="icon-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
