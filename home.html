@@ -173,12 +173,12 @@
     background:var(--panel);
     border:1px solid var(--line);
     border-radius:16px;
-    padding:20px 20px 24px;
+    padding:16px 20px 18px;
     margin-top:28px;
   }
   .cal-head{
     display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:16px; flex-wrap:wrap; gap:12px;
+    margin-bottom:12px; flex-wrap:wrap; gap:12px;
   }
   .cal-head-left{ display:flex; align-items:center; gap:12px; }
   .cal-title{ font-size:1.05rem; font-weight:700; }
@@ -208,37 +208,37 @@
 
   .cal-weekdays{
     display:grid; grid-template-columns:repeat(7,1fr);
-    gap:4px; margin-bottom:6px;
+    gap:4px; margin-bottom:4px;
   }
   .cal-weekdays span{
-    text-align:center; font-size:.64rem; font-weight:600; letter-spacing:.06em;
-    text-transform:uppercase; color:var(--muted); padding-bottom:4px;
+    text-align:center; font-size:.62rem; font-weight:600; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--muted); padding-bottom:2px;
   }
 
   .cal-week{
     border-top:1px solid var(--line);
-    padding-top:6px; margin-bottom:2px;
+    padding-top:3px; margin-bottom:1px;
   }
   .cal-daynums{
     display:grid; grid-template-columns:repeat(7,1fr);
-    gap:4px; margin-bottom:4px;
+    gap:4px; margin-bottom:2px;
   }
   .cal-daynums span{
-    font-family:'JetBrains Mono',monospace; font-size:.68rem;
-    color:var(--muted); padding:2px 4px;
+    font-family:'JetBrains Mono',monospace; font-size:.64rem;
+    color:var(--muted); padding:1px 4px; line-height:1.2; display:block;
   }
   .cal-daynums span.today{ color:var(--yellow); font-weight:700; }
   .cal-daynums span.out{ opacity:.3; }
 
   .cal-lane{
     display:grid; grid-template-columns:repeat(7,1fr);
-    gap:4px; margin-bottom:3px; min-height:18px;
+    gap:4px; margin-bottom:2px; min-height:15px;
   }
   .cal-bar{
-    border-radius:5px; padding:2px 8px;
-    font-size:.66rem; font-weight:600; color:#0b0e14;
+    border-radius:4px; padding:1px 8px;
+    font-size:.62rem; font-weight:600; color:#0b0e14;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    cursor:pointer; display:flex; align-items:center;
+    cursor:pointer; display:flex; align-items:center; line-height:1.4;
     transition:filter .15s;
   }
   .cal-bar:hover{ filter:brightness(1.12); }
