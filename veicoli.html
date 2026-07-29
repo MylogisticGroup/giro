@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -23,9 +23,9 @@
     background:var(--bg);
     color:var(--ink);
     min-height:100dvh;
-    padding:28px 20px 60px;
+    padding:28px clamp(20px, 4vw, 64px) 60px;
   }
-  .wrap{max-width:1080px;margin:0 auto;}
+  .wrap{width:100%; max-width:1800px; margin:0 auto;}
 
   /* ── Topbar ── */
   .topbar{
@@ -66,10 +66,9 @@
 
   /* ── Grid ── */
   .grid{
-    display:grid; grid-template-columns:repeat(3,1fr);
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
     gap:14px;
   }
-  @media(max-width:820px){ .grid{grid-template-columns:repeat(2,1fr);} }
   @media(max-width:520px){ .grid{grid-template-columns:1fr;} }
 
   /* ── Card (stesso pattern della home) ── */
@@ -151,7 +150,7 @@
   <div class="grid">
 
     <!-- MANUTENZIONE -->
-    <a class="card" href="https://www.appsheet.com/start/99b162dc-bdb6-4aa9-b0ee-3b46d36401c6?platform=desktop#appName=My_NEW_Logistic-716983141&vss=H4sIAAAAAAAAA62QMU_DMBCF_0p1cwpRoIR6BQaEylAiBjDDtb60FokdxU6hRP7vnAsVC0NaVfJgP9_7dO_1sNH08eRx-Q7itf97PdAWBPQSim1DEoSEG2t8aysJiYRHrH_EGZlOQoCQHO4tcFVpNMqOzkdz2minraF41w22-BVfO_Rbskd7ciD64VuJ4wMloBUZr0tNbeREF_t_PfwdHSzEeU4PdedxUdFuSZ4PLJ2qgCNSDCQPDTkA908He84BkATm1noeVujWC4utYukWPTKzbljP0uxqnObjLC_SqZhc8jm7nk7yizR_gRBbL-2yc6SeubHTNuXuzd1nw6MzqzhPiZWj8A2SuiZeQAMAAA==&view=Tagliando%20/%20Revisione%20/%20Riparazione" id="cardManutenzione">
+    <a class="card" href="#" id="cardManutenzione">
       <div class="card-top">
         <div class="icon-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -171,7 +170,7 @@
     </a>
 
     <!-- PNEUMATICI -->
-    <a class="card" href="https://www.appsheet.com/start/99b162dc-bdb6-4aa9-b0ee-3b46d36401c6?platform=desktop#appName=My_NEW_Logistic-716983141&vss=H4sIAAAAAAAAA52SMU_DMBSE_8vNLjIB0dYrMCBUhKBiADO48YtkkdhR4wBV5P_Oc6GqEAxtxlzuO99ZHvDu6OMxmvIN6mXYf93SBgqDxnLTkobSuAw-rkOtITTuTPMtLsj3GglJHM_ee-obE13ptgmvYpcQqYMaDj9cje8t4Cz56CpH65yTKeZ_GP6dCRayn0ei6aNZ1bQtyf7E0pE7R5T9HXBo5T31T_Gd_a9X4CGEyJolfhMCVyYappqWpUIWFxM5nRTTpZyr85mS8uRsJueyOH1GypdRhbLvyD7xwlHLuht__dkabxfBcrHK1B2lL9qdG9WlAgAA&view=Pneumatici" id="cardPneumatici">
+    <a class="card" href="#" id="cardPneumatici">
       <div class="card-top">
         <div class="icon-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -193,7 +192,7 @@
     </a>
 
     <!-- SINISTRI -->
-    <a class="card" href="https://www.appsheet.com/start/99b162dc-bdb6-4aa9-b0ee-3b46d36401c6?platform=desktop#appName=My_NEW_Logistic-716983141&vss=H4sIAAAAAAAAA52QzW7CMBCE32XPpnJDxY-vbQ8IwaEgDq17cOONZJHYUey0RZHfnTVtBKp6gBx3dj7vjDv4NPi1CSrfg3jrztMSDyCgk7A91ChBSHh0NjSulMAkrFX1I67QthIiRHY7uzHW-NCYE__Oej6gB9Fdf1oMT83AaLTBFAab9E6iiP9laJ0IEpKfKkLVBvVR4ikk-SNJN7UcEPUSvzZuz_wTuTf_dTJ4cS6QkqtG0_SkgiKmqknKeDYZ8ekom275XDzMBOd34xmf8-z-FWL6hMLlrUe9o24DOvmFff6uldUrpylUoUqP8QhAXzoemQIAAA==&view=Sinistri" id="cardSinistri">
+    <a class="card" href="#" id="cardSinistri">
       <div class="card-top">
         <div class="icon-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -218,7 +217,7 @@
     </a>
 
     <!-- TELEPASS -->
-    <a class="card" href="https://www.appsheet.com/start/99b162dc-bdb6-4aa9-b0ee-3b46d36401c6?platform=desktop#appName=My_NEW_Logistic-716983141&vss=H4sIAAAAAAAAA52QPW_CMBRF_8ubTWVCxYdXYKgqOtCIoXWHB3mRoiZ2hJ22KPJ_5xkatUIMkDE399jnuoWvgr5fPe4-Qb23f1_PdAAFrYb0UJMGpWFujd_bUoPQ8ILVOVyRaTQECOJ-NqWSanTuxH-IjvfkQLW3X636WwsoMjK-yAvax3Mixfwvw78jwUHs80SoGo_bkk6S3A8c3bWyh-p__Fbdjrmi3JUvmwLW1npOcnQ-jQRHC_TIYFVznshkPJCTQTJJ5Uw9TpWUD6OpnMlk-AYhvkRud42jbMMDewxzT2b5U6PJVjZjsxxLR-EICTzZrp4CAAA=&view=Telepass" id="cardTelepass">
+    <a class="card" href="#" id="cardTelepass">
       <div class="card-top">
         <div class="icon-box">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
