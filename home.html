@@ -162,6 +162,7 @@
   .chip.scaduto .dot{ background:#ef5350; }
   .chip.critico .dot{ background:#ff9152; }
   .chip.urgente .dot{ background:#ffca28; }
+  .chip.attenzione .dot{ background:#ffe082; }
   .alert-go{
     font-family:'JetBrains Mono',monospace; font-size:.72rem; font-weight:600;
     color:#ef5350; white-space:nowrap; flex-shrink:0;
@@ -212,11 +213,9 @@
       </svg>
     </div>
     <div class="alert-body">
-      <div class="alert-title"><span class="n" id="bannerCount">10</span> scadenze da verificare</div>
+      <div class="alert-title"><span class="n" id="bannerCount">···</span> scadenze da verificare</div>
       <div class="alert-chips" id="bannerChips">
-        <span class="chip scaduto"><span class="dot"></span>6 scaduto</span>
-        <span class="chip critico"><span class="dot"></span>3 critico</span>
-        <span class="chip urgente"><span class="dot"></span>1 urgente</span>
+        <span class="chip">caricamento…</span>
       </div>
     </div>
     <div class="alert-go">Vedi tutte →</div>
@@ -345,24 +344,26 @@
   async function caricaBannerScadenze(){
     try {
       const dati = await apiCall('action=scadenze');
-      let scaduto = 0, critico = 0, urgente = 0, totale = 0;
+      let scaduto = 0, critico = 0, urgente = 0, attenzione = 0, totale = 0;
 
       Object.values(dati).forEach(righe => {
         righe.forEach(r => {
           totale++;
           const sem = (r.semaforo || '').toUpperCase();
-          if (sem.includes('SCADUTO'))      scaduto++;
-          else if (sem.includes('CRITICO')) critico++;
-          else if (sem.includes('URGENTE')) urgente++;
+          if (sem.includes('SCADUTO'))         scaduto++;
+          else if (sem.includes('CRITICO'))    critico++;
+          else if (sem.includes('URGENTE'))    urgente++;
+          else if (sem.includes('ATTENZIONE')) attenzione++;
         });
       });
 
       document.getElementById('bannerCount').textContent = totale;
 
       const chipsHtml = [
-        scaduto ? `<span class="chip scaduto"><span class="dot"></span>${scaduto} scaduto</span>` : '',
-        critico ? `<span class="chip critico"><span class="dot"></span>${critico} critico</span>` : '',
-        urgente ? `<span class="chip urgente"><span class="dot"></span>${urgente} urgente</span>` : '',
+        scaduto    ? `<span class="chip scaduto"><span class="dot"></span>${scaduto} scaduto</span>` : '',
+        critico    ? `<span class="chip critico"><span class="dot"></span>${critico} critico</span>` : '',
+        urgente    ? `<span class="chip urgente"><span class="dot"></span>${urgente} urgente</span>` : '',
+        attenzione ? `<span class="chip attenzione"><span class="dot"></span>${attenzione} attenzione</span>` : '',
       ].join('');
       document.getElementById('bannerChips').innerHTML = chipsHtml || '<span class="chip">tutto in ordine</span>';
 
@@ -370,7 +371,9 @@
       const banner = document.querySelector('.alert-banner');
       if (!scaduto && !critico) banner.style.borderColor = 'var(--line)';
     } catch (e) {
-      // se il Worker non risponde, il banner resta con i valori statici già presenti nell'HTML
+      // se il Worker non risponde, mostro uno stato neutro invece dei vecchi valori fasulli
+      document.getElementById('bannerCount').textContent = '—';
+      document.getElementById('bannerChips').innerHTML = '<span class="chip">dati non disponibili</span>';
     }
   }
 
