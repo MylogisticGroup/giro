@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -210,6 +210,21 @@
     return { cls:'', label: sem }; // es. "↩ Rientro dd/mm/yyyy"
   }
 
+  // Colora l'etichetta di stato all'inizio della descrizione (es. "URGENTE — ...",
+  // "DA ESEGUIRE — ...", "DA PROGRAMMARE — ..."), stessi colori dello script originale.
+  const COLORI_STATO_DESCRIZIONE = {
+    'URGENTE':        '#ef5350', // rosso
+    'DA ESEGUIRE':    '#f9a825', // giallo ocra
+    'DA PROGRAMMARE': '#4fc3f7', // blu
+  };
+  function coloraStatoDescrizione(descrizione){
+    const m = String(descrizione).match(/^(URGENTE|DA ESEGUIRE|DA PROGRAMMARE)(\s*—\s*)/);
+    if (!m) return descrizione;
+    const colore = COLORI_STATO_DESCRIZIONE[m[1]];
+    const resto = descrizione.slice(m[0].length);
+    return `<span style="color:${colore};font-weight:700">${m[1]}</span>${m[2]}${resto}`;
+  }
+
   function renderCategorie(data){
     const cont = document.getElementById('categorie');
     cont.innerHTML = '';
@@ -252,7 +267,7 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="riferimento">${r.riferimento}</td>
-          <td>${r.descrizione}</td>
+          <td>${coloraStatoDescrizione(r.descrizione)}</td>
           ${!nascoste.includes('scadenza') ? `<td class="num" data-label="Scadenza">${r.data || '—'}</td>` : ''}
           ${!nascoste.includes('giorni') ? `<td class="num" data-label="Giorni">${r.gg ?? '—'}</td>` : ''}
           <td class="num" data-label="${info.ultimaColonna || 'Semaforo'}">
