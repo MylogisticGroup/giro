@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="it">
 <head>
 <meta charset="utf-8">
@@ -16,6 +16,12 @@
     --muted:   #6b7a99;
     --yellow:  #facc15;
     --yellow-dim: rgba(250,204,21,.14);
+
+    --c-ferie:     #22c55e;
+    --c-permesso:  #facc15;
+    --c-malattia:  #a855f7;
+    --c-richiesta: #3b82f6;
+    --c-rifiutato: #ef4444;
   }
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
   body{
@@ -23,7 +29,7 @@
     background:var(--bg);
     color:var(--ink);
     min-height:100dvh;
-    padding:28px clamp(20px, 4vw, 64px) 60px;
+    padding:28px clamp(20px, 4vw, 64px) 90px;
   }
   .wrap{width:100%; max-width:1800px; margin:0 auto;}
 
@@ -63,6 +69,13 @@
     text-transform:uppercase; color:var(--muted); margin-bottom:3px;
   }
   .module-head .title{ font-size:1.4rem; font-weight:700; }
+  .btn-nuova{
+    margin-left:auto; display:inline-flex; align-items:center; gap:8px;
+    background:var(--yellow); color:#161200; border:none; border-radius:10px;
+    padding:11px 18px; font-family:'Syne',sans-serif; font-weight:700; font-size:.85rem;
+    cursor:pointer; transition:filter .15s;
+  }
+  .btn-nuova:hover{ filter:brightness(1.08); }
 
   /* ── Calendario ── */
   .cal-panel{
@@ -70,6 +83,7 @@
     border:1px solid var(--line);
     border-radius:16px;
     padding:22px 26px 26px;
+    position:relative;
   }
   .cal-head{
     display:flex; align-items:center; justify-content:space-between;
@@ -87,13 +101,13 @@
     font-family:'JetBrains Mono',monospace; font-size:.95rem; color:var(--ink);
     min-width:150px; text-align:center; text-transform:capitalize;
   }
-  .cal-legend{ display:flex; gap:16px; flex-wrap:wrap; }
+  .cal-legend{ display:flex; gap:14px; flex-wrap:wrap; }
   .cal-legend span{
-    display:inline-flex; align-items:center; gap:7px;
-    font-size:.74rem; color:var(--muted);
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:.7rem; color:var(--muted);
     font-family:'JetBrains Mono',monospace;
   }
-  .cal-legend i{ width:10px; height:10px; border-radius:3px; display:inline-block; }
+  .cal-legend i{ width:9px; height:9px; border-radius:3px; display:inline-block; }
 
   .cal-weekdays{
     display:grid; grid-template-columns:repeat(7,1fr);
@@ -131,21 +145,47 @@
     transition:filter .15s, transform .1s;
   }
   .cal-bar:hover{ filter:brightness(1.12); transform:translateY(-1px); }
-  .cal-bar.tipo-malattia{ background:#ba68c8; }
-  .cal-bar.tipo-ferie{ background:#66bb6a; }
-  .cal-bar.tipo-permesso{ background:#facc15; }
+  .cal-bar.stato-richiesta{ background:var(--c-richiesta); color:#eaf1ff; }
+  .cal-bar.tipo-ferie{ background:var(--c-ferie); }
+  .cal-bar.tipo-permesso{ background:var(--c-permesso); }
+  .cal-bar.tipo-malattia{ background:var(--c-malattia); color:#fff; }
+  .cal-bar.stato-rifiutato{ background:transparent; border:1.5px dashed var(--c-rifiutato); color:var(--c-rifiutato); text-decoration:line-through; }
 
-  /* ── Modal dettaglio assenza ── */
-  .cal-modal-overlay{
+  .cal-loading, .cal-error{
+    text-align:center; padding:40px 20px; color:var(--muted);
+    font-family:'JetBrains Mono',monospace; font-size:.82rem;
+  }
+  .cal-error{ color:#fca5a5; }
+  .cal-error button{
+    margin-top:10px; background:transparent; border:1px solid #fca5a5; color:#fca5a5;
+    border-radius:8px; padding:6px 16px; font-family:'Syne',sans-serif; font-weight:600; cursor:pointer;
+  }
+
+  /* ── FAB ── */
+  .fab{
+    position:fixed; bottom:26px; right:26px; z-index:60;
+    width:56px; height:56px; border-radius:50%; border:none;
+    background:var(--yellow); color:#161200; font-size:1.6rem; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 22px rgba(250,204,21,.4); transition:transform .15s;
+  }
+  .fab:hover{ transform:scale(1.07); }
+  .fab:active{ transform:scale(.94); }
+
+  /* ── Modal generico (dettaglio + form) ── */
+  .modal-overlay{
     display:none; position:fixed; inset:0; z-index:200;
-    background:rgba(0,0,0,.55);
+    background:rgba(0,0,0,.6);
     align-items:center; justify-content:center; padding:20px;
   }
-  .cal-modal-overlay.open{ display:flex; }
-  .cal-modal{
+  .modal-overlay.open{ display:flex; }
+  .modal-box{
     background:var(--panel2); border:1px solid var(--line); border-radius:16px;
-    padding:24px 26px; max-width:380px; width:100%;
+    padding:24px 26px; max-width:420px; width:100%;
+    max-height:88dvh; overflow-y:auto;
   }
+
+  /* dettaglio */
   .cal-modal-tipo{
     display:inline-flex; align-items:center; gap:6px;
     font-size:.68rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
@@ -159,12 +199,63 @@
   }
   .cal-modal-row .k{ color:var(--muted); }
   .cal-modal-row .v{ font-family:'JetBrains Mono',monospace; }
-  .cal-modal-close{
-    margin-top:18px; width:100%; padding:11px; border-radius:10px;
+  .cal-modal-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+  .cal-modal-actions button{
+    flex:1; min-width:100px; padding:10px; border-radius:10px;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:.78rem; cursor:pointer;
+    border:1px solid var(--line); background:transparent; color:var(--ink);
+    transition:border-color .15s, background .15s;
+  }
+  .btn-approva{ border-color:var(--c-ferie); color:#86efac; }
+  .btn-approva:hover{ background:rgba(34,197,94,.12); }
+  .btn-rifiuta{ border-color:var(--c-rifiutato); color:#fca5a5; }
+  .btn-rifiuta:hover{ background:rgba(239,68,68,.12); }
+  .btn-modifica{ border-color:var(--yellow); color:var(--yellow); }
+  .btn-modifica:hover{ background:rgba(250,204,21,.1); }
+  .btn-elimina{ border-color:var(--c-rifiutato); color:#fca5a5; }
+  .btn-elimina:hover{ background:rgba(239,68,68,.12); }
+  .btn-chiudi-modal{
+    margin-top:8px; width:100%; padding:10px; border-radius:10px;
     border:1px solid var(--line); background:transparent; color:var(--muted);
     font-family:'Syne',sans-serif; font-weight:600; cursor:pointer;
   }
-  .cal-modal-close:hover{ border-color:var(--yellow); color:var(--yellow); }
+  .btn-chiudi-modal:hover{ border-color:var(--muted); color:var(--ink); }
+
+  /* form nuova/modifica */
+  .form-title{ font-size:1.05rem; font-weight:700; margin-bottom:18px; }
+  .form-field{ margin-bottom:16px; }
+  .form-label{
+    display:block; font-size:.65rem; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.1em; margin-bottom:7px;
+  }
+  .form-select, .form-date{
+    width:100%; padding:11px 12px; border-radius:9px;
+    border:1.5px solid var(--line); background:var(--panel);
+    color:var(--ink); font-family:'Syne',sans-serif; font-size:.85rem;
+  }
+  .tipo-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .tipo-btn{
+    padding:11px 6px; border-radius:9px; border:1.5px solid var(--line);
+    background:var(--panel); color:var(--muted); font-family:'Syne',sans-serif;
+    font-size:.78rem; font-weight:700; cursor:pointer; text-align:center;
+    transition:all .15s;
+  }
+  .tipo-btn.active-ferie{ border-color:var(--c-ferie); background:rgba(34,197,94,.12); color:#86efac; }
+  .tipo-btn.active-permesso{ border-color:var(--c-permesso); background:rgba(250,204,21,.12); color:#fde68a; }
+  .tipo-btn.active-malattia{ border-color:var(--c-malattia); background:rgba(168,85,247,.14); color:#d8b4fe; }
+  .date-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .form-err{
+    font-size:.78rem; color:#fca5a5; background:rgba(239,68,68,.1);
+    border:1px solid rgba(239,68,68,.3); border-radius:8px; padding:9px 12px;
+    margin-bottom:14px; display:none;
+  }
+  .form-err.visible{ display:block; }
+  .btn-submit-form{
+    width:100%; padding:13px; border-radius:10px; border:none;
+    background:var(--yellow); color:#161200; font-family:'Syne',sans-serif;
+    font-weight:700; font-size:.9rem; cursor:pointer; margin-top:6px;
+  }
+  .btn-submit-form:disabled{ opacity:.5; cursor:not-allowed; }
 </style>
 </head>
 <body>
@@ -191,6 +282,7 @@
       <div class="eyebrow">Modulo · AS</div>
       <div class="title">Assenze</div>
     </div>
+    <button class="btn-nuova" onclick="apriFormNuova()">＋ Nuova assenza</button>
   </div>
 
   <div class="cal-panel">
@@ -201,9 +293,11 @@
         <button id="calNext" aria-label="Mese successivo">→</button>
       </div>
       <div class="cal-legend">
-        <span><i style="background:#ba68c8"></i>Malattia</span>
-        <span><i style="background:#66bb6a"></i>Ferie</span>
+        <span><i style="background:#3b82f6"></i>Richiesta</span>
+        <span><i style="background:#22c55e"></i>Ferie</span>
         <span><i style="background:#facc15"></i>Permesso</span>
+        <span><i style="background:#a855f7"></i>Malattia</span>
+        <span><i style="background:#ef4444"></i>Rifiutato</span>
       </div>
     </div>
 
@@ -211,20 +305,56 @@
       <span>Lunedì</span><span>Martedì</span><span>Mercoledì</span><span>Giovedì</span><span>Venerdì</span><span>Sabato</span><span>Domenica</span>
     </div>
 
-    <div id="calWeeks"><!-- generato via JS --></div>
+    <div id="calWeeks"><div class="cal-loading">Caricamento assenze…</div></div>
   </div>
 </div>
 
+<button class="fab" onclick="apriFormNuova()" title="Nuova assenza">＋</button>
+
 <!-- Modal dettaglio assenza -->
-<div class="cal-modal-overlay" id="calModalOverlay" onclick="if(event.target===this) chiudiCalModal()">
-  <div class="cal-modal">
+<div class="modal-overlay" id="calModalOverlay" onclick="if(event.target===this) chiudiCalModal()">
+  <div class="modal-box">
     <div class="cal-modal-tipo" id="calModalTipo"></div>
     <div class="cal-modal-nome" id="calModalNome"></div>
     <div class="cal-modal-row"><span class="k">Dal</span><span class="v" id="calModalDal"></span></div>
     <div class="cal-modal-row"><span class="k">Al</span><span class="v" id="calModalAl"></span></div>
     <div class="cal-modal-row"><span class="k">Giorni</span><span class="v" id="calModalGiorni"></span></div>
     <div class="cal-modal-row"><span class="k">Stato</span><span class="v" id="calModalStato"></span></div>
-    <button class="cal-modal-close" onclick="chiudiCalModal()">Chiudi</button>
+    <div class="cal-modal-actions" id="calModalActions"><!-- generato via JS --></div>
+    <button class="btn-chiudi-modal" onclick="chiudiCalModal()">Chiudi</button>
+  </div>
+</div>
+
+<!-- Modal form nuova/modifica assenza -->
+<div class="modal-overlay" id="formOverlay" onclick="if(event.target===this) chiudiForm()">
+  <div class="modal-box">
+    <div class="form-title" id="formTitle">Nuova assenza</div>
+    <div class="form-err" id="formErr"></div>
+
+    <div class="form-field">
+      <label class="form-label">Driver</label>
+      <select class="form-select" id="formDriver"><option value="">— Seleziona —</option></select>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label">Tipo</label>
+      <div class="tipo-grid">
+        <button type="button" class="tipo-btn" id="btnTipoFerie" onclick="selTipoForm('Ferie')">Ferie</button>
+        <button type="button" class="tipo-btn" id="btnTipoPermesso" onclick="selTipoForm('Permesso')">Permesso</button>
+        <button type="button" class="tipo-btn" id="btnTipoMalattia" onclick="selTipoForm('Malattia')">Malattia</button>
+      </div>
+    </div>
+
+    <div class="form-field">
+      <label class="form-label">Periodo</label>
+      <div class="date-row">
+        <input type="date" class="form-date" id="formDal">
+        <input type="date" class="form-date" id="formAl">
+      </div>
+    </div>
+
+    <button class="btn-submit-form" id="btnSubmitForm" onclick="submitForm()" disabled>Salva</button>
+    <button class="btn-chiudi-modal" onclick="chiudiForm()">Annulla</button>
   </div>
 </div>
 
@@ -236,40 +366,77 @@
   }
   tick(); setInterval(tick, 1000);
 
-  // ── Calendario Assenze (dati di esempio — da collegare al foglio "Assenze Driver") ──
-  const ASSENZE_SAMPLE = [
-    { driver:'CACCIAPAGLIA ALESSANDRO', tipo:'malattia', dal:'2026-07-01', al:'2026-07-31', stato:'APPROVATO' },
-    { driver:'BUSHATI ERMIR',           tipo:'ferie',    dal:'2026-07-01', al:'2026-07-03', stato:'APPROVATO' },
-    { driver:'MARINELLI MARIO',         tipo:'ferie',    dal:'2026-07-01', al:'2026-07-04', stato:'APPROVATO' },
-    { driver:'VASI DELFIO',             tipo:'ferie',    dal:'2026-07-01', al:'2026-07-06', stato:'APPROVATO' },
-    { driver:'PAGANI MAURIZIO',         tipo:'permesso', dal:'2026-07-01', al:'2026-07-01', stato:'APPROVATO' },
-    { driver:'PAVIA FABRIZIO',          tipo:'permesso', dal:'2026-07-02', al:'2026-07-03', stato:'APPROVATO' },
-    { driver:'MINUSSO SIMONE',          tipo:'permesso', dal:'2026-07-01', al:'2026-07-01', stato:'APPROVATO' },
-    { driver:'LO VECCHIO SALVATORE GIULIO', tipo:'permesso', dal:'2026-07-03', al:'2026-07-03', stato:'APPROVATO' },
-    { driver:'GHIRALDI JURI',           tipo:'ferie',    dal:'2026-07-07', al:'2026-07-14', stato:'APPROVATO' },
-    { driver:'MENTASTI MARCO',          tipo:'ferie',    dal:'2026-07-07', al:'2026-07-15', stato:'APPROVATO' },
-    { driver:'CIVITILLO MARCO',         tipo:'ferie',    dal:'2026-07-07', al:'2026-07-08', stato:'APPROVATO' },
-    { driver:'LEONE MATTIA',            tipo:'permesso', dal:'2026-07-09', al:'2026-07-09', stato:'APPROVATO' },
-    { driver:'MONACELLI EMANUELE',      tipo:'permesso', dal:'2026-07-10', al:'2026-07-10', stato:'APPROVATO' },
-    { driver:'ROVERA LUCA',             tipo:'ferie',    dal:'2026-07-12', al:'2026-07-17', stato:'APPROVATO' },
-    { driver:'GALVALISI ALBERTO',       tipo:'ferie',    dal:'2026-07-19', al:'2026-07-27', stato:'APPROVATO' },
-    { driver:'BOLOGNA MAURO',           tipo:'malattia', dal:'2026-07-19', al:'2026-07-19', stato:'APPROVATO' },
-    { driver:'ZANCANELLA CLAUDIO',      tipo:'permesso', dal:'2026-07-19', al:'2026-07-19', stato:'APPROVATO' },
-    { driver:'IZZO GIANCARMINE JOSEPH', tipo:'permesso', dal:'2026-07-20', al:'2026-07-20', stato:'APPROVATO' },
-    { driver:'ANTONI FABIO',            tipo:'permesso', dal:'2026-07-22', al:'2026-07-22', stato:'APPROVATO' },
-    { driver:'DALLA BENETTA NICOLO\'',  tipo:'ferie',    dal:'2026-07-20', al:'2026-07-26', stato:'APPROVATO' },
-    { driver:'TERRAPIENO MASSIMO',      tipo:'ferie',    dal:'2026-07-20', al:'2026-07-26', stato:'APPROVATO' },
-    { driver:'MOLLO TULLIO',            tipo:'permesso', dal:'2026-07-25', al:'2026-07-25', stato:'APPROVATO' },
-    { driver:'VESCOVI CLAUDIO',         tipo:'ferie',    dal:'2026-07-27', al:'2026-07-31', stato:'APPROVATO' },
-    { driver:'MINOTTI MARCO',           tipo:'permesso', dal:'2026-07-30', al:'2026-07-30', stato:'APPROVATO' },
-    { driver:'MRKAJIC ZELJKO GERRY',    tipo:'ferie',    dal:'2026-07-31', al:'2026-07-31', stato:'APPROVATO' },
-  ];
+  // ── Config ────────────────────────────────────────────────
+  const API       = 'https://giro.groupmylogistich.workers.dev';
+  const ADMIN_KEY = 'mlg-admin-8f3k2q'; // deve combaciare con ADMIN_KEY nello script Apps Script
 
-  let calAnno = new Date().getFullYear();
-  let calMese = new Date().getMonth(); // 0-based
+  function apiCall(qs) {
+    return new Promise((resolve, reject) => {
+      const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
+      const tag   = document.createElement('script');
+      const timer = setTimeout(() => { delete window[cb]; tag.remove(); reject(new Error('Timeout')); }, 25000);
+      window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
+      tag.onerror = () => { clearTimeout(timer); delete window[cb]; tag.remove(); reject(new Error('Errore di rete')); };
+      tag.src = API + '?' + qs + '&callback=' + cb;
+      document.head.appendChild(tag);
+    });
+  }
 
-  function calParseISO(s){ const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+  let tutteAssenze = [];
+  let listaDrivers = [];
+  let calAnno  = new Date().getFullYear();
+  let calMese  = new Date().getMonth();
+  let modModifica = null; // id dell'assenza in modifica, o null se è una nuova
+  let tipoFormSel = '';
+
+  function calParseIt(s){ // "dd/mm/yyyy" -> Date
+    if (!s) return null;
+    const [d,m,y] = s.split('/').map(Number);
+    return new Date(y, m-1, d);
+  }
   function calFmtIt(d){ return d.toLocaleDateString('it-IT', { day:'2-digit', month:'2-digit', year:'numeric' }); }
+  function dateToISO(d){
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+
+  async function caricaTutto(){
+    document.getElementById('calWeeks').innerHTML = '<div class="cal-loading">Caricamento assenze…</div>';
+    try {
+      const [resA, resD] = await Promise.all([
+        apiCall('action=assenze_tutte'),
+        apiCall('action=driver_lista'),
+      ]);
+      tutteAssenze = (resA && resA.assenze) || [];
+      listaDrivers = (resD && resD.drivers) || [];
+      popolaDropdownDrivers();
+      renderCalendario();
+    } catch(e) {
+      document.getElementById('calWeeks').innerHTML =
+        '<div class="cal-error">⚠️ Impossibile caricare le assenze.<br>' + e.message + '<br>' +
+        '<button onclick="caricaTutto()">Riprova</button></div>';
+    }
+  }
+
+  function popolaDropdownDrivers(){
+    const sel = document.getElementById('formDriver');
+    sel.innerHTML = '<option value="">— Seleziona —</option>';
+    listaDrivers.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d.id; o.textContent = d.nome || d.id;
+      sel.appendChild(o);
+    });
+  }
+
+  // ── Colore/etichetta in base a stato + tipo ──
+  function classeEvento(a){
+    if (a.stato === 'Richiesta')  return 'stato-richiesta';
+    if (a.stato === 'Rifiutato')  return 'stato-rifiutato';
+    const t = (a.tipo || '').toLowerCase();
+    if (t === 'ferie')    return 'tipo-ferie';
+    if (t === 'permesso') return 'tipo-permesso';
+    if (t === 'malattia') return 'tipo-malattia';
+    return '';
+  }
 
   function renderCalendario(){
     const primoDelMese = new Date(calAnno, calMese, 1);
@@ -289,6 +456,10 @@
     const oggi = new Date(); oggi.setHours(0,0,0,0);
     const weeksContainer = document.getElementById('calWeeks');
     weeksContainer.innerHTML = '';
+
+    const eventiParsati = tutteAssenze.map(a => ({
+      ...a, dalD: calParseIt(a.dal), alD: calParseIt(a.al)
+    })).filter(a => a.dalD && a.alD);
 
     let cursore = new Date(inizioGriglia);
     while (cursore <= fineGriglia) {
@@ -310,8 +481,7 @@
       }
       weekEl.appendChild(daynums);
 
-      const eventiSettimana = ASSENZE_SAMPLE
-        .map(a => ({ ...a, dalD: calParseISO(a.dal), alD: calParseISO(a.al) }))
+      const eventiSettimana = eventiParsati
         .filter(a => a.alD >= settimanaInizio && a.dalD <= settimanaFine)
         .sort((a,b) => a.dalD - b.dalD);
 
@@ -323,9 +493,9 @@
         const endCol = Math.min(6, Math.round((ev.alD - settimanaInizio) / 86400000)) + 2;
 
         const bar = document.createElement('div');
-        bar.className = 'cal-bar tipo-' + ev.tipo;
+        bar.className = 'cal-bar ' + classeEvento(ev);
         bar.style.gridColumn = startCol + ' / ' + endCol;
-        bar.textContent = (ev.tipo === 'malattia' ? 'Malattia' : ev.tipo === 'ferie' ? 'Ferie' : 'Permesso') + ' — ' + ev.driver;
+        bar.textContent = (ev.tipo || '') + ' — ' + (ev.nomeDriver || ev.driver);
         bar.onclick = () => apriCalModal(ev);
         lane.appendChild(bar);
 
@@ -337,22 +507,164 @@
     }
   }
 
+  // ── Modal dettaglio + azioni (approva/rifiuta/modifica/elimina) ──
+  let evCorrente = null;
+  const COLORI_TIPO = { 'Ferie':'#22c55e', 'Permesso':'#facc15', 'Malattia':'#a855f7' };
+
   function apriCalModal(ev){
-    const coloriTipo = { malattia:'#ba68c8', ferie:'#66bb6a', permesso:'#facc15' };
-    const labelTipo = { malattia:'Malattia', ferie:'Ferie', permesso:'Permesso' };
+    evCorrente = ev;
     const tipoEl = document.getElementById('calModalTipo');
-    tipoEl.textContent = labelTipo[ev.tipo];
-    tipoEl.style.background = coloriTipo[ev.tipo];
-    document.getElementById('calModalNome').textContent = ev.driver;
-    document.getElementById('calModalDal').textContent = calFmtIt(ev.dalD);
-    document.getElementById('calModalAl').textContent = calFmtIt(ev.alD);
-    const giorni = Math.round((ev.alD - ev.dalD) / 86400000) + 1;
-    document.getElementById('calModalGiorni').textContent = giorni;
+    if (ev.stato === 'Richiesta') { tipoEl.textContent = 'Richiesta'; tipoEl.style.background = '#3b82f6'; tipoEl.style.color = '#fff'; }
+    else if (ev.stato === 'Rifiutato') { tipoEl.textContent = 'Rifiutato'; tipoEl.style.background = '#ef4444'; tipoEl.style.color = '#fff'; }
+    else { tipoEl.textContent = ev.tipo; tipoEl.style.background = COLORI_TIPO[ev.tipo] || '#6b7a99'; tipoEl.style.color = '#0b0e14'; }
+
+    document.getElementById('calModalNome').textContent = ev.nomeDriver || ev.driver;
+    document.getElementById('calModalDal').textContent = ev.dal;
+    document.getElementById('calModalAl').textContent = ev.al;
+    document.getElementById('calModalGiorni').textContent = ev.giorni;
     document.getElementById('calModalStato').textContent = ev.stato;
+
+    const az = document.getElementById('calModalActions');
+    az.innerHTML = '';
+    if (ev.stato === 'Richiesta') {
+      az.innerHTML += '<button class="btn-approva" onclick="azioneStato(\'Approvato\')">✓ Approva</button>';
+      az.innerHTML += '<button class="btn-rifiuta" onclick="azioneStato(\'Rifiutato\')">✕ Rifiuta</button>';
+    }
+    az.innerHTML += '<button class="btn-modifica" onclick="apriFormModifica()">✎ Modifica</button>';
+    az.innerHTML += '<button class="btn-elimina" onclick="eliminaAssenza()">🗑 Elimina</button>';
+
     document.getElementById('calModalOverlay').classList.add('open');
   }
   function chiudiCalModal(){
     document.getElementById('calModalOverlay').classList.remove('open');
+    evCorrente = null;
+  }
+
+  async function azioneStato(nuovoStato){
+    if (!evCorrente) return;
+    try {
+      const res = await apiCall('action=assenze_admin_update&id=' + encodeURIComponent(evCorrente.id) +
+        '&stato=' + encodeURIComponent(nuovoStato) + '&key=' + encodeURIComponent(ADMIN_KEY));
+      if (res.ok) {
+        chiudiCalModal();
+        await caricaTutto();
+      } else {
+        alert(res.errore || 'Errore aggiornamento.');
+      }
+    } catch(e) { alert('Errore di connessione.'); }
+  }
+
+  async function eliminaAssenza(){
+    if (!evCorrente) return;
+    if (!confirm('Eliminare questa assenza di ' + (evCorrente.nomeDriver || evCorrente.driver) + '?')) return;
+    try {
+      const res = await apiCall('action=assenze_admin_delete&id=' + encodeURIComponent(evCorrente.id) +
+        '&key=' + encodeURIComponent(ADMIN_KEY));
+      if (res.ok) {
+        chiudiCalModal();
+        await caricaTutto();
+      } else {
+        alert(res.errore || 'Errore eliminazione.');
+      }
+    } catch(e) { alert('Errore di connessione.'); }
+  }
+
+  // ── Form nuova / modifica ──
+  function resetForm(){
+    modModifica = null;
+    tipoFormSel = '';
+    document.getElementById('formTitle').textContent = 'Nuova assenza';
+    document.getElementById('formDriver').value = '';
+    document.getElementById('formDriver').disabled = false;
+    document.getElementById('formDal').value = '';
+    document.getElementById('formAl').value = '';
+    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active-ferie','active-permesso','active-malattia'));
+    document.getElementById('formErr').classList.remove('visible');
+    aggiornaSubmitForm();
+  }
+
+  function apriFormNuova(){
+    resetForm();
+    document.getElementById('formOverlay').classList.add('open');
+  }
+
+  function apriFormModifica(){
+    if (!evCorrente) return;
+    resetForm();
+    modModifica = evCorrente.id;
+    document.getElementById('formTitle').textContent = 'Modifica assenza';
+    document.getElementById('formDriver').value = evCorrente.driver;
+    document.getElementById('formDriver').disabled = true; // non si cambia driver in modifica
+    const dalD = calParseIt(evCorrente.dal), alD = calParseIt(evCorrente.al);
+    if (dalD) document.getElementById('formDal').value = dateToISO(dalD);
+    if (alD)  document.getElementById('formAl').value  = dateToISO(alD);
+    selTipoForm(evCorrente.tipo);
+    chiudiCalModal();
+    document.getElementById('formOverlay').classList.add('open');
+  }
+
+  function chiudiForm(){
+    document.getElementById('formOverlay').classList.remove('open');
+  }
+
+  function selTipoForm(tipo){
+    tipoFormSel = tipo;
+    document.querySelectorAll('.tipo-btn').forEach(b => b.classList.remove('active-ferie','active-permesso','active-malattia'));
+    if (tipo === 'Ferie')    document.getElementById('btnTipoFerie').classList.add('active-ferie');
+    if (tipo === 'Permesso') document.getElementById('btnTipoPermesso').classList.add('active-permesso');
+    if (tipo === 'Malattia') document.getElementById('btnTipoMalattia').classList.add('active-malattia');
+    aggiornaSubmitForm();
+  }
+
+  document.getElementById('formDriver').addEventListener('change', aggiornaSubmitForm);
+  document.getElementById('formDal').addEventListener('change', aggiornaSubmitForm);
+  document.getElementById('formAl').addEventListener('change', aggiornaSubmitForm);
+
+  function aggiornaSubmitForm(){
+    const driverOk = modModifica || document.getElementById('formDriver').value;
+    const ok = driverOk && tipoFormSel && document.getElementById('formDal').value && document.getElementById('formAl').value;
+    document.getElementById('btnSubmitForm').disabled = !ok;
+  }
+
+  async function submitForm(){
+    const dal = document.getElementById('formDal').value;
+    const al  = document.getElementById('formAl').value;
+    if (al < dal) {
+      document.getElementById('formErr').textContent = 'La data "Al" non può precedere la data "Dal".';
+      document.getElementById('formErr').classList.add('visible');
+      return;
+    }
+    const giorni = Math.round((new Date(al) - new Date(dal)) / 86400000) + 1;
+    document.getElementById('formErr').classList.remove('visible');
+    document.getElementById('btnSubmitForm').disabled = true;
+
+    try {
+      let res;
+      if (modModifica) {
+        res = await apiCall('action=assenze_admin_update&id=' + encodeURIComponent(modModifica) +
+          '&tipo=' + encodeURIComponent(tipoFormSel) +
+          '&dal=' + encodeURIComponent(dal) + '&al=' + encodeURIComponent(al) +
+          '&giorni=' + giorni + '&key=' + encodeURIComponent(ADMIN_KEY));
+      } else {
+        const driverId = document.getElementById('formDriver').value;
+        res = await apiCall('action=assenze_admin_add&driver=' + encodeURIComponent(driverId) +
+          '&tipo=' + encodeURIComponent(tipoFormSel) + '&tipoPermesso=' +
+          '&dal=' + encodeURIComponent(dal) + '&al=' + encodeURIComponent(al) +
+          '&giorni=' + giorni + '&key=' + encodeURIComponent(ADMIN_KEY));
+      }
+      if (res.ok) {
+        chiudiForm();
+        await caricaTutto();
+      } else {
+        document.getElementById('formErr').textContent = res.errore || 'Errore salvataggio.';
+        document.getElementById('formErr').classList.add('visible');
+        document.getElementById('btnSubmitForm').disabled = false;
+      }
+    } catch(e) {
+      document.getElementById('formErr').textContent = 'Errore di connessione. Riprova.';
+      document.getElementById('formErr').classList.add('visible');
+      document.getElementById('btnSubmitForm').disabled = false;
+    }
   }
 
   document.getElementById('calPrev').onclick = () => {
@@ -364,7 +676,7 @@
     renderCalendario();
   };
 
-  renderCalendario();
+  caricaTutto();
 </script>
 </body>
 </html>
