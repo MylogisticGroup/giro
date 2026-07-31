@@ -102,6 +102,14 @@
     font-family:'JetBrains Mono',monospace; font-size:.95rem; color:var(--ink);
     min-width:150px; text-align:center; text-transform:capitalize;
   }
+  .cal-today-btn{
+    font-size:.65rem; font-weight:700; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--yellow);
+    background:var(--yellow-dim); border:1px solid rgba(250,204,21,.25);
+    border-radius:8px; padding:8px 12px; cursor:pointer;
+    font-family:'Syne',sans-serif; transition:filter .15s;
+  }
+  .cal-today-btn:hover{ filter:brightness(1.1); }
   .cal-legend{ display:flex; gap:14px; flex-wrap:wrap; }
   .cal-legend span{
     display:inline-flex; align-items:center; gap:6px;
@@ -110,58 +118,105 @@
   }
   .cal-legend i{ width:9px; height:9px; border-radius:3px; display:inline-block; }
 
-  .cal-weekdays{
+  /* ── Griglia mensile ── */
+  .cal-grid-head{
     display:grid; grid-template-columns:repeat(7,1fr);
-    gap:6px; margin-bottom:8px;
+    gap:8px; margin-bottom:8px;
   }
-  .cal-weekdays span{
+  .cal-dow{
     text-align:center; font-size:.7rem; font-weight:700; letter-spacing:.08em;
     text-transform:uppercase; color:var(--muted); padding-bottom:4px;
   }
 
-  .cal-week{
-    border-top:1px solid var(--line);
-    padding-top:8px; margin-bottom:2px;
-  }
-  .cal-daynums{
+  .cal-grid{
     display:grid; grid-template-columns:repeat(7,1fr);
-    gap:6px; margin-bottom:6px;
+    gap:8px;
   }
-  .cal-daynums span{
-    font-family:'JetBrains Mono',monospace; font-size:.78rem;
-    color:var(--muted); padding:2px 6px; display:block;
+  .cal-day{
+    position:relative;
+    background:var(--panel2);
+    border:1px solid var(--line);
+    border-radius:11px;
+    min-height:104px;
+    padding:8px 8px 7px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+    overflow:hidden;
   }
-  .cal-daynums span.today{ color:var(--yellow); font-weight:700; }
-  .cal-daynums span.out{ opacity:.3; }
+  .cal-day:hover{ border-color:var(--yellow); }
+  .cal-day.out{ opacity:.35; }
+  .cal-day.out:hover{ border-color:var(--line); }
+  .cal-day.today{ border-color:var(--yellow); }
+  .cal-day-num{
+    font-family:'JetBrains Mono',monospace; font-size:.8rem;
+    color:var(--muted); margin-bottom:6px; display:block;
+  }
+  .cal-day.today .cal-day-num{ color:var(--yellow); font-weight:800; }
 
-  .cal-lane{
-    display:grid; grid-template-columns:repeat(7,1fr);
-    gap:6px; margin-bottom:4px; min-height:24px;
-  }
-  .cal-bar{
-    border-radius:6px; padding:4px 10px;
-    font-size:.74rem; font-weight:600; color:#0b0e14;
+  .cal-events{ display:flex; flex-direction:column; gap:4px; }
+  .cal-event{
+    border-radius:6px; padding:4px 8px;
+    font-size:.7rem; font-weight:700; color:#0b0e14;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    cursor:pointer; display:flex; align-items:center;
-    transition:filter .15s, transform .1s;
+    cursor:pointer; transition:filter .15s, transform .1s;
   }
-  .cal-bar:hover{ filter:brightness(1.12); transform:translateY(-1px); }
-  .cal-bar.stato-richiesta{ background:var(--c-richiesta); color:#eaf1ff; }
-  .cal-bar.tipo-ferie{ background:var(--c-ferie); }
-  .cal-bar.tipo-permesso{ background:var(--c-permesso); }
-  .cal-bar.tipo-malattia{ background:var(--c-malattia); color:#fff; }
-  .cal-bar.stato-rifiutato{ background:transparent; border:1.5px dashed var(--c-rifiutato); color:var(--c-rifiutato); text-decoration:line-through; }
-  .cal-bar.tipo-blocco{ background:var(--c-blocco); color:#1a2438; }
+  .cal-event:hover{ filter:brightness(1.12); transform:translateY(-1px); }
+  .cal-event.stato-richiesta{ background:var(--c-richiesta); color:#eaf1ff; }
+  .cal-event.tipo-ferie{ background:var(--c-ferie); }
+  .cal-event.tipo-permesso{ background:var(--c-permesso); }
+  .cal-event.tipo-malattia{ background:var(--c-malattia); color:#fff; }
+  .cal-event.stato-rifiutato{ background:transparent; border:1.5px dashed var(--c-rifiutato); color:var(--c-rifiutato); text-decoration:line-through; }
+  .cal-event.tipo-blocco{ background:var(--c-blocco); color:#1a2438; }
+  .cal-event.altri{
+    background:rgba(255,255,255,.08); color:var(--muted);
+    font-weight:700; text-align:center;
+  }
 
   .cal-loading, .cal-error{
     text-align:center; padding:40px 20px; color:var(--muted);
     font-family:'JetBrains Mono',monospace; font-size:.82rem;
+    grid-column:1 / -1;
   }
   .cal-error{ color:#fca5a5; }
   .cal-error button{
     margin-top:10px; background:transparent; border:1px solid #fca5a5; color:#fca5a5;
     border-radius:8px; padding:6px 16px; font-family:'Syne',sans-serif; font-weight:600; cursor:pointer;
   }
+
+  /* ── Popup giorno ── */
+  .day-popup{
+    display:none; position:fixed; z-index:300;
+    background:var(--panel2); border:1px solid var(--line); border-radius:16px;
+    padding:16px; min-width:230px; max-width:300px;
+    box-shadow:0 8px 32px rgba(0,0,0,.6);
+  }
+  .day-popup.open{ display:block; }
+  .day-popup-title{
+    font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:10px; padding-bottom:8px;
+    border-bottom:1px solid var(--line);
+  }
+  .day-popup-item{
+    display:flex; align-items:center; gap:9px; padding:8px 0;
+    border-bottom:1px solid var(--line); cursor:pointer;
+  }
+  .day-popup-item:hover{ opacity:.8; }
+  .day-popup-item:last-of-type{ border-bottom:none; }
+  .day-popup-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .day-popup-name{ font-size:.82rem; font-weight:700; color:var(--ink); }
+  .day-popup-label{ font-size:.68rem; color:var(--muted); margin-top:1px; }
+  .day-popup-add{
+    margin-top:10px; width:100%; padding:9px; border-radius:8px;
+    background:var(--yellow-dim); border:1px solid rgba(250,204,21,.25);
+    color:var(--yellow); font-family:'Syne',sans-serif; font-weight:700;
+    font-size:.75rem; cursor:pointer;
+  }
+  .day-popup-close{
+    margin-top:8px; width:100%; padding:8px; border-radius:8px;
+    background:var(--panel); border:1px solid var(--line); color:var(--muted);
+    font-family:'Syne',sans-serif; font-weight:700; font-size:.75rem; cursor:pointer;
+  }
+  .day-popup-close:hover{ border-color:var(--muted); color:var(--ink); }
 
   /* ── FAB ── */
   .fab{
@@ -294,6 +349,7 @@
         <button id="calPrev" aria-label="Mese precedente">←</button>
         <span class="cal-month-label" id="calMonthLabel">—</span>
         <button id="calNext" aria-label="Mese successivo">→</button>
+        <button class="cal-today-btn" id="calToday">OGGI</button>
       </div>
       <div class="cal-legend">
         <span><i style="background:#3b82f6"></i>Richiesta</span>
@@ -305,15 +361,29 @@
       </div>
     </div>
 
-    <div class="cal-weekdays">
-      <span>Lunedì</span><span>Martedì</span><span>Mercoledì</span><span>Giovedì</span><span>Venerdì</span><span>Sabato</span><span>Domenica</span>
+    <div class="cal-grid-head">
+      <div class="cal-dow">Lun</div>
+      <div class="cal-dow">Mar</div>
+      <div class="cal-dow">Mer</div>
+      <div class="cal-dow">Gio</div>
+      <div class="cal-dow">Ven</div>
+      <div class="cal-dow">Sab</div>
+      <div class="cal-dow">Dom</div>
     </div>
 
-    <div id="calWeeks"><div class="cal-loading">Caricamento assenze…</div></div>
+    <div class="cal-grid" id="calGrid"><div class="cal-loading">Caricamento assenze…</div></div>
   </div>
 </div>
 
 <button class="fab" onclick="apriFormNuova()" title="Nuova assenza">＋</button>
+
+<!-- Popup giorno -->
+<div class="day-popup" id="dayPopup">
+  <div class="day-popup-title" id="dayPopupTitle"></div>
+  <div id="dayPopupList"></div>
+  <button class="day-popup-add" id="dayPopupAdd">＋ Nuova assenza in questo giorno</button>
+  <button class="day-popup-close" onclick="chiudiDayPopup()">Chiudi</button>
+</div>
 
 <!-- Modal dettaglio assenza -->
 <div class="modal-overlay" id="calModalOverlay" onclick="if(event.target===this) chiudiCalModal()">
@@ -394,6 +464,9 @@
   let modModifica = null; // id dell'assenza in modifica, o null se è una nuova
   let tipoFormSel = '';
 
+  const MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+                'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+
   function calParseIt(s){ // "dd/mm/yyyy" -> Date
     if (!s) return null;
     const [d,m,y] = s.split('/').map(Number);
@@ -405,7 +478,7 @@
   }
 
   async function caricaTutto(){
-    document.getElementById('calWeeks').innerHTML = '<div class="cal-loading">Caricamento assenze…</div>';
+    document.getElementById('calGrid').innerHTML = '<div class="cal-loading">Caricamento assenze…</div>';
     try {
       const [resA, resD] = await Promise.all([
         apiCall('action=assenze_tutte'),
@@ -416,7 +489,7 @@
       popolaDropdownDrivers();
       renderCalendario();
     } catch(e) {
-      document.getElementById('calWeeks').innerHTML =
+      document.getElementById('calGrid').innerHTML =
         '<div class="cal-error">⚠️ Impossibile caricare le assenze.<br>' + e.message + '<br>' +
         '<button onclick="caricaTutto()">Riprova</button></div>';
     }
@@ -444,8 +517,9 @@
     return '';
   }
 
+  // ── Calendario a griglia mensile ──
   function renderCalendario(){
-    const primoDelMese = new Date(calAnno, calMese, 1);
+    const primoDelMese  = new Date(calAnno, calMese, 1);
     const ultimoDelMese = new Date(calAnno, calMese + 1, 0);
 
     const inizioGriglia = new Date(primoDelMese);
@@ -460,8 +534,8 @@
       primoDelMese.toLocaleDateString('it-IT', { month:'long', year:'numeric' });
 
     const oggi = new Date(); oggi.setHours(0,0,0,0);
-    const weeksContainer = document.getElementById('calWeeks');
-    weeksContainer.innerHTML = '';
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
 
     const eventiParsati = tutteAssenze.map(a => ({
       ...a, dalD: calParseIt(a.dal), alD: calParseIt(a.al)
@@ -469,48 +543,101 @@
 
     let cursore = new Date(inizioGriglia);
     while (cursore <= fineGriglia) {
-      const settimanaInizio = new Date(cursore);
-      const settimanaFine = new Date(cursore); settimanaFine.setDate(settimanaFine.getDate() + 6);
+      const data = new Date(cursore);
+      const el = document.createElement('div');
+      el.className = 'cal-day';
+      if (data.getMonth() !== calMese) el.classList.add('out');
+      if (data.getTime() === oggi.getTime()) el.classList.add('today');
 
-      const weekEl = document.createElement('div');
-      weekEl.className = 'cal-week';
+      const numEl = document.createElement('div');
+      numEl.className = 'cal-day-num';
+      numEl.textContent = data.getDate();
+      el.appendChild(numEl);
 
-      const daynums = document.createElement('div');
-      daynums.className = 'cal-daynums';
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(settimanaInizio); d.setDate(d.getDate() + i);
-        const span = document.createElement('span');
-        span.textContent = d.getDate();
-        if (d.getMonth() !== calMese) span.classList.add('out');
-        if (d.getTime() === oggi.getTime()) span.classList.add('today');
-        daynums.appendChild(span);
-      }
-      weekEl.appendChild(daynums);
-
-      const eventiSettimana = eventiParsati
-        .filter(a => a.alD >= settimanaInizio && a.dalD <= settimanaFine)
+      const eventiGiorno = eventiParsati
+        .filter(a => a.dalD <= data && a.alD >= data)
         .sort((a,b) => a.dalD - b.dalD);
 
-      eventiSettimana.forEach(ev => {
-        const lane = document.createElement('div');
-        lane.className = 'cal-lane';
-
-        const startCol = Math.max(0, Math.round((ev.dalD - settimanaInizio) / 86400000)) + 1;
-        const endCol = Math.min(6, Math.round((ev.alD - settimanaInizio) / 86400000)) + 2;
-
-        const bar = document.createElement('div');
-        bar.className = 'cal-bar ' + classeEvento(ev);
-        bar.style.gridColumn = startCol + ' / ' + endCol;
-        bar.textContent = (ev.tipo || '') + ' — ' + (ev.nomeDriver || ev.driver);
-        bar.onclick = () => apriCalModal(ev);
-        lane.appendChild(bar);
-
-        weekEl.appendChild(lane);
+      const evWrap = document.createElement('div');
+      evWrap.className = 'cal-events';
+      eventiGiorno.slice(0, 3).forEach(ev => {
+        const chip = document.createElement('div');
+        chip.className = 'cal-event ' + classeEvento(ev);
+        chip.textContent = (ev.nomeDriver || ev.driver || ev.tipo);
+        chip.onclick = (e) => { e.stopPropagation(); apriCalModal(ev); };
+        evWrap.appendChild(chip);
       });
+      if (eventiGiorno.length > 3) {
+        const more = document.createElement('div');
+        more.className = 'cal-event altri';
+        more.textContent = '+' + (eventiGiorno.length - 3) + ' altri';
+        evWrap.appendChild(more);
+      }
+      el.appendChild(evWrap);
 
-      weeksContainer.appendChild(weekEl);
-      cursore.setDate(cursore.getDate() + 7);
+      el.addEventListener('click', () => apriDayPopup(data, eventiGiorno));
+
+      grid.appendChild(el);
+      cursore.setDate(cursore.getDate() + 1);
     }
+  }
+
+  // ── Popup giorno ──
+  let dataPopupCorrente = null;
+  function apriDayPopup(data, eventiGiorno){
+    dataPopupCorrente = data;
+    document.getElementById('dayPopupTitle').textContent =
+      data.getDate() + ' ' + MESI[data.getMonth()] + ' ' + data.getFullYear();
+
+    const listEl = document.getElementById('dayPopupList');
+    if (!eventiGiorno.length) {
+      listEl.innerHTML = '<div style="font-size:.78rem;color:var(--muted);padding:6px 0 2px">Nessuna assenza in questo giorno.</div>';
+    } else {
+      listEl.innerHTML = eventiGiorno.map((ev, i) => {
+        const col   = ev.stato === 'Richiesta' ? '#3b82f6' : ev.stato === 'Rifiutato' ? '#ef4444' :
+                      ({ 'Ferie':'#22c55e','Permesso':'#facc15','Malattia':'#a855f7','Blocco':'#e2e8f0' })[ev.tipo] || '#6b7a99';
+        const label = ev.stato === 'Richiesta' ? 'In attesa di approvazione' : ev.stato === 'Rifiutato' ? 'Rifiutato' : ev.stato;
+        return '<div class="day-popup-item" data-idx="' + i + '">' +
+          '<div class="day-popup-dot" style="background:' + col + '"></div>' +
+          '<div><div class="day-popup-name">' + (ev.nomeDriver || ev.driver) + ' — ' + ev.tipo + '</div>' +
+          '<div class="day-popup-label">' + label + '</div></div></div>';
+      }).join('');
+      listEl.querySelectorAll('.day-popup-item').forEach(item => {
+        item.onclick = () => {
+          const idx = Number(item.getAttribute('data-idx'));
+          chiudiDayPopup();
+          apriCalModal(eventiGiorno[idx]);
+        };
+      });
+    }
+
+    document.getElementById('dayPopupAdd').onclick = () => {
+      chiudiDayPopup();
+      apriFormNuova();
+      const iso = dateToISO(data);
+      document.getElementById('formDal').value = iso;
+      document.getElementById('formAl').value = iso;
+      aggiornaSubmitForm();
+    };
+
+    const popup = document.getElementById('dayPopup');
+    popup.classList.add('open');
+    // centra il popup nello schermo (semplice e affidabile su ogni dispositivo)
+    popup.style.left = '50%';
+    popup.style.top = '50%';
+    popup.style.transform = 'translate(-50%, -50%)';
+
+    setTimeout(() => {
+      document.addEventListener('click', chiudiDayPopupOutside);
+    }, 50);
+  }
+  function chiudiDayPopupOutside(e){
+    const popup = document.getElementById('dayPopup');
+    if (!popup.contains(e.target)) chiudiDayPopup();
+  }
+  function chiudiDayPopup(){
+    document.getElementById('dayPopup').classList.remove('open');
+    document.removeEventListener('click', chiudiDayPopupOutside);
   }
 
   // ── Modal dettaglio + azioni (approva/rifiuta/modifica/elimina) ──
@@ -687,6 +814,11 @@
   };
   document.getElementById('calNext').onclick = () => {
     calMese++; if (calMese > 11) { calMese = 0; calAnno++; }
+    renderCalendario();
+  };
+  document.getElementById('calToday').onclick = () => {
+    calAnno = new Date().getFullYear();
+    calMese = new Date().getMonth();
     renderCalendario();
   };
 
