@@ -1,0 +1,1620 @@
+// ===========================================================
+//  CONFIGURAZIONE
+// ===========================================================
+const SPREADSHEET_ID  = '1OCPrUDzg_JNj-ssxAFUkZPSSvSLy9p-NkUoryG0nFwA';
+const SHEET_GIRO      = 'Giro';
+const SHEET_VEICOLO   = 'Veicolo';
+const SHEET_DRIVER    = 'Driver';
+const SHEET_ASSENZE   = 'Assenze Driver';
+
+const EMAIL_NOTIFICHE = 'effeventitre23@gmail.com';
+
+// ── Colonne tabella GIRO (0-based) ─────────────────────────
+const G = {
+  ID             : 0,
+  DRIVER         : 1,
+  NOME_DRIVER    : 2,
+  STATO_DRIVER   : 3,
+  GIORNO         : 4,
+  TARGA          : 5,
+  VEICOLO_ENTR   : 6,
+  GIRO1          : 7,
+  GIRO2          : 8,
+  GIRO3          : 9,
+  GIRO4          : 10,
+  KM_PERCORSO    : 11,
+  ADESIVO        : 12,
+  DATA_INIZIO    : 13,
+  GPS_INIZIO     : 14,
+  KM_INIZIO      : 15,
+  DATA_FINE      : 16,
+  GPS_FINE       : 17,
+  KM_FINE        : 18,
+  DISTANZA       : 19,
+  STATO_VEICOLO  : 20,
+  CHI_RICEVE     : 21,
+  QR_CODE        : 22,
+  CAMBIO_VEI     : 23,
+  KM_TRASF       : 24,
+  KM_VEI_USCITA  : 25,
+  REF_REPORT     : 26,
+  ULTIMO_ACC     : 27,
+  EMAIL_ACC      : 28,
+};
+
+// ── Colonne tabella VEICOLO ──────────────────────────────────
+const V_ID         = 'IDVeicolo';
+const V_STATO_OPE  = 'Stato Veicolo';
+const V_STATO_DISP = 'Stato dello Veicolo';
+const V_MARCA      = 'Marca';
+const V_MODELLO    = 'Modello';
+const V_ADESIVO    = 'Adesivo';
+const V_TARGA      = 'Targa';
+
+// ── Colonne tabella DRIVER ───────────────────────────────────
+const D_ID    = 'ID';
+const D_NOME  = 'Cognome Nome';
+const D_STATO = 'Stato';
+
+// ── Colonne tabella ASSENZE ──────────────────────────────────
+const A_ID         = 'ID Assenza';
+const A_DRIVER     = 'Driver';
+const A_NOME       = 'Nome Driver';
+const A_TIPO       = 'Tipo Assenza';
+const A_TIPO_PERM  = 'Tipo Permesso';
+const A_GIORNO     = 'Giorno';
+const A_DAL        = 'Dal';
+const A_AL         = 'Al';
+const A_GIORNI     = 'Giorni';
+const A_STATO      = 'Stato Richiesta';
+const A_ULT_ACC    = 'Ultimo Accesso';
+const A_EMAIL_ACC  = 'Email_Accesso';
+
+// ============================================================
+//  ENTRY POINT — Web App
+// ============================================================
+function doGet(e) {
+  if (!e || !e.parameter) {
+    return paginaErrore('Accedi tramite il link della Web App.');
+  }
+
+  const action   = e.parameter.action  || '';
+  const driverId = (e.parameter.driver || '').trim();
+  const callback = e.parameter.callback || '';
+
+  if (action) {
+    let result;
+    try {
+      if (action === 'stato')         result = getStatoDriver(driverId);
+      if (action === 'veicoli')       result = getVeicoliDisponibili();
+      if (action === 'apri')          result = apriGiro(driverId, e.parameter.targa, Number(e.parameter.km));
+      if (action === 'chiudi')        result = chiudiGiro(driverId, Number(e.parameter.km));
+
+      if (action === 'init') {
+        const stato = getStatoDriver(driverId);
+        if (stato.occupato) {
+          result = { ok: true, occupato: true, nomeDriver: stato.nomeDriver, targa: stato.targa, kmInizio: stato.kmInizio, dataInizio: stato.dataInizio, adesivo: stato.adesivo, veicoli: [] };
+        } else {
+          result = { ok: true, occupato: false, nomeDriver: stato.nomeDriver, veicoli: getVeicoliDisponibili() };
+        }
+      }
+
+      if (action === 'assenze_init')   result = assenzeInit(driverId);
+      if (action === 'assenze_add')    result = assenzeAdd(
+        driverId,
+        e.parameter.tipo   || '',
+        e.parameter.giro   || '',
+        e.parameter.dal    || '',
+        e.parameter.al     || '',
+        Number(e.parameter.giorni || 0)
+      );
+      if (action === 'assenze_annulla') result = assenzeAnnulla(
+        driverId,
+        e.parameter.id || ''
+      );
+
+      if (action === 'assenze_tutte') result = { ok: true, assenze: getTutteAssenze() };
+      if (action === 'driver_lista')  result = { ok: true, drivers: getListaDrivers() };
+
+      if (action === 'assenze_admin_add') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = assenzeAdminAdd(
+          e.parameter.driver || '',
+          e.parameter.tipo || '',
+          e.parameter.tipoPermesso || '',
+          e.parameter.dal || '',
+          e.parameter.al || '',
+          Number(e.parameter.giorni || 0)
+        );
+      }
+
+      if (action === 'assenze_admin_update') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = assenzeAdminUpdate(e.parameter.id || '', {
+          tipo:         e.parameter.tipo,
+          tipoPermesso: e.parameter.tipoPermesso,
+          dal:          e.parameter.dal,
+          al:           e.parameter.al,
+          giorni:       e.parameter.giorni,
+          stato:        e.parameter.stato,
+        });
+      }
+
+      if (action === 'assenze_admin_delete') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = assenzeAdminDelete(e.parameter.id || '');
+      }
+
+      // ── Anagrafica Driver completa ──
+      if (action === 'driver_lista_completa') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = { ok: true, drivers: getListaDriverCompleta() };
+      }
+      if (action === 'driver_dettaglio') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = getDriverDettaglio(e.parameter.driver || '');
+      }
+      if (action === 'driver_admin_update') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = adminDriverUpdate(e.parameter.driver || '', e.parameter.campi || '{}');
+      }
+      if (action === 'documento_upsert') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = adminDocumentoUpsert(e.parameter.driver || '', e.parameter.campi || '{}');
+      }
+      if (action === 'multa_add') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = adminMultaAdd(e.parameter.driver || '', e.parameter.campi || '{}');
+      }
+      if (action === 'multa_update') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = adminMultaUpdate(e.parameter.id || '', e.parameter.campi || '{}');
+      }
+      if (action === 'multa_delete') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = adminMultaDelete(e.parameter.id || '');
+      }
+      if (action === 'sinistro_add') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = adminSinistroAdd(e.parameter.driver || '', e.parameter.campi || '{}');
+      }
+      if (action === 'sinistro_update') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = adminSinistroUpdate(e.parameter.id || '', e.parameter.campi || '{}');
+      }
+      if (action === 'sinistro_delete') {
+        if (!_chiaveValida(e)) { result = { ok:false, errore:'Non autorizzato.' }; }
+        else result = adminSinistroDelete(e.parameter.id || '');
+      }
+
+      if (!result) result = { ok: false, errore: 'Azione non riconosciuta.' };
+    } catch(err) {
+      result = { ok: false, errore: err.message };
+    }
+
+    const json = JSON.stringify(result);
+    if (callback) {
+      return ContentService
+        .createTextOutput(callback + '(' + json + ')')
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+    return ContentService
+      .createTextOutput(json)
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // Pagina HTML normale
+  if (!driverId) return paginaErrore('QR Code non valido o mancante.');
+  const driver = getDriver(driverId);
+  if (!driver) return paginaErrore('Driver ID "' + driverId + '" non trovato.');
+  const giroAperto = getGiroAperto(driverId);
+  return giroAperto ? buildPageChiudi(driver, giroAperto) : buildPageApri(driver);
+}
+
+// ============================================================
+//  AZIONI GIRO
+// ============================================================
+
+function apriGiro(driverId, targa, kmInizio) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const driver = getDriver(driverId, ss);
+    if (!driver) return { ok: false, errore: 'Driver non trovato.' };
+
+    const veicolo = getVeicolo(targa, ss);
+    if (!veicolo) return { ok: false, errore: 'Veicolo non trovato.' };
+    if (veicolo[V_STATO_OPE] === 'In Uso') return { ok: false, errore: 'Veicolo già in uso.' };
+
+    const ora  = new Date();
+    const riga = new Array(29).fill('');
+    riga[G.ID]            = Utilities.getUuid().substring(0, 8);
+    riga[G.DRIVER]        = driverId;
+    riga[G.NOME_DRIVER]   = driver[D_NOME];
+    riga[G.STATO_DRIVER]  = 'Occupato';
+    riga[G.GIORNO]        = ora;
+    riga[G.TARGA]         = targa;
+    riga[G.ADESIVO]       = veicolo[V_ADESIVO] || '';
+    riga[G.DATA_INIZIO]   = ora;
+    riga[G.KM_INIZIO]     = Number(kmInizio);
+    riga[G.STATO_VEICOLO] = 'In Uso';
+    riga[G.ULTIMO_ACC]    = ora;
+    riga[G.REF_REPORT]    = driverId + '_' + (ora.getMonth() + 1) + '_' + ora.getFullYear();
+
+    ss.getSheetByName(SHEET_GIRO).appendRow(riga);
+    aggiornaColonnaVeicolo(ss, targa, V_STATO_OPE, 'In Uso');
+    aggiornaColonnaDriver(ss, driverId, D_STATO, 'Occupato');
+
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function chiudiGiro(driverId, kmFine) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = ss.getSheetByName(SHEET_GIRO);
+    const data  = sheet.getDataRange().getValues();
+    const ora   = new Date();
+
+    let rowIndex = -1;
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][G.DRIVER]).trim() === String(driverId).trim() &&
+          data[i][G.STATO_DRIVER] === 'Occupato') {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+    if (rowIndex === -1) return { ok: false, errore: 'Nessun giro aperto trovato.' };
+
+    const riga     = data[rowIndex - 1];
+    const kmInizio = Number(riga[G.KM_INIZIO]);
+    const km       = Number(kmFine);
+    const distanza = Math.max(0, km - kmInizio);
+    const targa    = riga[G.TARGA];
+
+    const updates = {};
+    updates[G.DATA_FINE     + 1] = ora;
+    updates[G.KM_FINE       + 1] = km;
+    updates[G.DISTANZA      + 1] = distanza;
+    updates[G.STATO_DRIVER  + 1] = 'Libero';
+    updates[G.STATO_VEICOLO + 1] = 'Libero';
+    updates[G.ULTIMO_ACC    + 1] = ora;
+
+    for (const [col, val] of Object.entries(updates)) {
+      sheet.getRange(rowIndex, Number(col)).setValue(val);
+    }
+
+    aggiornaColonnaVeicolo(ss, targa, V_STATO_OPE, 'Libero');
+    aggiornaColonnaDriver(ss, driverId, D_STATO, 'Libero');
+
+    return { ok: true, distanza: distanza, targa: targa };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function getVeicoliDisponibili() {
+  try {
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheetV = ss.getSheetByName(SHEET_VEICOLO);
+    const dataV  = sheetV.getDataRange().getValues();
+    const hdrV   = dataV[0].map(h => h.toString().trim());
+
+    const iID    = hdrV.indexOf(V_ID);
+    const iStOpe = hdrV.indexOf(V_STATO_OPE);
+    const iStDis = hdrV.indexOf(V_STATO_DISP);
+    const iTarga = hdrV.indexOf(V_TARGA);
+    const iMarca = hdrV.indexOf(V_MARCA);
+    const iMod   = hdrV.indexOf(V_MODELLO);
+
+    const sheetG = ss.getSheetByName(SHEET_GIRO);
+    const dataG  = sheetG.getDataRange().getValues();
+    const kmMap  = {};
+    for (let i = 1; i < dataG.length; i++) {
+      const targa  = String(dataG[i][G.TARGA]).trim();
+      const kmFine = dataG[i][G.KM_FINE];
+      if (targa && kmFine !== '' && Number(kmFine) > 0) {
+        kmMap[targa] = Number(kmFine);
+      }
+    }
+
+    return dataV.slice(1)
+      .filter(r => {
+        const stOpe = r[iStOpe] ? r[iStOpe].toString().trim() : '';
+        const stDis = r[iStDis] ? r[iStDis].toString().trim() : '';
+        return stOpe === 'Libero' && stDis === 'Disponibile';
+      })
+      .map(r => {
+        const id = String(r[iID]).trim();
+        return {
+          id     : id,
+          targa  : r[iTarga] ? r[iTarga].toString().trim() : id,
+          marca  : r[iMarca] ? r[iMarca].toString().trim() : '',
+          modello: r[iMod]   ? r[iMod].toString().trim()   : '',
+          kmFine : kmMap[id] !== undefined ? kmMap[id] : '',
+        };
+      });
+  } catch (err) {
+    return [];
+  }
+}
+
+function getStatoDriver(driverId) {
+  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const data = ss.getSheetByName(SHEET_GIRO).getDataRange().getValues();
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][G.DRIVER]).trim() === String(driverId).trim() &&
+        data[i][G.STATO_DRIVER] === 'Occupato') {
+      const tz = Session.getScriptTimeZone();
+      return {
+        occupato   : true,
+        targa      : data[i][G.TARGA],
+        kmInizio   : data[i][G.KM_INIZIO],
+        dataInizio : Utilities.formatDate(new Date(data[i][G.DATA_INIZIO]), tz, 'dd/MM/yyyy HH:mm'),
+        adesivo    : data[i][G.ADESIVO] || '',
+        nomeDriver : data[i][G.NOME_DRIVER],
+      };
+    }
+  }
+  const driver = getDriver(driverId, ss);
+  return {
+    occupato   : false,
+    nomeDriver : driver ? driver[D_NOME] : '',
+  };
+}
+
+// ============================================================
+//  AZIONI ASSENZE
+// ============================================================
+
+function assenzeInit(driverId) {
+  try {
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const driver = getDriver(driverId, ss);
+    if (!driver) return { ok: false, errore: 'Driver non trovato.' };
+
+    const sheetA = ss.getSheetByName(SHEET_ASSENZE);
+    const dataA  = sheetA.getDataRange().getValues();
+    const hdrA   = dataA[0].map(h => h.toString().trim());
+
+    const iID    = hdrA.indexOf(A_ID);
+    const iDrv   = hdrA.indexOf(A_DRIVER);
+    const iNome  = hdrA.indexOf(A_NOME);
+    const iTipo  = hdrA.indexOf(A_TIPO);
+    const iPerm  = hdrA.indexOf(A_TIPO_PERM);
+    const iDal   = hdrA.indexOf(A_DAL);
+    const iAl    = hdrA.indexOf(A_AL);
+    const iGior  = hdrA.indexOf(A_GIORNI);
+    const iStato = hdrA.indexOf(A_STATO);
+    const tz     = Session.getScriptTimeZone();
+
+    const assenze = dataA.slice(1)
+      .filter(r => r[iStato] && r[iStato].toString().trim() !== '')
+      .map(r => {
+        function fmtData(v) {
+          if (!v) return '';
+          if (v instanceof Date) return Utilities.formatDate(v, tz, 'dd/MM/yyyy');
+          return v.toString().trim();
+        }
+        return {
+          id          : r[iID]    ? r[iID].toString().trim()    : '',
+          driver      : r[iDrv]   ? r[iDrv].toString().trim()   : '',
+          nomeDriver  : r[iNome]  ? r[iNome].toString().trim()  : '',
+          tipo        : r[iTipo]  ? r[iTipo].toString().trim()  : '',
+          tipoPermesso: r[iPerm]  ? r[iPerm].toString().trim()  : '',
+          dal         : fmtData(r[iDal]),
+          al          : fmtData(r[iAl]),
+          giorni      : r[iGior]  ? Number(r[iGior])            : 0,
+          stato       : r[iStato] ? r[iStato].toString().trim() : '',
+        };
+      })
+      .filter(a => a.dal !== '');
+
+    return {
+      ok      : true,
+      driver  : { id: driver[D_ID], nome: driver[D_NOME] },
+      assenze : assenze,
+    };
+  } catch(err) {
+    return { ok: false, errore: err.message };
+  }
+}
+
+// ── Controlla se un periodo [dal, al] si sovrappone a un Blocco esistente ──
+// Stessa identica logica del Valid_If su AppSheet (colonne Dal/Al):
+// overlap se un blocco inizia prima o durante, e finisce dopo o durante il
+// periodo richiesto. Considera SOLO righe con Tipo Assenza = "Blocco" e
+// Stato Richiesta = "Periodo Bloccato" — lo stesso identico stato che ora
+// viene assegnato sia da AppSheet sia da assenzeAdminAdd().
+function _periodoInBlocco(ss, dal, al) {
+  const sheetA = ss.getSheetByName(SHEET_ASSENZE);
+  const dataA  = sheetA.getDataRange().getValues();
+  const hdrA   = dataA[0].map(h => h.toString().trim());
+
+  const iTipo  = hdrA.indexOf(A_TIPO);
+  const iStato = hdrA.indexOf(A_STATO);
+  const iDal   = hdrA.indexOf(A_DAL);
+  const iAl    = hdrA.indexOf(A_AL);
+
+  for (let i = 1; i < dataA.length; i++) {
+    const tipo  = dataA[i][iTipo]  ? dataA[i][iTipo].toString().trim()  : '';
+    const stato = dataA[i][iStato] ? dataA[i][iStato].toString().trim() : '';
+    if (tipo !== 'Blocco' || stato !== 'Periodo Bloccato') continue;
+
+    const bDal = dataA[i][iDal];
+    const bAl  = dataA[i][iAl];
+    if (!(bDal instanceof Date) || !(bAl instanceof Date)) continue;
+
+    // overlap: il blocco inizia prima o durante il periodo richiesto,
+    // e finisce dopo o durante il periodo richiesto
+    if (bDal <= al && bAl >= dal) return true;
+  }
+  return false;
+}
+
+function assenzeAdd(driverId, tipo, giro, dal, al, giorni) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const driver = getDriver(driverId, ss);
+    if (!driver) return { ok: false, errore: 'Driver non trovato.' };
+
+    if (!tipo) return { ok: false, errore: 'Tipo assenza mancante.' };
+    if (!dal || !al) return { ok: false, errore: 'Date mancanti.' };
+
+    // ── controllo limite 3 richieste giornaliere ──────────
+    const oggi    = new Date();
+    const sheetA2 = ss.getSheetByName(SHEET_ASSENZE);
+    const dataA2  = sheetA2.getDataRange().getValues();
+    const hdrA2   = dataA2[0].map(h => h.toString().trim());
+    const iDrv2   = hdrA2.indexOf(A_DRIVER);
+    const iAcc2   = hdrA2.indexOf(A_ULT_ACC);
+    let   countOggi = 0;
+    for (let i = 1; i < dataA2.length; i++) {
+      const drv = dataA2[i][iDrv2] ? dataA2[i][iDrv2].toString().trim() : '';
+      if (drv !== String(driverId).trim()) continue;
+      const acc = dataA2[i][iAcc2];
+      if (!(acc instanceof Date)) continue;
+      if (acc.getFullYear() === oggi.getFullYear() &&
+          acc.getMonth()    === oggi.getMonth()    &&
+          acc.getDate()     === oggi.getDate()) {
+        countOggi++;
+      }
+    }
+    if (countOggi >= 3) {
+      return { ok: false, errore: 'Hai raggiunto il limite di 3 richieste giornaliere. Contatta l\'amministratore.' };
+    }
+
+    const ora = new Date();
+    const id  = Utilities.getUuid().substring(0, 8);
+    const tz  = Session.getScriptTimeZone();
+
+    function isoToDate(s) {
+      const parts = s.split('-');
+      return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+    }
+    const dalDate = isoToDate(dal);
+    const alDate  = isoToDate(al);
+
+    // ── blocco: stesso controllo del Valid_If su AppSheet ──
+    if (_periodoInBlocco(ss, dalDate, alDate)) {
+      return { ok: false, errore: 'Periodo bloccato dall\'amministratore. Contatta l\'ufficio per inserire questa richiesta.' };
+    }
+
+    const sheetA = ss.getSheetByName(SHEET_ASSENZE);
+    const hdrA   = sheetA.getDataRange().getValues()[0].map(h => h.toString().trim());
+
+    const riga = new Array(hdrA.length).fill('');
+    function set(col, val) {
+      const i = hdrA.indexOf(col);
+      if (i >= 0) riga[i] = val;
+    }
+
+    set(A_ID,        id);
+    set(A_DRIVER,    driverId);
+    set(A_NOME,      driver[D_NOME]);
+    set(A_TIPO,      tipo);
+    set(A_TIPO_PERM, giro || '');
+    set(A_GIORNO,    ora);
+    set(A_DAL,       dalDate);
+    set(A_AL,        alDate);
+    set(A_GIORNI,    giorni);
+    set(A_STATO,     'Richiesta');
+    set(A_ULT_ACC,   ora);
+
+    sheetA.appendRow(riga);
+
+    // ── Invio email notifica ──────────────────────────────
+    try {
+      const dalFmt = Utilities.formatDate(dalDate, tz, 'dd/MM/yyyy');
+      const alFmt  = Utilities.formatDate(alDate,  tz, 'dd/MM/yyyy');
+      const tipoLabel = tipo + (giro ? ' — ' + giro : '');
+      const oggetto = 'Richiesta ' + tipo + ' da ' + driver[D_NOME] + ' dal ' + dalFmt + ' al ' + alFmt;
+      const corpo =
+        'Richiesta ' + tipoLabel + ' da ' + driver[D_NOME] + ' dal ' + dalFmt + ' al ' + alFmt + '\n\n' +
+        'Giorni: ' + giorni + '\n' +
+        'Stato: Richiesta\n' +
+        'ID richiesta: ' + id;
+      const corpoHtml =
+        '<div style="font-family:sans-serif;padding:20px;max-width:500px">' +
+        '<h2 style="color:#1a1a2e">📅 Nuova Richiesta Assenza</h2>' +
+        '<hr style="border:1px solid #eee">' +
+        '<p><b>Driver:</b> ' + driver[D_NOME] + '</p>' +
+        '<p><b>Tipo:</b> ' + tipoLabel + '</p>' +
+        '<p><b>Dal:</b> ' + dalFmt + ' &nbsp;→&nbsp; <b>Al:</b> ' + alFmt + '</p>' +
+        '<p><b>Giorni:</b> ' + giorni + '</p>' +
+        '<p><b>Stato:</b> <span style="color:#3b82f6">Richiesta ⏳</span></p>' +
+        '<hr style="border:1px solid #eee">' +
+        '<p style="color:#888;font-size:.85em">ID: ' + id + '</p>' +
+        '</div>';
+      MailApp.sendEmail(EMAIL_NOTIFICHE, oggetto, corpo, { htmlBody: corpoHtml });
+    } catch(mailErr) {
+      // non bloccare se l'email fallisce
+    }
+
+    return {
+      ok    : true,
+      id    : id,
+      stato : 'Richiesta',
+      dal   : Utilities.formatDate(dalDate, tz, 'dd/MM/yyyy'),
+      al    : Utilities.formatDate(alDate,  tz, 'dd/MM/yyyy'),
+    };
+  } catch(err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function assenzeAnnulla(driverId, assenzaId) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const driver = getDriver(driverId, ss);
+    if (!driver) return { ok: false, errore: 'Driver non trovato.' };
+    if (!assenzaId) return { ok: false, errore: 'ID assenza mancante.' };
+
+    const sheetA = ss.getSheetByName(SHEET_ASSENZE);
+    const dataA  = sheetA.getDataRange().getValues();
+    const hdrA   = dataA[0].map(h => h.toString().trim());
+
+    const iID    = hdrA.indexOf(A_ID);
+    const iDrv   = hdrA.indexOf(A_DRIVER);
+    const iStato = hdrA.indexOf(A_STATO);
+    const iAcc   = hdrA.indexOf(A_ULT_ACC);
+
+    for (let i = 1; i < dataA.length; i++) {
+      const rowId  = dataA[i][iID]  ? dataA[i][iID].toString().trim()  : '';
+      const rowDrv = dataA[i][iDrv] ? dataA[i][iDrv].toString().trim() : '';
+      const rowSt  = dataA[i][iStato] ? dataA[i][iStato].toString().trim() : '';
+
+      if (rowId === assenzaId && rowDrv === driverId) {
+        if (rowSt !== 'Richiesta') {
+          return { ok: false, errore: 'Solo le richieste in attesa possono essere annullate.' };
+        }
+        sheetA.deleteRow(i + 1);
+
+        // email notifica annullamento
+        try {
+          const tz     = Session.getScriptTimeZone();
+          const iDal   = hdrA.indexOf(A_DAL);
+          const iAl    = hdrA.indexOf(A_AL);
+          const iTipo  = hdrA.indexOf(A_TIPO);
+          const iPerm  = hdrA.indexOf(A_TIPO_PERM);
+          const dalVal = dataA[i][iDal];
+          const alVal  = dataA[i][iAl];
+          const dalFmt = dalVal instanceof Date ? Utilities.formatDate(dalVal, tz, 'dd/MM/yyyy') : dalVal.toString();
+          const alFmt  = alVal  instanceof Date ? Utilities.formatDate(alVal,  tz, 'dd/MM/yyyy') : alVal.toString();
+          const tipo   = dataA[i][iTipo] ? dataA[i][iTipo].toString() : '';
+          const perm   = dataA[i][iPerm] ? dataA[i][iPerm].toString() : '';
+          const tipoLabel = tipo + (perm ? ' — ' + perm : '');
+          const oggetto = '❌ Annullata richiesta ' + tipo + ' da ' + driver[D_NOME] + ' dal ' + dalFmt + ' al ' + alFmt;
+          const corpoHtml =
+            '<div style="font-family:sans-serif;padding:20px;max-width:500px">' +
+            '<h2 style="color:#c62828">❌ Richiesta Annullata</h2>' +
+            '<hr style="border:1px solid #eee">' +
+            '<p><b>Driver:</b> ' + driver[D_NOME] + '</p>' +
+            '<p><b>Tipo:</b> ' + tipoLabel + '</p>' +
+            '<p><b>Dal:</b> ' + dalFmt + ' &nbsp;→&nbsp; <b>Al:</b> ' + alFmt + '</p>' +
+            '<p><b>Stato:</b> <span style="color:#ef4444">Annullata</span></p>' +
+            '<hr style="border:1px solid #eee">' +
+            '<p style="color:#888;font-size:.85em">ID: ' + assenzaId + '</p>' +
+            '</div>';
+          MailApp.sendEmail(EMAIL_NOTIFICHE, oggetto, oggetto, { htmlBody: corpoHtml });
+        } catch(mailErr) {}
+
+        return { ok: true, id: assenzaId, stato: 'Annullata' };
+      }
+    }
+    return { ok: false, errore: 'Richiesta non trovata.' };
+  } catch(err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ============================================================
+//  HELPER — lettura
+// ============================================================
+
+function getDriver(driverId, ss) {
+  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  const data = ss.getSheetByName(SHEET_DRIVER).getDataRange().getValues();
+  const hdr  = data[0].map(h => h.toString().trim());
+  const iID  = hdr.indexOf(D_ID);
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][iID]).trim() === String(driverId).trim()) {
+      const obj = {};
+      hdr.forEach((h, j) => obj[h] = data[i][j]);
+      return obj;
+    }
+  }
+  return null;
+}
+
+function getVeicolo(idVeicolo, ss) {
+  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  const data = ss.getSheetByName(SHEET_VEICOLO).getDataRange().getValues();
+  const hdr  = data[0].map(h => h.toString().trim());
+  const iID  = hdr.indexOf(V_ID);
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][iID]).trim() === String(idVeicolo).trim()) {
+      const obj = {};
+      hdr.forEach((h, j) => obj[h] = data[i][j]);
+      return obj;
+    }
+  }
+  return null;
+}
+
+function getGiroAperto(driverId, ss) {
+  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  const data = ss.getSheetByName(SHEET_GIRO).getDataRange().getValues();
+  for (let i = data.length - 1; i >= 1; i--) {
+    if (String(data[i][G.DRIVER]).trim() === String(driverId).trim() &&
+        data[i][G.STATO_DRIVER] === 'Occupato') {
+      return {
+        targa      : data[i][G.TARGA],
+        kmInizio   : data[i][G.KM_INIZIO],
+        dataInizio : data[i][G.DATA_INIZIO],
+        adesivo    : data[i][G.ADESIVO],
+      };
+    }
+  }
+  return null;
+}
+
+// ============================================================
+//  HELPER — scrittura
+// ============================================================
+
+function aggiornaColonnaVeicolo(ss, idVeicolo, nomeColonna, valore) {
+  const sheet = ss.getSheetByName(SHEET_VEICOLO);
+  const data  = sheet.getDataRange().getValues();
+  const hdr   = data[0].map(h => h.toString().trim());
+  const iID   = hdr.indexOf(V_ID);
+  const iCol  = hdr.indexOf(nomeColonna);
+  if (iCol < 0) return;
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][iID]).trim() === String(idVeicolo).trim()) {
+      sheet.getRange(i + 1, iCol + 1).setValue(valore);
+      return;
+    }
+  }
+}
+
+function aggiornaColonnaDriver(ss, driverId, nomeColonna, valore) {
+  const sheet = ss.getSheetByName(SHEET_DRIVER);
+  const data  = sheet.getDataRange().getValues();
+  const hdr   = data[0].map(h => h.toString().trim());
+  const iID   = hdr.indexOf(D_ID);
+  const iCol  = hdr.indexOf(nomeColonna);
+  if (iCol < 0) return;
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][iID]).trim() === String(driverId).trim()) {
+      sheet.getRange(i + 1, iCol + 1).setValue(valore);
+      return;
+    }
+  }
+}
+
+// ============================================================
+//  PAGE BUILDERS
+// ============================================================
+
+function buildPageApri(driver) {
+  const tmpl = HtmlService.createTemplateFromFile('ApriGiro');
+  tmpl.driverId   = driver[D_ID];
+  tmpl.nomeDriver = driver[D_NOME];
+  return tmpl.evaluate()
+    .setTitle('Apri Giro')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+function buildPageChiudi(driver, giro) {
+  const tz   = Session.getScriptTimeZone();
+  const tmpl = HtmlService.createTemplateFromFile('ChiudiGiro');
+  tmpl.driverId   = driver[D_ID];
+  tmpl.nomeDriver = driver[D_NOME];
+  tmpl.targa      = giro.targa;
+  tmpl.adesivo    = giro.adesivo || '';
+  tmpl.kmInizio   = giro.kmInizio || 0;
+  tmpl.dataInizio = giro.dataInizio
+    ? Utilities.formatDate(new Date(giro.dataInizio), tz, 'dd/MM/yyyy HH:mm')
+    : '';
+  return tmpl.evaluate()
+    .setTitle('Chiudi Giro')
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1');
+}
+
+function paginaErrore(msg) {
+  return HtmlService.createHtmlOutput(
+    `<!DOCTYPE html><html><head><meta charset="utf-8">
+     <meta name="viewport" content="width=device-width,initial-scale=1">
+     <style>body{font-family:sans-serif;padding:2rem;text-align:center;background:#fff0f0}
+     h2{color:#c62828}p{color:#555;margin-top:.5rem}</style></head>
+     <body><h2>⚠️ Errore</h2><p>${msg}</p></body></html>`
+  );
+}
+
+// ============================================================
+//  CONTROLLO EMAIL — eseguito ogni minuto dal trigger
+// ============================================================
+
+function checkAndSendEmails() {
+  try {
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet  = ss.getSheetByName(SHEET_ASSENZE);
+    if (!sheet) return;
+
+    const tz     = Session.getScriptTimeZone();
+    const ncol   = sheet.getLastColumn();
+    const hdrA   = sheet.getRange(1, 1, 1, ncol).getValues()[0].map(h => h.toString().trim());
+    const dataA  = sheet.getDataRange().getValues();
+
+    const iID    = hdrA.indexOf(A_ID);
+    const iStato = hdrA.indexOf(A_STATO);
+    const iNome  = hdrA.indexOf(A_NOME);
+    const iTipo  = hdrA.indexOf(A_TIPO);
+    const iPerm  = hdrA.indexOf(A_TIPO_PERM);
+    const iDal   = hdrA.indexOf(A_DAL);
+    const iAl    = hdrA.indexOf(A_AL);
+    const iGior  = hdrA.indexOf(A_GIORNI);
+    const iAcc   = hdrA.indexOf(A_ULT_ACC);
+
+    // cerca righe con stato "Richiesta" e Ultimo Accesso negli ultimi 2 minuti
+    const now    = new Date();
+    const due_min = 2 * 60 * 1000;
+
+    for (let i = 1; i < dataA.length; i++) {
+      const stato = dataA[i][iStato] ? dataA[i][iStato].toString().trim() : '';
+      if (stato !== 'Richiesta') continue;
+
+      const acc = dataA[i][iAcc];
+      if (!acc || !(acc instanceof Date)) continue;
+      if (now - acc > due_min) continue;
+
+      // riga recente — manda email
+      const id     = dataA[i][iID]   ? dataA[i][iID].toString()   : '';
+      const nome   = dataA[i][iNome] ? dataA[i][iNome].toString() : '';
+      const tipo   = dataA[i][iTipo] ? dataA[i][iTipo].toString() : '';
+      const perm   = dataA[i][iPerm] ? dataA[i][iPerm].toString() : '';
+      const giorni = dataA[i][iGior] ? dataA[i][iGior].toString() : '';
+      const tipoLabel = tipo + (perm ? ' — ' + perm : '');
+
+      const dalVal = dataA[i][iDal];
+      const alVal  = dataA[i][iAl];
+      const dalFmt = dalVal instanceof Date ? Utilities.formatDate(dalVal, tz, 'dd/MM/yyyy') : String(dalVal);
+      const alFmt  = alVal  instanceof Date ? Utilities.formatDate(alVal,  tz, 'dd/MM/yyyy') : String(alVal);
+
+      const oggetto = 'Richiesta ' + tipo + ' da ' + nome + ' dal ' + dalFmt + ' al ' + alFmt;
+      const corpoHtml =
+        '<div style="font-family:sans-serif;padding:20px;max-width:500px">' +
+        '<h2 style="color:#1a1a2e">📅 Nuova Richiesta Assenza</h2>' +
+        '<hr style="border:1px solid #eee">' +
+        '<p><b>Driver:</b> ' + nome + '</p>' +
+        '<p><b>Tipo:</b> ' + tipoLabel + '</p>' +
+        '<p><b>Dal:</b> ' + dalFmt + ' → <b>Al:</b> ' + alFmt + '</p>' +
+        '<p><b>Giorni:</b> ' + giorni + '</p>' +
+        '<p><b>Stato:</b> <span style="color:#3b82f6">Richiesta ⏳</span></p>' +
+        '<hr style="border:1px solid #eee">' +
+        '<p style="color:#888;font-size:.85em">ID: ' + id + '</p>' +
+        '</div>';
+
+      try {
+        MailApp.sendEmail(EMAIL_NOTIFICHE, oggetto, oggetto, { htmlBody: corpoHtml });
+        // marca come notificata cambiando stato temporaneamente — usa campo ULT_ACC
+        // per evitare di mandare la stessa email due volte, aggiorna ULT_ACC a una data passata
+        sheet.getRange(i + 1, iAcc + 1).setValue(new Date(0));
+      } catch(mailErr) {
+        Logger.log('Errore invio email: ' + mailErr.message);
+      }
+    }
+  } catch(err) {
+    Logger.log('Errore checkAndSendEmails: ' + err.message);
+  }
+}
+
+function installaTimerEmail() {
+  // rimuove timer esistenti
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'checkAndSendEmails') {
+      ScriptApp.deleteTrigger(t);
+    }
+  });
+  // crea timer ogni minuto
+  ScriptApp.newTrigger('checkAndSendEmails')
+    .timeBased()
+    .everyMinutes(1)
+    .create();
+  Logger.log('Timer email installato.');
+}
+
+
+// ============================================================
+//  TRIGGER onEdit — invia email su nuova riga in Assenze Driver
+//  (utile solo per modifiche fatte a mano da un utente sul foglio;
+//   NON si attiva per le scritture di AppSheet — vedi checkAndSendEmails)
+// ============================================================
+
+function inviaEmailNuovaAssenza(e) {
+  try {
+    if (!e || !e.range) return;
+    const sheet = e.range.getSheet();
+    if (sheet.getName() !== SHEET_ASSENZE) return;
+
+    const row = e.range.getRow();
+    if (row < 2) return;
+
+    const ncol   = sheet.getLastColumn();
+    const hdrA   = sheet.getRange(1, 1, 1, ncol).getValues()[0].map(h => h.toString().trim());
+    const rowVals= sheet.getRange(row, 1, 1, ncol).getValues()[0];
+
+    const iID    = hdrA.indexOf(A_ID);
+    const iStato = hdrA.indexOf(A_STATO);
+    const iNome  = hdrA.indexOf(A_NOME);
+    const iTipo  = hdrA.indexOf(A_TIPO);
+    const iPerm  = hdrA.indexOf(A_TIPO_PERM);
+    const iDal   = hdrA.indexOf(A_DAL);
+    const iAl    = hdrA.indexOf(A_AL);
+    const iGior  = hdrA.indexOf(A_GIORNI);
+
+    // solo righe nuove con stato Richiesta
+    const id    = rowVals[iID]    ? rowVals[iID].toString().trim()    : '';
+    const stato = rowVals[iStato] ? rowVals[iStato].toString().trim() : '';
+    if (!id || stato !== 'Richiesta') return;
+
+    const tz     = Session.getScriptTimeZone();
+    const nome   = rowVals[iNome] ? rowVals[iNome].toString() : '';
+    const tipo   = rowVals[iTipo] ? rowVals[iTipo].toString() : '';
+    const perm   = rowVals[iPerm] ? rowVals[iPerm].toString() : '';
+    const giorni = rowVals[iGior] ? rowVals[iGior].toString() : '';
+    const tipoLabel = tipo + (perm ? ' — ' + perm : '');
+
+    const dalVal = rowVals[iDal];
+    const alVal  = rowVals[iAl];
+    const dalFmt = dalVal instanceof Date ? Utilities.formatDate(dalVal, tz, 'dd/MM/yyyy') : String(dalVal);
+    const alFmt  = alVal  instanceof Date ? Utilities.formatDate(alVal,  tz, 'dd/MM/yyyy') : String(alVal);
+
+    const oggetto = 'Richiesta ' + tipo + ' da ' + nome + ' dal ' + dalFmt + ' al ' + alFmt;
+    const corpoHtml =
+      '<div style="font-family:sans-serif;padding:20px;max-width:500px">' +
+      '<h2 style="color:#1a1a2e">📅 Nuova Richiesta Assenza</h2>' +
+      '<hr style="border:1px solid #eee">' +
+      '<p><b>Driver:</b> ' + nome + '</p>' +
+      '<p><b>Tipo:</b> ' + tipoLabel + '</p>' +
+      '<p><b>Dal:</b> ' + dalFmt + ' → <b>Al:</b> ' + alFmt + '</p>' +
+      '<p><b>Giorni:</b> ' + giorni + '</p>' +
+      '<p><b>Stato:</b> <span style="color:#3b82f6">Richiesta ⏳</span></p>' +
+      '<hr style="border:1px solid #eee">' +
+      '<p style="color:#888;font-size:.85em">ID: ' + id + '</p>' +
+      '</div>';
+
+    GmailApp.sendEmail(EMAIL_NOTIFICHE, oggetto, oggetto, { htmlBody: corpoHtml });
+  } catch(err) {
+    Logger.log('Errore trigger email: ' + err.message);
+  }
+}
+
+function installaTrigger() {
+  // rimuove trigger esistenti per evitare duplicati
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'inviaEmailNuovaAssenza') {
+      ScriptApp.deleteTrigger(t);
+    }
+  });
+  // crea nuovo trigger onEdit sul foglio
+  ScriptApp.newTrigger('inviaEmailNuovaAssenza')
+    .forSpreadsheet(SPREADSHEET_ID)
+    .onEdit()
+    .create();
+  Logger.log('Trigger installato correttamente.');
+}
+
+// ============================================================
+//  ADMIN — Calendario Assenze
+// ============================================================
+
+// Chiave segreta minima per proteggere le azioni di scrittura/eliminazione
+// dell'admin. Cambiala pure con una tua stringa a piacere — basta che sia
+// la STESSA sia qui sia dentro calendario-assenze.html.
+const ADMIN_KEY = 'mlg-admin-8f3k2q';
+
+// Colonna Email nel foglio Driver (già esistente) e colonna che verrà
+// creata in automatico nel foglio Assenze per registrare quando è stata
+// inviata l'email di approvazione.
+const D_EMAIL               = 'Email_Driver';
+const A_EMAIL_APPROVAZIONE  = 'Email_Approvazione_Inviata';
+
+function _chiaveValida(e) {
+  return e && e.parameter && e.parameter.key === ADMIN_KEY;
+}
+
+// ── Elenco COMPLETO delle assenze (tutti i driver) — per il calendario admin ──
+function getTutteAssenze() {
+  try {
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheetA = ss.getSheetByName(SHEET_ASSENZE);
+    const dataA  = sheetA.getDataRange().getValues();
+    const hdrA   = dataA[0].map(h => h.toString().trim());
+
+    const iID    = hdrA.indexOf(A_ID);
+    const iDrv   = hdrA.indexOf(A_DRIVER);
+    const iNome  = hdrA.indexOf(A_NOME);
+    const iTipo  = hdrA.indexOf(A_TIPO);
+    const iPerm  = hdrA.indexOf(A_TIPO_PERM);
+    const iDal   = hdrA.indexOf(A_DAL);
+    const iAl    = hdrA.indexOf(A_AL);
+    const iGior  = hdrA.indexOf(A_GIORNI);
+    const iStato = hdrA.indexOf(A_STATO);
+    const tz     = Session.getScriptTimeZone();
+
+    function fmtData(v) {
+      if (!v) return '';
+      if (v instanceof Date) return Utilities.formatDate(v, tz, 'dd/MM/yyyy');
+      return v.toString().trim();
+    }
+
+    return dataA.slice(1)
+      .filter(r => r[iID] && r[iStato] && r[iStato].toString().trim() !== '')
+      .map(r => ({
+        id          : r[iID].toString().trim(),
+        driver      : r[iDrv]  ? r[iDrv].toString().trim()  : '',
+        nomeDriver  : r[iNome] ? r[iNome].toString().trim() : '',
+        tipo        : r[iTipo] ? r[iTipo].toString().trim() : '',
+        tipoPermesso: r[iPerm] ? r[iPerm].toString().trim() : '',
+        dal         : fmtData(r[iDal]),
+        al          : fmtData(r[iAl]),
+        giorni      : r[iGior] ? Number(r[iGior]) : 0,
+        stato       : r[iStato] ? r[iStato].toString().trim() : '',
+      }));
+  } catch (err) {
+    return [];
+  }
+}
+
+// ── Elenco driver (id + nome) — per il menu a tendina "nuova assenza" ──
+function getListaDrivers() {
+  try {
+    const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const data = ss.getSheetByName(SHEET_DRIVER).getDataRange().getValues();
+    const hdr  = data[0].map(h => h.toString().trim());
+    const iID  = hdr.indexOf(D_ID);
+    const iNome= hdr.indexOf(D_NOME);
+    return data.slice(1)
+      .filter(r => r[iID])
+      .map(r => ({ id: String(r[iID]).trim(), nome: r[iNome] ? r[iNome].toString().trim() : '' }))
+      .sort((a,b) => a.nome.localeCompare(b.nome));
+  } catch (err) {
+    return [];
+  }
+}
+
+// ── Legge l'email di un driver dal foglio Driver (colonna Email_Driver) ──
+function _getEmailDriver(driverId, ss) {
+  try {
+    const sh   = ss.getSheetByName(SHEET_DRIVER);
+    const data = sh.getDataRange().getValues();
+    const hdr  = data[0].map(h => h.toString().trim());
+    const iID    = hdr.indexOf(D_ID);
+    const iEmail = hdr.indexOf(D_EMAIL);
+    if (iEmail < 0) return '';
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][iID]).trim() === String(driverId).trim()) {
+        return data[i][iEmail] ? data[i][iEmail].toString().trim() : '';
+      }
+    }
+    return '';
+  } catch (e) { return ''; }
+}
+
+// Crea (se manca) la colonna che registra quando è stata inviata l'email
+// di approvazione, e ne restituisce l'indice colonna (1-based).
+function _assicuraColonnaEmailApprovazione(sh, hdrA) {
+  const idx = hdrA.indexOf(A_EMAIL_APPROVAZIONE);
+  if (idx >= 0) return idx + 1;
+  const nuovaCol = sh.getLastColumn() + 1;
+  sh.getRange(1, nuovaCol).setValue(A_EMAIL_APPROVAZIONE)
+    .setBackground('#1565C0').setFontColor('#FFFFFF').setFontWeight('bold')
+    .setHorizontalAlignment('center').setVerticalAlignment('middle').setWrap(true);
+  return nuovaCol;
+}
+
+// Invia l'email di approvazione al driver (se ha un'email registrata) e
+// registra sempre la data/ora del tentativo nella colonna dedicata.
+function _inviaEmailApprovazione(ss, sheetA, riga, hdrA, driverId, nomeDriver, tipo, dal, al, giorni) {
+  try {
+    const email = _getEmailDriver(driverId, ss);
+    const tz    = Session.getScriptTimeZone();
+    const dalFmt = dal instanceof Date ? Utilities.formatDate(dal, tz, 'dd/MM/yyyy') : String(dal);
+    const alFmt  = al  instanceof Date ? Utilities.formatDate(al,  tz, 'dd/MM/yyyy') : String(al);
+
+    if (email) {
+      const oggetto = '✅ Richiesta ' + tipo + ' approvata';
+      const corpoHtml =
+        '<div style="font-family:sans-serif;padding:20px;max-width:500px">' +
+        '<h2 style="color:#16a34a">✅ Richiesta Approvata</h2>' +
+        '<hr style="border:1px solid #eee">' +
+        '<p><b>Tipo:</b> ' + tipo + '</p>' +
+        '<p><b>Dal:</b> ' + dalFmt + ' &nbsp;→&nbsp; <b>Al:</b> ' + alFmt + '</p>' +
+        '<p><b>Giorni:</b> ' + giorni + '</p>' +
+        '<hr style="border:1px solid #eee">' +
+        '<p style="color:#888;font-size:.85em">Ciao ' + nomeDriver + ', la tua richiesta è stata approvata dall\'amministrazione.</p>' +
+        '</div>';
+      MailApp.sendEmail(email, oggetto, oggetto, { htmlBody: corpoHtml });
+    }
+
+    // registra comunque la data/ora del tentativo, anche se manca l'indirizzo email
+    const colData = _assicuraColonnaEmailApprovazione(sheetA, hdrA);
+    sheetA.getRange(riga, colData).setValue(new Date()).setNumberFormat('dd/mm/yyyy HH:mm');
+  } catch (err) {
+    Logger.log('Errore invio email approvazione: ' + err.message);
+  }
+}
+
+// ── Crea una nuova assenza (Admin) ──
+// Ferie/Permesso/Malattia nascono sempre come "Richiesta" (in attesa di
+// approvazione). Blocco invece ha stato "Periodo Bloccato" fin dalla
+// creazione — non richiede driver specifico e non passa da nessuna
+// approvazione: è già una decisione dell'amministratore, ed è LO STESSO
+// stato usato dal Valid_If di AppSheet, così i due sistemi restano allineati.
+function assenzeAdminAdd(driverId, tipo, tipoPermesso, dal, al, giorni) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    if (!tipo) return { ok: false, errore: 'Tipo assenza mancante.' };
+    if (!dal || !al) return { ok: false, errore: 'Date mancanti.' };
+
+    let nomeDriver = '';
+    let statoIniziale = 'Richiesta';
+
+    function isoToDate(s) {
+      const p = s.split('-');
+      return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    }
+    const dalDate = isoToDate(dal);
+    const alDate  = isoToDate(al);
+
+    if (tipo === 'Blocco') {
+      driverId      = driverId || 'BLOCCO';
+      nomeDriver    = 'Blocco periodo';
+      statoIniziale = 'Periodo Bloccato';   // allineato ad AppSheet
+    } else {
+      const driver = getDriver(driverId, ss);
+      if (!driver) return { ok: false, errore: 'Driver non trovato.' };
+      nomeDriver = driver[D_NOME];
+
+      // ── blocco: una richiesta normale non può nascere dentro un Blocco,
+      //    stesso controllo lato script del Valid_If di AppSheet ──
+      if (_periodoInBlocco(ss, dalDate, alDate)) {
+        return { ok: false, errore: 'Periodo bloccato dall\'amministratore. Non è possibile inserire una richiesta in questo intervallo.' };
+      }
+    }
+
+    const ora = new Date();
+    const id  = Utilities.getUuid().substring(0, 8);
+
+    const sheetA = ss.getSheetByName(SHEET_ASSENZE);
+    const hdrA   = sheetA.getDataRange().getValues()[0].map(h => h.toString().trim());
+    const riga   = new Array(hdrA.length).fill('');
+    function set(col, val) { const i = hdrA.indexOf(col); if (i >= 0) riga[i] = val; }
+
+    set(A_ID,        id);
+    set(A_DRIVER,    driverId);
+    set(A_NOME,      nomeDriver);
+    set(A_TIPO,      tipo);
+    set(A_TIPO_PERM, tipoPermesso || '');
+    set(A_GIORNO,    ora);
+    set(A_DAL,       dalDate);
+    set(A_AL,        alDate);
+    set(A_GIORNI,    giorni);
+    set(A_STATO,     statoIniziale);
+    set(A_ULT_ACC,   ora);
+
+    sheetA.appendRow(riga);
+    return { ok: true, id: id };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ── Modifica un'assenza esistente (Admin) — usata sia per l'editing pieno
+//    (date/tipo) sia per approvare/rifiutare (basta passare solo "stato").
+//    Se lo stato passa ad "Approvato", invia automaticamente l'email al driver.
+//    Se si modificano le date "Dal"/"Al" di una richiesta NON di tipo Blocco,
+//    viene ricontrollato l'overlap con eventuali Blocchi esistenti. ──
+function assenzeAdminUpdate(id, campi) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (!id) return { ok: false, errore: 'ID mancante.' };
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheetA = ss.getSheetByName(SHEET_ASSENZE);
+    const dataA  = sheetA.getDataRange().getValues();
+    const hdrA   = dataA[0].map(h => h.toString().trim());
+    const iID    = hdrA.indexOf(A_ID);
+
+    function isoToDate(s) {
+      const p = s.split('-');
+      return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+    }
+
+    for (let i = 1; i < dataA.length; i++) {
+      if (String(dataA[i][iID]).trim() !== String(id).trim()) continue;
+      const riga = i + 1;
+      const row  = dataA[i];
+
+      const iDriver = hdrA.indexOf(A_DRIVER);
+      const iNome   = hdrA.indexOf(A_NOME);
+      const iTipo   = hdrA.indexOf(A_TIPO);
+      const iPerm   = hdrA.indexOf(A_TIPO_PERM);
+      const iDal    = hdrA.indexOf(A_DAL);
+      const iAl     = hdrA.indexOf(A_AL);
+      const iGior   = hdrA.indexOf(A_GIORNI);
+      const iStato  = hdrA.indexOf(A_STATO);
+
+      // valori correnti, usati come base per l'email (aggiornati sotto se cambiano)
+      const driverId     = row[iDriver];
+      const nomeDriver    = row[iNome];
+      let tipoFinale      = row[iTipo];
+      let dalFinale       = row[iDal];
+      let alFinale        = row[iAl];
+      let giorniFinale    = row[iGior];
+
+      // Se si stanno modificando le date, verifica l'overlap PRIMA di scrivere,
+      // ma solo per richieste che non sono esse stesse un Blocco.
+      if ((campi.dal !== undefined || campi.al !== undefined) && tipoFinale !== 'Blocco') {
+        const nuovoDal = campi.dal !== undefined ? isoToDate(campi.dal) : dalFinale;
+        const nuovoAl  = campi.al  !== undefined ? isoToDate(campi.al)  : alFinale;
+        if (_periodoInBlocco(ss, nuovoDal, nuovoAl)) {
+          return { ok: false, errore: 'Periodo bloccato dall\'amministratore. Non è possibile spostare la richiesta in questo intervallo.' };
+        }
+      }
+
+      if (campi.tipo !== undefined) { sheetA.getRange(riga, iTipo + 1).setValue(campi.tipo); tipoFinale = campi.tipo; }
+      if (campi.tipoPermesso !== undefined) sheetA.getRange(riga, iPerm + 1).setValue(campi.tipoPermesso);
+      if (campi.dal !== undefined) { const d = isoToDate(campi.dal); sheetA.getRange(riga, iDal + 1).setValue(d); dalFinale = d; }
+      if (campi.al !== undefined)  { const d = isoToDate(campi.al);  sheetA.getRange(riga, iAl + 1).setValue(d);  alFinale = d; }
+      if (campi.giorni !== undefined) { sheetA.getRange(riga, iGior + 1).setValue(Number(campi.giorni)); giorniFinale = Number(campi.giorni); }
+
+      let approvataOra = false;
+      if (campi.stato !== undefined) {
+        sheetA.getRange(riga, iStato + 1).setValue(campi.stato);
+        if (campi.stato === 'Approvato') approvataOra = true;
+      }
+
+      if (approvataOra) {
+        _inviaEmailApprovazione(ss, sheetA, riga, hdrA, driverId, nomeDriver, tipoFinale, dalFinale, alFinale, giorniFinale);
+      }
+
+      return { ok: true };
+    }
+    return { ok: false, errore: 'Assenza non trovata.' };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ── Elimina un'assenza (Admin) — a differenza di assenzeAnnulla() del
+//    driver, qui si può eliminare qualsiasi riga, in qualsiasi stato ──
+function assenzeAdminDelete(id) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (!id) return { ok: false, errore: 'ID mancante.' };
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheetA = ss.getSheetByName(SHEET_ASSENZE);
+    const dataA  = sheetA.getDataRange().getValues();
+    const hdrA   = dataA[0].map(h => h.toString().trim());
+    const iID    = hdrA.indexOf(A_ID);
+
+    for (let i = 1; i < dataA.length; i++) {
+      if (String(dataA[i][iID]).trim() === String(id).trim()) {
+        sheetA.deleteRow(i + 1);
+        return { ok: true };
+      }
+    }
+    return { ok: false, errore: 'Assenza non trovata.' };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ============================================================
+//  UTILITY UNA-TANTUM — sistema i Blocchi creati prima della
+//  correzione, che nel foglio hanno ancora Stato Richiesta = "Attivo"
+//  invece di "Periodo Bloccato". Eseguila UNA VOLTA sola dall'editor
+//  Apps Script (seleziona la funzione "correggiVecchiBlocchi" ed esegui),
+//  poi puoi anche cancellarla.
+// ============================================================
+// ============================================================
+//  ANAGRAFICA DRIVER COMPLETA — Documenti, Multe, Sinistri
+//  Sostituisce il rimando ad AppSheet per l'anagrafica.
+//  Tutte le azioni di scrittura sono protette da ADMIN_KEY
+//  (stessa chiave già usata per il modulo Assenze).
+// ============================================================
+
+const SHEET_DOCUMENTI = 'Documenti_Driver';
+const SHEET_MULTE     = 'Multe';
+const SHEET_SINISTRI  = 'Sinistro';
+
+const DOC_ID     = 'ID_Documenti';
+const DOC_DRIVER = 'Driver';
+const DOC_NOME   = 'Nome Driver';
+
+const MULTA_ID     = 'ID_Multa';
+const MULTA_DRIVER = 'ID_Driver';
+
+const SIN_ID     = 'ID Sinistro';
+const SIN_DRIVER = 'Driver';
+
+// Legge un intero foglio e restituisce { ss, sh, hdr, data }
+function _leggiTabella(nomeFoglio, ss) {
+  ss = ss || SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sh   = ss.getSheetByName(nomeFoglio);
+  const data = sh.getDataRange().getValues();
+  const hdr  = data[0].map(h => h.toString().trim());
+  return { ss, sh, hdr, data };
+}
+
+// Converte una riga in oggetto {colonna: valore}, formattando le date in dd/MM/yyyy
+function _rigaToOggetto(hdr, riga, tz) {
+  const obj = {};
+  hdr.forEach((h, i) => {
+    const v = riga[i];
+    if (v instanceof Date) obj[h] = Utilities.formatDate(v, tz, 'dd/MM/yyyy');
+    else obj[h] = (v === undefined || v === null) ? '' : v;
+  });
+  return obj;
+}
+
+// ── Lista completa driver (colonna sinistra dell'anagrafica) ──
+function getListaDriverCompleta() {
+  const { hdr, data } = _leggiTabella(SHEET_DRIVER);
+  const iID     = hdr.indexOf(D_ID);
+  const iNome   = hdr.indexOf(D_NOME);
+  const iStato  = hdr.indexOf(D_STATO);
+  const iRuolo  = hdr.indexOf('Ruolo');
+  const iDip    = hdr.indexOf('Dipendente');
+  const iStUt   = hdr.indexOf('Stato Utente');
+  return data.slice(1)
+    .filter(r => r[iID])
+    .map(r => ({
+      id          : String(r[iID]).trim(),
+      nome        : iNome  >= 0 ? (r[iNome]  || '').toString().trim() : '',
+      stato       : iStato >= 0 ? (r[iStato] || '').toString().trim() : '',
+      ruolo       : iRuolo >= 0 ? (r[iRuolo] || '').toString().trim() : '',
+      dipendente  : iDip   >= 0 ? (r[iDip]   || '').toString().trim() : '',
+      statoUtente : iStUt  >= 0 ? (r[iStUt]  || '').toString().trim() : '',
+    }))
+    .sort((a, b) => a.nome.localeCompare(b.nome));
+}
+
+// ── Dettaglio completo di UN driver: anagrafica + assenze + documenti + multe + sinistri ──
+function getDriverDettaglio(driverId) {
+  if (!driverId) return { ok: false, errore: 'Driver mancante.' };
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const tz = Session.getScriptTimeZone();
+
+  const driver = getDriver(driverId, ss);
+  if (!driver) return { ok: false, errore: 'Driver non trovato.' };
+
+  // conteggio assenze
+  const { hdr: hdrA, data: dataA } = _leggiTabella(SHEET_ASSENZE, ss);
+  const iDrvA = hdrA.indexOf(A_DRIVER);
+  const nAssenze = dataA.slice(1).filter(r => String(r[iDrvA]).trim() === String(driverId).trim()).length;
+
+  // documenti — un record unico per driver
+  const { hdr: hdrD, data: dataD } = _leggiTabella(SHEET_DOCUMENTI, ss);
+  const iDrvD  = hdrD.indexOf(DOC_DRIVER);
+  const rigaDoc = dataD.slice(1).find(r => String(r[iDrvD]).trim() === String(driverId).trim());
+  const documento = rigaDoc ? _rigaToOggetto(hdrD, rigaDoc, tz) : null;
+
+  // multe — lista
+  const { hdr: hdrM, data: dataM } = _leggiTabella(SHEET_MULTE, ss);
+  const iDrvM = hdrM.indexOf(MULTA_DRIVER);
+  const multe = dataM.slice(1)
+    .filter(r => String(r[iDrvM]).trim() === String(driverId).trim())
+    .map(r => _rigaToOggetto(hdrM, r, tz));
+
+  // sinistri — lista
+  const { hdr: hdrS, data: dataS } = _leggiTabella(SHEET_SINISTRI, ss);
+  const iDrvS = hdrS.indexOf(SIN_DRIVER);
+  const sinistri = dataS.slice(1)
+    .filter(r => String(r[iDrvS]).trim() === String(driverId).trim())
+    .map(r => _rigaToOggetto(hdrS, r, tz));
+
+  return {
+    ok       : true,
+    driver   : driver,
+    nAssenze : nAssenze,
+    documento: documento,
+    multe    : multe,
+    sinistri : sinistri,
+  };
+}
+
+function _parseCampi(campiJson) {
+  try { return JSON.parse(campiJson || '{}'); } catch (e) { return null; }
+}
+
+// ── Aggiorna anagrafica driver ──
+function adminDriverUpdate(driverId, campiJson) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (!driverId) return { ok: false, errore: 'Driver mancante.' };
+    const campi = _parseCampi(campiJson);
+    if (!campi) return { ok: false, errore: 'Dati non validi.' };
+
+    const { sh, hdr, data } = _leggiTabella(SHEET_DRIVER);
+    const iID = hdr.indexOf(D_ID);
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][iID]).trim() === String(driverId).trim()) {
+        const riga = i + 1;
+        Object.keys(campi).forEach(col => {
+          const iCol = hdr.indexOf(col);
+          if (iCol >= 0) sh.getRange(riga, iCol + 1).setValue(campi[col]);
+        });
+        return { ok: true };
+      }
+    }
+    return { ok: false, errore: 'Driver non trovato.' };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ── Documenti: record UNICO per driver — crea se non esiste, aggiorna se esiste ──
+function adminDocumentoUpsert(driverId, campiJson) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (!driverId) return { ok: false, errore: 'Driver mancante.' };
+    const campi = _parseCampi(campiJson);
+    if (!campi) return { ok: false, errore: 'Dati non validi.' };
+
+    const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const driver = getDriver(driverId, ss);
+    if (!driver) return { ok: false, errore: 'Driver non trovato.' };
+
+    const { sh, hdr, data } = _leggiTabella(SHEET_DOCUMENTI, ss);
+    const iDrv = hdr.indexOf(DOC_DRIVER);
+    const iAcc = hdr.indexOf('Ultimo Accesso');
+
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][iDrv]).trim() === String(driverId).trim()) {
+        const riga = i + 1;
+        Object.keys(campi).forEach(col => {
+          const iCol = hdr.indexOf(col);
+          if (iCol >= 0) sh.getRange(riga, iCol + 1).setValue(campi[col]);
+        });
+        if (iAcc >= 0) sh.getRange(riga, iAcc + 1).setValue(new Date());
+        return { ok: true };
+      }
+    }
+    // non esiste ancora: crea una nuova riga
+    const nuovaRiga = new Array(hdr.length).fill('');
+    function set(col, val) { const i = hdr.indexOf(col); if (i >= 0) nuovaRiga[i] = val; }
+    set(DOC_ID, Utilities.getUuid().substring(0, 8));
+    set(DOC_DRIVER, driverId);
+    set(DOC_NOME, driver[D_NOME]);
+    Object.keys(campi).forEach(col => set(col, campi[col]));
+    set('Ultimo Accesso', new Date());
+    sh.appendRow(nuovaRiga);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ── Multe: add / update / delete ──
+function adminMultaAdd(driverId, campiJson) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (!driverId) return { ok: false, errore: 'Driver mancante.' };
+    const campi = _parseCampi(campiJson);
+    if (!campi) return { ok: false, errore: 'Dati non validi.' };
+
+    const { sh, hdr } = _leggiTabella(SHEET_MULTE);
+    const nuovaRiga = new Array(hdr.length).fill('');
+    function set(col, val) { const i = hdr.indexOf(col); if (i >= 0) nuovaRiga[i] = val; }
+    set(MULTA_ID, Utilities.getUuid().substring(0, 8));
+    set(MULTA_DRIVER, driverId);
+    Object.keys(campi).forEach(col => set(col, campi[col]));
+    set('Ultimo Accesso', new Date());
+    sh.appendRow(nuovaRiga);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function adminMultaUpdate(id, campiJson) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (!id) return { ok: false, errore: 'ID mancante.' };
+    const campi = _parseCampi(campiJson);
+    if (!campi) return { ok: false, errore: 'Dati non validi.' };
+
+    const { sh, hdr, data } = _leggiTabella(SHEET_MULTE);
+    const iID = hdr.indexOf(MULTA_ID);
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][iID]).trim() === String(id).trim()) {
+        const riga = i + 1;
+        Object.keys(campi).forEach(col => {
+          const iCol = hdr.indexOf(col);
+          if (iCol >= 0) sh.getRange(riga, iCol + 1).setValue(campi[col]);
+        });
+        return { ok: true };
+      }
+    }
+    return { ok: false, errore: 'Multa non trovata.' };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function adminMultaDelete(id) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (!id) return { ok: false, errore: 'ID mancante.' };
+    const { sh, hdr, data } = _leggiTabella(SHEET_MULTE);
+    const iID = hdr.indexOf(MULTA_ID);
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][iID]).trim() === String(id).trim()) {
+        sh.deleteRow(i + 1);
+        return { ok: true };
+      }
+    }
+    return { ok: false, errore: 'Multa non trovata.' };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// ── Sinistri: add / update / delete ──
+function adminSinistroAdd(driverId, campiJson) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (!driverId) return { ok: false, errore: 'Driver mancante.' };
+    const campi = _parseCampi(campiJson);
+    if (!campi) return { ok: false, errore: 'Dati non validi.' };
+
+    const { sh, hdr } = _leggiTabella(SHEET_SINISTRI);
+    const nuovaRiga = new Array(hdr.length).fill('');
+    function set(col, val) { const i = hdr.indexOf(col); if (i >= 0) nuovaRiga[i] = val; }
+    set(SIN_ID, Utilities.getUuid().substring(0, 8));
+    set(SIN_DRIVER, driverId);
+    Object.keys(campi).forEach(col => set(col, campi[col]));
+    set('Ultimo Accesso', new Date());
+    sh.appendRow(nuovaRiga);
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function adminSinistroUpdate(id, campiJson) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (!id) return { ok: false, errore: 'ID mancante.' };
+    const campi = _parseCampi(campiJson);
+    if (!campi) return { ok: false, errore: 'Dati non validi.' };
+
+    const { sh, hdr, data } = _leggiTabella(SHEET_SINISTRI);
+    const iID = hdr.indexOf(SIN_ID);
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][iID]).trim() === String(id).trim()) {
+        const riga = i + 1;
+        Object.keys(campi).forEach(col => {
+          const iCol = hdr.indexOf(col);
+          if (iCol >= 0) sh.getRange(riga, iCol + 1).setValue(campi[col]);
+        });
+        return { ok: true };
+      }
+    }
+    return { ok: false, errore: 'Sinistro non trovato.' };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function adminSinistroDelete(id) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (!id) return { ok: false, errore: 'ID mancante.' };
+    const { sh, hdr, data } = _leggiTabella(SHEET_SINISTRI);
+    const iID = hdr.indexOf(SIN_ID);
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][iID]).trim() === String(id).trim()) {
+        sh.deleteRow(i + 1);
+        return { ok: true };
+      }
+    }
+    return { ok: false, errore: 'Sinistro non trovato.' };
+  } catch (err) {
+    return { ok: false, errore: err.message };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function correggiVecchiBlocchi() {
+  const ss     = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheetA = ss.getSheetByName(SHEET_ASSENZE);
+  const dataA  = sheetA.getDataRange().getValues();
+  const hdrA   = dataA[0].map(h => h.toString().trim());
+  const iTipo  = hdrA.indexOf(A_TIPO);
+  const iStato = hdrA.indexOf(A_STATO);
+
+  let corrette = 0;
+  for (let i = 1; i < dataA.length; i++) {
+    const tipo  = dataA[i][iTipo]  ? dataA[i][iTipo].toString().trim()  : '';
+    const stato = dataA[i][iStato] ? dataA[i][iStato].toString().trim() : '';
+    if (tipo === 'Blocco' && stato === 'Attivo') {
+      sheetA.getRange(i + 1, iStato + 1).setValue('Periodo Bloccato');
+      corrette++;
+    }
+  }
+  Logger.log('Blocchi corretti: ' + corrette);
+}
