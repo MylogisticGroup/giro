@@ -492,10 +492,9 @@
   async function caricaTutto(){
   document.getElementById('calGrid').innerHTML = '<div class="cal-loading">Caricamento assenze…</div>';
   try {
-    const resA = await apiCall('action=assenze_tutte');
-    const resD = await apiCall('action=driver_lista');
-    tutteAssenze = (resA && resA.assenze) || [];
-    listaDrivers = (resD && resD.drivers) || [];
+    const res = await apiCall('action=assenze_calendario_init');
+    tutteAssenze = (res && res.assenze) || [];
+    listaDrivers = (res && res.drivers) || [];
     popolaDropdownDrivers();
     renderCalendario();
   } catch(e) {
