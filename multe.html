@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Multe — MyLogAdmin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:      #080d18;
+    --panel:   #141d2e;
+    --panel2:  #182238;
+    --line:    #1f2d45;
+    --ink:     #f0f4ff;
+    --muted:   #6b7a99;
+    --yellow:  #facc15;
+    --yellow-dim: rgba(250,204,21,.14);
+
+    --c-pagata:   #22c55e;
+    --c-dapagare: #ef4444;
+    --c-driver:   #3b82f6;
+    --c-azienda:  #a855f7;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Syne',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100dvh;
+    padding:28px clamp(20px, 4vw, 64px) 90px;
+  }
+  .wrap{width:100%; max-width:1800px; margin:0 auto;}
+
+  /* ── Topbar ── */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:8px; gap:16px;
+  }
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'JetBrains Mono',monospace; font-size:.72rem;
+    color:var(--muted); text-decoration:none;
+    letter-spacing:.05em; text-transform:uppercase;
+    transition:color .15s;
+  }
+  .back-link:hover{ color:var(--yellow); }
+  .topbar-right{
+    font-family:'JetBrains Mono',monospace; font-size:.72rem;
+    color:var(--muted); text-align:right; line-height:1.5;
+  }
+  .topbar-right .clock{color:var(--ink); font-weight:600; font-size:.85rem;}
+
+  /* ── Header modulo ── */
+  .module-head{
+    display:flex; align-items:center; gap:14px;
+    margin:22px 0 24px; flex-wrap:wrap;
+  }
+  .module-icon{
+    width:48px; height:48px; border-radius:12px;
+    background:var(--yellow-dim);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--yellow); flex-shrink:0;
+  }
+  .module-icon svg{ width:26px; height:26px; }
+  .module-head .eyebrow{
+    font-size:.62rem; font-weight:600; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:3px;
+  }
+  .module-head .title{ font-size:1.4rem; font-weight:700; }
+  .btn-nuova{
+    margin-left:auto; display:inline-flex; align-items:center; gap:8px;
+    background:var(--yellow); color:#161200; border:none; border-radius:10px;
+    padding:11px 18px; font-family:'Syne',sans-serif; font-weight:700; font-size:.85rem;
+    cursor:pointer; transition:filter .15s;
+  }
+  .btn-nuova:hover{ filter:brightness(1.08); }
+
+  /* ── Stat cards ── */
+  .stats{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr));
+    gap:12px; margin-bottom:20px;
+  }
+  .stat{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px;
+  }
+  .stat .num{ font-family:'JetBrains Mono',monospace; font-size:1.4rem; font-weight:700; }
+  .stat .lbl{ font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-top:2px; }
+  .stat.warn .num{ color:var(--c-dapagare); }
+  .stat.ok .num{ color:var(--c-pagata); }
+
+  /* ── Filtri ── */
+  .filters{
+    display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;
+  }
+  .filters input, .filters select{
+    padding:10px 12px; border-radius:9px;
+    border:1.5px solid var(--line); background:var(--panel2);
+    color:var(--ink); font-family:'Syne',sans-serif; font-size:.82rem;
+  }
+  .filters input{ flex:1; min-width:180px; }
+  .filters select{ min-width:150px; }
+
+  /* ── Tabella ── */
+  .table-panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow-x:auto;
+  }
+  table{ width:100%; border-collapse:collapse; min-width:920px; }
+  thead th{
+    text-align:left; font-size:.66rem; font-weight:700; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--muted); padding:14px 14px;
+    border-bottom:1px solid var(--line); white-space:nowrap;
+  }
+  tbody td{
+    padding:12px 14px; font-size:.82rem; border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  tbody tr{ cursor:pointer; transition:background .15s; }
+  tbody tr:hover{ background:var(--panel2); }
+  tbody tr:last-child td{ border-bottom:none; }
+  .cell-driver{ font-weight:700; }
+  .cell-importo{ font-family:'JetBrains Mono',monospace; }
+  .badge{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:.68rem; font-weight:700; padding:4px 10px; border-radius:20px;
+  }
+  .badge-pagata{ background:rgba(34,197,94,.14); color:#86efac; }
+  .badge-dapagare{ background:rgba(239,68,68,.14); color:#fca5a5; }
+  .badge-driver{ background:rgba(59,130,246,.14); color:#93c5fd; }
+  .badge-azienda{ background:rgba(168,85,247,.14); color:#d8b4fe; }
+  .badge-mix{ background:rgba(250,204,21,.14); color:#fde68a; }
+  .empty-row td{
+    text-align:center; padding:40px 20px; color:var(--muted);
+    font-family:'JetBrains Mono',monospace; font-size:.82rem;
+  }
+  .cal-error{
+    text-align:center; padding:40px 20px; color:#fca5a5;
+    font-family:'JetBrains Mono',monospace; font-size:.82rem;
+  }
+  .cal-error button{
+    margin-top:10px; background:transparent; border:1px solid #fca5a5; color:#fca5a5;
+    border-radius:8px; padding:6px 16px; font-family:'Syne',sans-serif; font-weight:600; cursor:pointer;
+  }
+
+  /* ── FAB ── */
+  .fab{
+    position:fixed; bottom:26px; right:26px; z-index:60;
+    width:56px; height:56px; border-radius:50%; border:none;
+    background:var(--yellow); color:#161200; font-size:1.6rem; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 22px rgba(250,204,21,.4); transition:transform .15s;
+  }
+  .fab:hover{ transform:scale(1.07); }
+  .fab:active{ transform:scale(.94); }
+
+  /* ── Modal ── */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,.6);
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{
+    background:var(--panel2); border:1px solid var(--line); border-radius:16px;
+    padding:24px 26px; max-width:480px; width:100%;
+    max-height:88dvh; overflow-y:auto;
+  }
+
+  /* dettaglio */
+  .det-nome{ font-size:1.15rem; font-weight:700; margin-bottom:14px; }
+  .det-row{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:14px;
+    padding:9px 0; border-top:1px solid var(--line);
+    font-size:.83rem;
+  }
+  .det-row .k{ color:var(--muted); flex-shrink:0; }
+  .det-row .v{ font-family:'JetBrains Mono',monospace; text-align:right; }
+  .det-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+  .det-actions button{
+    flex:1; min-width:100px; padding:10px; border-radius:10px;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:.78rem; cursor:pointer;
+    border:1px solid var(--line); background:transparent; color:var(--ink);
+    transition:border-color .15s, background .15s;
+  }
+  .btn-modifica{ border-color:var(--yellow); color:var(--yellow); }
+  .btn-modifica:hover{ background:rgba(250,204,21,.1); }
+  .btn-elimina{ border-color:var(--c-dapagare); color:#fca5a5; }
+  .btn-elimina:hover{ background:rgba(239,68,68,.12); }
+  .btn-chiudi-modal{
+    margin-top:8px; width:100%; padding:10px; border-radius:10px;
+    border:1px solid var(--line); background:transparent; color:var(--muted);
+    font-family:'Syne',sans-serif; font-weight:600; cursor:pointer;
+  }
+  .btn-chiudi-modal:hover{ border-color:var(--muted); color:var(--ink); }
+
+  /* form */
+  .form-title{ font-size:1.05rem; font-weight:700; margin-bottom:18px; }
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 12px; }
+  .form-field{ margin-bottom:14px; }
+  .form-field.full{ grid-column:1 / -1; }
+  .form-label{
+    display:block; font-size:.63rem; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px;
+  }
+  .form-input, .form-select, .form-date, .form-textarea{
+    width:100%; padding:10px 11px; border-radius:9px;
+    border:1.5px solid var(--line); background:var(--panel);
+    color:var(--ink); font-family:'Syne',sans-serif; font-size:.82rem;
+  }
+  .form-textarea{ resize:vertical; min-height:56px; font-family:'Syne',sans-serif; }
+  .form-err{
+    font-size:.78rem; color:#fca5a5; background:rgba(239,68,68,.1);
+    border:1px solid rgba(239,68,68,.3); border-radius:8px; padding:9px 12px;
+    margin-bottom:14px; display:none;
+  }
+  .form-err.visible{ display:block; }
+  .btn-submit-form{
+    width:100%; padding:13px; border-radius:10px; border:none;
+    background:var(--yellow); color:#161200; font-family:'Syne',sans-serif;
+    font-weight:700; font-size:.9rem; cursor:pointer; margin-top:6px;
+  }
+  .btn-submit-form:disabled{ opacity:.5; cursor:not-allowed; }
+
+  @media(max-width:520px){ .form-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a class="back-link" href="driver.html">← Driver</a>
+    <div class="topbar-right">
+      <div class="clock" id="clock">--:--:--</div>
+      <div id="dateLabel">—</div>
+    </div>
+  </div>
+
+  <div class="module-head">
+    <div class="module-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3.5 3.5 8v8L12 20.5 20.5 16V8z"></path>
+        <path d="M12 8v5"></path>
+        <circle cx="12" cy="16" r=".4" fill="currentColor" stroke="none"></circle>
+      </svg>
+    </div>
+    <div>
+      <div class="eyebrow">Modulo · DR · Multe</div>
+      <div class="title">Multe</div>
+    </div>
+    <button class="btn-nuova" onclick="apriFormNuova()">＋ Nuova multa</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="num" id="statTotale">—</div>
+      <div class="lbl">Totale multe</div>
+    </div>
+    <div class="stat warn">
+      <div class="num" id="statDaPagare">—</div>
+      <div class="lbl">Da pagare</div>
+    </div>
+    <div class="stat">
+      <div class="num" id="statImporto">—</div>
+      <div class="lbl">Importo totale</div>
+    </div>
+    <div class="stat">
+      <div class="num" id="statPunti">—</div>
+      <div class="lbl">Punti decurtati</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="fSearch" placeholder="Cerca per driver, targa o motivo…">
+    <select id="fDriver"><option value="">Tutti i driver</option></select>
+    <select id="fStato">
+      <option value="">Tutti gli stati</option>
+      <option value="Pagata">Pagata</option>
+      <option value="Da Pagare">Da Pagare</option>
+    </select>
+  </div>
+
+  <div class="table-panel">
+    <table>
+      <thead>
+        <tr>
+          <th>Driver</th>
+          <th>Veicolo</th>
+          <th>Data</th>
+          <th>Motivo</th>
+          <th>Importo</th>
+          <th>Punti</th>
+          <th>Pagamento</th>
+          <th>Addebito</th>
+        </tr>
+      </thead>
+      <tbody id="tblBody">
+        <tr class="empty-row"><td colspan="8">Caricamento multe…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<button class="fab" onclick="apriFormNuova()" title="Nuova multa">＋</button>
+
+<!-- Modal dettaglio multa -->
+<div class="modal-overlay" id="detModalOverlay" onclick="if(event.target===this) chiudiDetModal()">
+  <div class="modal-box">
+    <div class="det-nome" id="detNome"></div>
+    <div class="det-row"><span class="k">Veicolo</span><span class="v" id="detVeicolo"></span></div>
+    <div class="det-row"><span class="k">Data contravvenzione</span><span class="v" id="detData"></span></div>
+    <div class="det-row"><span class="k">Motivo</span><span class="v" id="detMotivo"></span></div>
+    <div class="det-row"><span class="k">Importo</span><span class="v" id="detImporto"></span></div>
+    <div class="det-row"><span class="k">Punti decurtati</span><span class="v" id="detPunti"></span></div>
+    <div class="det-row"><span class="k">Scadenza invio punti</span><span class="v" id="detScadenza"></span></div>
+    <div class="det-row"><span class="k">Invio punti</span><span class="v" id="detInvioPunti"></span></div>
+    <div class="det-row"><span class="k">Stato pagamento</span><span class="v" id="detStatoPag"></span></div>
+    <div class="det-row"><span class="k">Stato addebito</span><span class="v" id="detStatoAdd"></span></div>
+    <div class="det-row"><span class="k">Importo da addebitare</span><span class="v" id="detImportoAdd"></span></div>
+    <div class="det-row"><span class="k">Note</span><span class="v" id="detNote"></span></div>
+    <div class="det-row"><span class="k">Allegato</span><span class="v" id="detAllegato"></span></div>
+    <div class="det-actions">
+      <button class="btn-modifica" onclick="apriFormModifica()">✎ Modifica</button>
+      <button class="btn-elimina" onclick="eliminaMulta()">🗑 Elimina</button>
+    </div>
+    <button class="btn-chiudi-modal" onclick="chiudiDetModal()">Chiudi</button>
+  </div>
+</div>
+
+<!-- Modal form nuova/modifica multa -->
+<div class="modal-overlay" id="formOverlay" onclick="if(event.target===this) chiudiForm()">
+  <div class="modal-box">
+    <div class="form-title" id="formTitle">Nuova multa</div>
+    <div class="form-err" id="formErr"></div>
+
+    <div class="form-field" id="fieldDriver">
+      <label class="form-label">Driver</label>
+      <select class="form-select" id="formDriver"><option value="">— Seleziona —</option></select>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label">Veicolo (targa)</label>
+        <input class="form-input" id="formVeicolo" placeholder="es. GT 491 DW">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Data contravvenzione</label>
+        <input type="date" class="form-date" id="formData">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Importo (€)</label>
+        <input type="number" step="0.01" class="form-input" id="formImporto" placeholder="0.00">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Punti decurtati</label>
+        <input type="number" class="form-input" id="formPunti" placeholder="0">
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Motivo</label>
+        <input class="form-input" id="formMotivo" placeholder="es. velocità, semaforo…">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Scadenza invio punti</label>
+        <input type="date" class="form-date" id="formScadenza">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Invio punti</label>
+        <input type="date" class="form-date" id="formInvioPunti">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Stato pagamento</label>
+        <select class="form-select" id="formStatoPag">
+          <option value="Da Pagare">Da Pagare</option>
+          <option value="Pagata">Pagata</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Stato addebito</label>
+        <select class="form-select" id="formStatoAdd">
+          <option value="">—</option>
+          <option value="Azienda">Azienda</option>
+          <option value="Driver">Driver</option>
+          <option value="Azienda & Driver">Azienda &amp; Driver</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label class="form-label">Importo da addebitare (€)</label>
+        <input type="number" step="0.01" class="form-input" id="formImportoAdd" placeholder="0.00">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Riferimento allegato</label>
+        <input class="form-input" id="formAllegato" placeholder="nome file / link (facoltativo)">
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Note</label>
+        <textarea class="form-textarea" id="formNote"></textarea>
+      </div>
+    </div>
+
+    <button class="btn-submit-form" id="btnSubmitForm" onclick="submitForm()" disabled>Salva</button>
+    <button class="btn-chiudi-modal" onclick="chiudiForm()">Annulla</button>
+  </div>
+</div>
+
+<script>
+  function tick(){
+    const d = new Date();
+    document.getElementById('clock').textContent = d.toLocaleTimeString('it-IT');
+    document.getElementById('dateLabel').textContent = d.toLocaleDateString('it-IT', { weekday:'short', day:'2-digit', month:'short' });
+  }
+  tick(); setInterval(tick, 1000);
+
+  // ── Config ────────────────────────────────────────────────
+  const API       = 'https://giro.groupmylogistich.workers.dev';
+  const ADMIN_KEY = 'mlg-admin-8f3k2q';
+
+  function apiCall(qs, _retry) {
+    return new Promise((resolve, reject) => {
+      const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
+      const tag   = document.createElement('script');
+      const timer = setTimeout(() => {
+        delete window[cb]; tag.remove();
+        if (!_retry) { apiCall(qs, true).then(resolve).catch(reject); }
+        else { reject(new Error('Timeout')); }
+      }, 40000);
+      window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
+      tag.onerror = () => {
+        clearTimeout(timer); delete window[cb]; tag.remove();
+        if (!_retry) { apiCall(qs, true).then(resolve).catch(reject); }
+        else { reject(new Error('Errore di rete')); }
+      };
+      tag.src = API + '?' + qs + '&callback=' + cb;
+      document.head.appendChild(tag);
+    });
+  }
+
+  // ── Nomi esatti delle colonne nel foglio "Multe" ──
+  const COL = {
+    ID: 'ID_Multa', DRIVER: 'ID_Driver', VEICOLO: 'ID_Veicolo', ANNO: 'Anno',
+    DATA: 'Data_Contravvenzione', IMPORTO: 'Importo', MOTIVO: 'Motivo',
+    PUNTI: 'Punti_Decurtati', SCADENZA: 'Scadenza_Invio_Punti', INVIO: 'Invio Punti',
+    STATO_PAG: 'Stato_Pagamento', STATO_ADD: 'Stato_Addebito',
+    IMPORTO_ADD: 'Importo_da_addebitare', NOTE: 'Note', ALLEGATO: 'Allega_Multa',
+  };
+
+  let tutteMulte = [];
+  let listaDrivers = [];
+  let modModifica = null;
+  let multaCorrente = null;
+
+  function itToISO(s){ // "dd/mm/yyyy" -> "yyyy-mm-dd" (per <input type=date>)
+    if (!s) return '';
+    const [d,m,y] = s.split('/');
+    if (!d || !m || !y) return '';
+    return y + '-' + m + '-' + d;
+  }
+  function euro(v){
+    if (v === '' || v === null || v === undefined) return '—';
+    const n = typeof v === 'number' ? v : parseFloat(String(v).replace(',', '.').replace('€','').trim());
+    if (isNaN(n)) return String(v);
+    return n.toLocaleString('it-IT', { style:'currency', currency:'EUR' });
+  }
+
+  async function caricaTutto(){
+    document.getElementById('tblBody').innerHTML = '<tr class="empty-row"><td colspan="8">Caricamento multe…</td></tr>';
+    try {
+      const [resM, resD] = await Promise.all([
+        apiCall('action=multe_tutte'),
+        apiCall('action=driver_lista')
+      ]);
+      tutteMulte   = (resM && resM.multe)   || [];
+      listaDrivers = (resD && resD.drivers) || [];
+      popolaDropdownDrivers();
+      renderStats();
+      renderTabella();
+    } catch(e) {
+      document.getElementById('tblBody').innerHTML =
+        '<tr><td colspan="8"><div class="cal-error">⚠️ Impossibile caricare le multe.<br>' + e.message + '<br>' +
+        '<button onclick="caricaTutto()">Riprova</button></div></td></tr>';
+    }
+  }
+
+  function popolaDropdownDrivers(){
+    const selForm   = document.getElementById('formDriver');
+    const selFiltro = document.getElementById('fDriver');
+    selForm.innerHTML   = '<option value="">— Seleziona —</option>';
+    selFiltro.innerHTML = '<option value="">Tutti i driver</option>';
+    listaDrivers.forEach(d => {
+      const o1 = document.createElement('option'); o1.value = d.id; o1.textContent = d.nome || d.id;
+      selForm.appendChild(o1);
+      const o2 = document.createElement('option'); o2.value = d.id; o2.textContent = d.nome || d.id;
+      selFiltro.appendChild(o2);
+    });
+  }
+
+  function renderStats(){
+    const tot = tutteMulte.length;
+    const daPagare = tutteMulte.filter(m => (m[COL.STATO_PAG]||'') === 'Da Pagare').length;
+    const importoTot = tutteMulte.reduce((s,m) => {
+      const n = typeof m[COL.IMPORTO] === 'number' ? m[COL.IMPORTO] : parseFloat(String(m[COL.IMPORTO]||'0').replace(',', '.').replace('€','').trim());
+      return s + (isNaN(n) ? 0 : n);
+    }, 0);
+    const puntiTot = tutteMulte.reduce((s,m) => s + (Number(m[COL.PUNTI]) || 0), 0);
+
+    document.getElementById('statTotale').textContent   = tot;
+    document.getElementById('statDaPagare').textContent = daPagare;
+    document.getElementById('statImporto').textContent  = euro(importoTot);
+    document.getElementById('statPunti').textContent    = puntiTot;
+  }
+
+  function badgeStatoPag(v){
+    if (v === 'Pagata')    return '<span class="badge badge-pagata">Pagata</span>';
+    if (v === 'Da Pagare') return '<span class="badge badge-dapagare">Da Pagare</span>';
+    return v ? '<span class="badge">' + v + '</span>' : '—';
+  }
+  function badgeStatoAdd(v){
+    if (v === 'Driver')  return '<span class="badge badge-driver">Driver</span>';
+    if (v === 'Azienda') return '<span class="badge badge-azienda">Azienda</span>';
+    if (v === 'Azienda & Driver') return '<span class="badge badge-mix">Azienda &amp; Driver</span>';
+    return v ? '<span class="badge">' + v + '</span>' : '—';
+  }
+
+  function multeFiltrate(){
+    const q       = document.getElementById('fSearch').value.trim().toLowerCase();
+    const driver  = document.getElementById('fDriver').value;
+    const stato   = document.getElementById('fStato').value;
+
+    return tutteMulte.filter(m => {
+      if (driver && String(m[COL.DRIVER]).trim() !== driver) return false;
+      if (stato && (m[COL.STATO_PAG]||'') !== stato) return false;
+      if (q) {
+        const hay = [(m.nomeDriver||''), (m[COL.VEICOLO]||''), (m[COL.MOTIVO]||'')].join(' ').toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderTabella(){
+    const rows = multeFiltrate();
+    const tbody = document.getElementById('tblBody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Nessuna multa trovata.</td></tr>';
+      return;
+    }
+    // ordina per data contravvenzione decrescente (stringhe dd/mm/yyyy)
+    rows.sort((a,b) => {
+      const da = itToISO(a[COL.DATA]), db = itToISO(b[COL.DATA]);
+      return db.localeCompare(da);
+    });
+    tbody.innerHTML = rows.map(m => {
+      const id = m[COL.ID];
+      return '<tr onclick="apriDetModal(\'' + id + '\')">' +
+        '<td class="cell-driver">' + (m.nomeDriver || m[COL.DRIVER] || '—') + '</td>' +
+        '<td>' + (m[COL.VEICOLO] || '—') + '</td>' +
+        '<td>' + (m[COL.DATA] || '—') + '</td>' +
+        '<td>' + (m[COL.MOTIVO] || '—') + '</td>' +
+        '<td class="cell-importo">' + euro(m[COL.IMPORTO]) + '</td>' +
+        '<td>' + (m[COL.PUNTI] || '—') + '</td>' +
+        '<td>' + badgeStatoPag(m[COL.STATO_PAG]) + '</td>' +
+        '<td>' + badgeStatoAdd(m[COL.STATO_ADD]) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  document.getElementById('fSearch').addEventListener('input', renderTabella);
+  document.getElementById('fDriver').addEventListener('change', renderTabella);
+  document.getElementById('fStato').addEventListener('change', renderTabella);
+
+  // ── Modal dettaglio ──
+  function apriDetModal(id){
+    multaCorrente = tutteMulte.find(m => m[COL.ID] === id);
+    if (!multaCorrente) return;
+    const m = multaCorrente;
+    document.getElementById('detNome').textContent      = (m.nomeDriver || m[COL.DRIVER] || '—');
+    document.getElementById('detVeicolo').textContent    = m[COL.VEICOLO] || '—';
+    document.getElementById('detData').textContent       = m[COL.DATA] || '—';
+    document.getElementById('detMotivo').textContent     = m[COL.MOTIVO] || '—';
+    document.getElementById('detImporto').textContent    = euro(m[COL.IMPORTO]);
+    document.getElementById('detPunti').textContent      = m[COL.PUNTI] || '—';
+    document.getElementById('detScadenza').textContent   = m[COL.SCADENZA] || '—';
+    document.getElementById('detInvioPunti').textContent = m[COL.INVIO] || '—';
+    document.getElementById('detStatoPag').innerHTML     = badgeStatoPag(m[COL.STATO_PAG]);
+    document.getElementById('detStatoAdd').innerHTML     = badgeStatoAdd(m[COL.STATO_ADD]);
+    document.getElementById('detImportoAdd').textContent = euro(m[COL.IMPORTO_ADD]);
+    document.getElementById('detNote').textContent       = m[COL.NOTE] || '—';
+    document.getElementById('detAllegato').textContent   = m[COL.ALLEGATO] || '—';
+    document.getElementById('detModalOverlay').classList.add('open');
+  }
+  function chiudiDetModal(){
+    document.getElementById('detModalOverlay').classList.remove('open');
+    multaCorrente = null;
+  }
+
+  async function eliminaMulta(){
+    if (!multaCorrente) return;
+    if (!confirm('Eliminare questa multa di ' + (multaCorrente.nomeDriver || multaCorrente[COL.DRIVER]) + '?')) return;
+    try {
+      const res = await apiCall('action=multa_delete&id=' + encodeURIComponent(multaCorrente[COL.ID]) +
+        '&key=' + encodeURIComponent(ADMIN_KEY));
+      if (res.ok) {
+        chiudiDetModal();
+        await caricaTutto();
+      } else {
+        alert(res.errore || 'Errore eliminazione.');
+      }
+    } catch(e) { alert('Errore di connessione.'); }
+  }
+
+  // ── Form nuova / modifica ──
+  function resetForm(){
+    modModifica = null;
+    document.getElementById('formTitle').textContent = 'Nuova multa';
+    document.getElementById('formDriver').value = '';
+    document.getElementById('formDriver').disabled = false;
+    document.getElementById('formVeicolo').value = '';
+    document.getElementById('formData').value = '';
+    document.getElementById('formImporto').value = '';
+    document.getElementById('formPunti').value = '';
+    document.getElementById('formMotivo').value = '';
+    document.getElementById('formScadenza').value = '';
+    document.getElementById('formInvioPunti').value = '';
+    document.getElementById('formStatoPag').value = 'Da Pagare';
+    document.getElementById('formStatoAdd').value = '';
+    document.getElementById('formImportoAdd').value = '';
+    document.getElementById('formAllegato').value = '';
+    document.getElementById('formNote').value = '';
+    document.getElementById('formErr').classList.remove('visible');
+    aggiornaSubmitForm();
+  }
+
+  function apriFormNuova(){
+    resetForm();
+    document.getElementById('formOverlay').classList.add('open');
+  }
+
+  function apriFormModifica(){
+    if (!multaCorrente) return;
+    resetForm();
+    const m = multaCorrente;
+    modModifica = m[COL.ID];
+    document.getElementById('formTitle').textContent = 'Modifica multa';
+    document.getElementById('formDriver').value = m[COL.DRIVER] || '';
+    document.getElementById('formVeicolo').value = m[COL.VEICOLO] || '';
+    document.getElementById('formData').value = itToISO(m[COL.DATA]);
+    document.getElementById('formImporto').value = (typeof m[COL.IMPORTO] === 'number') ? m[COL.IMPORTO] : (m[COL.IMPORTO] || '');
+    document.getElementById('formPunti').value = m[COL.PUNTI] || '';
+    document.getElementById('formMotivo').value = m[COL.MOTIVO] || '';
+    document.getElementById('formScadenza').value = itToISO(m[COL.SCADENZA]);
+    document.getElementById('formInvioPunti').value = itToISO(m[COL.INVIO]);
+    document.getElementById('formStatoPag').value = m[COL.STATO_PAG] || 'Da Pagare';
+    document.getElementById('formStatoAdd').value = m[COL.STATO_ADD] || '';
+    document.getElementById('formImportoAdd').value = (typeof m[COL.IMPORTO_ADD] === 'number') ? m[COL.IMPORTO_ADD] : (m[COL.IMPORTO_ADD] || '');
+    document.getElementById('formAllegato').value = m[COL.ALLEGATO] || '';
+    document.getElementById('formNote').value = m[COL.NOTE] || '';
+    chiudiDetModal();
+    document.getElementById('formOverlay').classList.add('open');
+    aggiornaSubmitForm();
+  }
+
+  function chiudiForm(){
+    document.getElementById('formOverlay').classList.remove('open');
+  }
+
+  document.getElementById('formDriver').addEventListener('change', aggiornaSubmitForm);
+  document.getElementById('formData').addEventListener('change', aggiornaSubmitForm);
+  document.getElementById('formImporto').addEventListener('input', aggiornaSubmitForm);
+  document.getElementById('formMotivo').addEventListener('input', aggiornaSubmitForm);
+
+  function aggiornaSubmitForm(){
+    const ok = document.getElementById('formDriver').value &&
+               document.getElementById('formData').value &&
+               document.getElementById('formImporto').value &&
+               document.getElementById('formMotivo').value.trim();
+    document.getElementById('btnSubmitForm').disabled = !ok;
+  }
+
+  async function submitForm(){
+    document.getElementById('formErr').classList.remove('visible');
+    document.getElementById('btnSubmitForm').disabled = true;
+
+    const campi = {};
+    campi[COL.VEICOLO]     = document.getElementById('formVeicolo').value.trim();
+    campi[COL.DATA]        = document.getElementById('formData').value; // yyyy-mm-dd
+    campi[COL.ANNO]        = document.getElementById('formData').value ? Number(document.getElementById('formData').value.split('-')[0]) : '';
+    campi[COL.IMPORTO]     = Number(document.getElementById('formImporto').value) || 0;
+    campi[COL.PUNTI]       = document.getElementById('formPunti').value ? Number(document.getElementById('formPunti').value) : '';
+    campi[COL.MOTIVO]      = document.getElementById('formMotivo').value.trim();
+    campi[COL.SCADENZA]    = document.getElementById('formScadenza').value;
+    campi[COL.INVIO]       = document.getElementById('formInvioPunti').value;
+    campi[COL.STATO_PAG]   = document.getElementById('formStatoPag').value;
+    campi[COL.STATO_ADD]   = document.getElementById('formStatoAdd').value;
+    campi[COL.IMPORTO_ADD] = document.getElementById('formImportoAdd').value ? Number(document.getElementById('formImportoAdd').value) : '';
+    campi[COL.ALLEGATO]    = document.getElementById('formAllegato').value.trim();
+    campi[COL.NOTE]        = document.getElementById('formNote').value.trim();
+
+    const driverId = document.getElementById('formDriver').value;
+
+    try {
+      let res;
+      if (modModifica) {
+        res = await apiCall('action=multa_update&id=' + encodeURIComponent(modModifica) +
+          '&campi=' + encodeURIComponent(JSON.stringify(campi)) +
+          '&key=' + encodeURIComponent(ADMIN_KEY));
+      } else {
+        res = await apiCall('action=multa_add&driver=' + encodeURIComponent(driverId) +
+          '&campi=' + encodeURIComponent(JSON.stringify(campi)) +
+          '&key=' + encodeURIComponent(ADMIN_KEY));
+      }
+      if (res.ok) {
+        chiudiForm();
+        await caricaTutto();
+      } else {
+        document.getElementById('formErr').textContent = res.errore || 'Errore salvataggio.';
+        document.getElementById('formErr').classList.add('visible');
+        document.getElementById('btnSubmitForm').disabled = false;
+      }
+    } catch(e) {
+      document.getElementById('formErr').textContent = 'Errore di connessione. Riprova.';
+      document.getElementById('formErr').classList.add('visible');
+      document.getElementById('btnSubmitForm').disabled = false;
+    }
+  }
+
+  caricaTutto();
+</script>
+</body>
+</html>
