@@ -73,6 +73,7 @@
   .search-box{
     padding:14px; border-bottom:1px solid var(--line); position:sticky; top:0;
     background:var(--panel); z-index:5;
+    display:flex; flex-direction:column; gap:8px;
   }
   .search-input{
     width:100%; padding:10px 12px; border-radius:9px;
@@ -80,6 +81,12 @@
     color:var(--ink); font-family:'Syne',sans-serif; font-size:.85rem;
   }
   .search-input::placeholder{ color:var(--dim); }
+  .btn-nuovo-driver{
+    width:100%; padding:10px; border-radius:9px; border:none;
+    background:var(--yellow); color:#161200; font-family:'Syne',sans-serif;
+    font-weight:700; font-size:.8rem; cursor:pointer; transition:filter .15s;
+  }
+  .btn-nuovo-driver:hover{ filter:brightness(1.08); }
   .driver-list{ padding:8px; flex:1; }
   .driver-card{
     padding:12px 14px; border-radius:10px; margin-bottom:6px;
@@ -234,6 +241,7 @@
   <div class="col-left">
     <div class="search-box">
       <input class="search-input" id="searchInput" placeholder="🔍 Cerca driver…" oninput="filtraLista()">
+      <button class="btn-nuovo-driver" onclick="apriNuovoDriverModal()">＋ Nuovo Driver</button>
     </div>
     <div class="driver-list" id="driverList">
       <div class="spin-wrap"><div class="spinner"></div>Caricamento driver…</div>
@@ -621,8 +629,8 @@
     }
   }
 
-  // ── Modal generico Multa / Sinistro ──
-  let recordModalTipo = null;   // 'multa' | 'sinistro'
+  // ── Modal generico Multa / Sinistro / Nuovo Driver ──
+  let recordModalTipo = null;   // 'multa' | 'sinistro' | 'driver'
   let recordModalIdx  = null;   // indice nell'array cache (null = nuovo)
 
   function apriRecordModal(tipo, idx){
@@ -638,6 +646,16 @@
     document.getElementById('recordModal').classList.add('open');
   }
 
+  // ── Apre il modal per creare un nuovo driver da zero ──
+  function apriNuovoDriverModal(){
+    recordModalTipo = 'driver';
+    recordModalIdx  = null;
+    document.getElementById('recordModalTitle').textContent = 'Nuovo Driver';
+    document.getElementById('recordModalFields').innerHTML = buildFormFields(DRIVER_FIELDS, {}, 'rec');
+    document.getElementById('recordModalErr').classList.remove('visible');
+    document.getElementById('recordModal').classList.add('open');
+  }
+
   function chiudiRecordModal(){
     document.getElementById('recordModal').classList.remove('open');
     recordModalTipo = null; recordModalIdx = null;
@@ -648,6 +666,38 @@
     const errEl = document.getElementById('recordModalErr');
     errEl.classList.remove('visible');
     document.getElementById('recordModalSubmit').disabled = true;
+
+    // ── Caso "Nuovo Driver": azione e cache separate dagli altri tipi ──
+    if (recordModalTipo === 'driver') {
+      if (!campi['Cognome Nome'] || !campi['Cognome Nome'].trim()) {
+        document.getElementById('recordModalSubmit').disabled = false;
+        errEl.textContent = '⚠️ Il nome del driver è obbligatorio.';
+        errEl.classList.add('visible');
+        return;
+      }
+      try {
+        const res = await apiCall('action=driver_add&campi=' + encodeURIComponent(JSON.stringify(campi)) +
+          '&key=' + encodeURIComponent(ADMIN_KEY));
+        document.getElementById('recordModalSubmit').disabled = false;
+        if (res.ok) {
+          const nuovoDriver = Object.assign({ ID: res.id }, campi);
+          cacheDrivers.push(nuovoDriver);
+          cacheDrivers.sort((a,b) => String(a['Cognome Nome']||'').localeCompare(String(b['Cognome Nome']||'')));
+          chiudiRecordModal();
+          document.getElementById('searchInput').value = '';
+          selezionaDriver(res.id);
+        } else {
+          errEl.textContent = '⚠️ ' + (res.errore || 'Errore salvataggio.');
+          errEl.classList.add('visible');
+        }
+      } catch(e) {
+        document.getElementById('recordModalSubmit').disabled = false;
+        errEl.textContent = '⚠️ Errore di connessione.';
+        errEl.classList.add('visible');
+      }
+      return;
+    }
+
     try {
       let res;
       const idField = recordModalTipo === 'multa' ? 'ID_Multa' : 'ID Sinistro';
