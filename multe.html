@@ -275,6 +275,7 @@
 
   <div class="filters">
     <input type="text" id="fSearch" placeholder="Cerca per driver, targa o motivo…">
+    <select id="fAnno"><option value="">Tutti gli anni</option></select>
     <select id="fDriver"><option value="">Tutti i driver</option></select>
     <select id="fStato">
       <option value="">Tutti gli stati</option>
@@ -463,6 +464,18 @@
     if (isNaN(n)) return String(v);
     return n.toLocaleString('it-IT', { style:'currency', currency:'EUR' });
   }
+  function annoDiMulta(m){
+    // preferisce la colonna Anno se presente/valida, altrimenti la ricava dalla data
+    const a = Number(m[COL.ANNO]);
+    if (a) return a;
+    const data = m[COL.DATA];
+    if (data && data.includes('/')) {
+      const parts = data.split('/');
+      const y = Number(parts[2]);
+      if (y) return y;
+    }
+    return null;
+  }
 
   async function caricaTutto(){
     document.getElementById('tblBody').innerHTML = '<tr class="empty-row"><td colspan="8">Caricamento multe…</td></tr>';
@@ -474,6 +487,7 @@
       tutteMulte   = (resM && resM.multe)   || [];
       listaDrivers = (resD && resD.drivers) || [];
       popolaDropdownDrivers();
+      popolaDropdownAnni();
       renderStats();
       renderTabella();
     } catch(e) {
@@ -494,6 +508,19 @@
       const o2 = document.createElement('option'); o2.value = d.id; o2.textContent = d.nome || d.id;
       selFiltro.appendChild(o2);
     });
+  }
+
+  function popolaDropdownAnni(){
+    const selAnno = document.getElementById('fAnno');
+    const valorePrecedente = selAnno.value;
+    const anni = Array.from(new Set(
+      tutteMulte.map(annoDiMulta).filter(a => a)
+    )).sort((a,b) => b - a); // più recenti prima
+
+    selAnno.innerHTML = '<option value="">Tutti gli anni</option>' +
+      anni.map(a => '<option value="' + a + '">' + a + '</option>').join('');
+
+    if (anni.includes(Number(valorePrecedente))) selAnno.value = valorePrecedente;
   }
 
   function renderStats(){
@@ -525,10 +552,12 @@
 
   function multeFiltrate(){
     const q       = document.getElementById('fSearch').value.trim().toLowerCase();
+    const anno    = document.getElementById('fAnno').value;
     const driver  = document.getElementById('fDriver').value;
     const stato   = document.getElementById('fStato').value;
 
     return tutteMulte.filter(m => {
+      if (anno && String(annoDiMulta(m)) !== anno) return false;
       if (driver && String(m[COL.DRIVER]).trim() !== driver) return false;
       if (stato && (m[COL.STATO_PAG]||'') !== stato) return false;
       if (q) {
@@ -567,6 +596,7 @@
   }
 
   document.getElementById('fSearch').addEventListener('input', renderTabella);
+  document.getElementById('fAnno').addEventListener('change', renderTabella);
   document.getElementById('fDriver').addEventListener('change', renderTabella);
   document.getElementById('fStato').addEventListener('change', renderTabella);
 
