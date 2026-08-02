@@ -34,7 +34,6 @@
   ::-webkit-scrollbar-track{ background:transparent; }
   ::-webkit-scrollbar-thumb{ background:var(--line2); border-radius:3px; }
 
-  /* ── Topbar ── */
   .topbar{
     display:flex; align-items:center; justify-content:space-between;
     padding:14px 22px; border-bottom:1px solid var(--line);
@@ -50,10 +49,11 @@
   .topbar-title{ font-size:1.1rem; font-weight:800; }
   .topbar-right{
     font-family:'JetBrains Mono',monospace; font-size:.7rem;
-    color:var(--muted);
+    color:var(--muted); display:flex; align-items:center; gap:10px;
   }
+  .sync-dot{ width:7px; height:7px; border-radius:50%; background:var(--green); display:inline-block; }
+  .sync-dot.stale{ background:var(--yellow); }
 
-  /* ── Layout due colonne ── */
   .layout{
     display:grid;
     grid-template-columns: 340px 1fr;
@@ -64,7 +64,6 @@
     .col-left{ max-height:50dvh; }
   }
 
-  /* ── Colonna sinistra: lista driver ── */
   .col-left{
     background:var(--panel);
     border-right:1px solid var(--line);
@@ -101,17 +100,11 @@
   .dc-badge.lib{ background:rgba(34,197,94,.15); color:#86efac; }
   .dc-badge.dip{ background:rgba(59,130,246,.12); color:#93c5fd; }
 
-  .btn-nuovo-driver{
-    margin:10px 14px 14px; padding:11px; border-radius:10px;
-    background:var(--yellow); color:#161200; border:none;
-    font-family:'Syne',sans-serif; font-weight:700; font-size:.8rem; cursor:pointer;
-  }
-
-  /* ── Colonna destra: dettaglio ── */
   .col-right{ overflow-y:auto; padding:22px 28px 60px; }
   .empty-state{
     display:flex; align-items:center; justify-content:center;
     height:100%; color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:.85rem;
+    text-align:center; padding:20px;
   }
 
   .detail-header{
@@ -143,7 +136,6 @@
   }
   .btn-small:hover{ filter:brightness(1.1); }
 
-  /* form grid */
   .form-grid{ display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:14px; }
   .f-field{ display:flex; flex-direction:column; gap:6px; }
   .f-field.wide{ grid-column:1 / -1; }
@@ -169,7 +161,6 @@
   .save-msg.ok{ color:#86efac; display:block; }
   .save-msg.err{ color:#fca5a5; display:block; }
 
-  /* liste multe/sinistri */
   .record-list{ display:flex; flex-direction:column; gap:8px; }
   .record-item{
     background:var(--panel2); border:1px solid var(--line2); border-radius:10px;
@@ -188,7 +179,6 @@
   .ri-btn.del:hover{ border-color:var(--red); color:#fca5a5; }
   .record-empty{ color:var(--dim); font-size:.78rem; font-family:'JetBrains Mono',monospace; padding:8px 0; }
 
-  /* modal */
   .modal-overlay{
     display:none; position:fixed; inset:0; z-index:200;
     background:rgba(0,0,0,.65); align-items:center; justify-content:center; padding:20px;
@@ -212,6 +202,7 @@
     background:var(--yellow); color:#161200; font-family:'Syne',sans-serif;
     font-weight:700; font-size:.82rem; cursor:pointer;
   }
+  .btn-confirm-modal:disabled{ opacity:.5; cursor:not-allowed; }
   .modal-err{
     font-size:.78rem; color:#fca5a5; background:rgba(239,68,68,.1);
     border:1px solid rgba(239,68,68,.3); border-radius:8px; padding:9px 12px;
@@ -232,11 +223,14 @@
 <div class="topbar">
   <a class="back-link" href="home.html">← Home</a>
   <div class="topbar-title">👤 Anagrafica Driver</div>
-  <div class="topbar-right" id="topClock">--:--:--</div>
+  <div class="topbar-right">
+    <span class="sync-dot" id="syncDot"></span>
+    <span id="syncLabel">Caricamento…</span>
+    <span id="topClock">--:--:--</span>
+  </div>
 </div>
 
 <div class="layout">
-  <!-- COLONNA SINISTRA -->
   <div class="col-left">
     <div class="search-box">
       <input class="search-input" id="searchInput" placeholder="🔍 Cerca driver…" oninput="filtraLista()">
@@ -246,13 +240,11 @@
     </div>
   </div>
 
-  <!-- COLONNA DESTRA -->
   <div class="col-right" id="colRight">
     <div class="empty-state">← Seleziona un driver dalla lista</div>
   </div>
 </div>
 
-<!-- MODAL generico per Multa / Sinistro -->
 <div class="modal-overlay" id="recordModal" onclick="if(event.target===this) chiudiRecordModal()">
   <div class="modal-box">
     <div class="modal-title" id="recordModalTitle">Nuovo record</div>
@@ -384,10 +376,13 @@
     { key:'Note Generali', label:'Note Generali', type:'textarea', wide:true },
   ];
 
-  // ── Stato globale ────────────────────────────────────────
-  let listaDriver   = [];
-  let driverAttivo  = null;
-  let dettaglio     = null;
+  // ── Stato / cache globale — popolata da UNA sola chiamata iniziale ──
+  let cacheDrivers      = [];   // array oggetti driver completi (riga Driver)
+  let cacheAssenzeCount = {};   // { driverId: numero }
+  let cacheDocumenti    = {};   // { driverId: oggetto documento }
+  let cacheMulte        = {};   // { driverId: [oggetti multa] }
+  let cacheSinistri     = {};   // { driverId: [oggetti sinistro] }
+  let driverAttivo      = null;
 
   // ── Utility date dd/MM/yyyy <-> yyyy-MM-dd (per <input type=date>) ──
   function itToIso(s){
@@ -403,15 +398,26 @@
     return d + '/' + m + '/' + y;
   }
 
-  // ── Caricamento lista driver ──
-  async function caricaListaDriver(){
+  // ── Caricamento MASSIVO unico all'apertura pagina ──
+  async function caricaTutto(){
+    document.getElementById('syncLabel').textContent = 'Caricamento…';
+    document.getElementById('syncDot').classList.add('stale');
     try {
-      const res = await apiCall('action=driver_lista_completa&key=' + encodeURIComponent(ADMIN_KEY));
-      if (!res.ok) { document.getElementById('driverList').innerHTML = '<div class="spin-wrap">⚠️ ' + (res.errore||'Errore') + '</div>'; return; }
-      listaDriver = res.drivers || [];
-      renderListaDriver(listaDriver);
+      const res = await apiCall('action=anagrafica_completa&key=' + encodeURIComponent(ADMIN_KEY));
+      if (!res.ok) {
+        document.getElementById('driverList').innerHTML = '<div class="spin-wrap">⚠️ ' + (res.errore||'Errore') + '<br><button class="btn-small" onclick="caricaTutto()">Riprova</button></div>';
+        return;
+      }
+      cacheDrivers      = res.drivers || [];
+      cacheAssenzeCount = res.assenzeCount || {};
+      cacheDocumenti    = res.documenti || {};
+      cacheMulte        = res.multe || {};
+      cacheSinistri     = res.sinistri || {};
+      renderListaDriver(cacheDrivers);
+      document.getElementById('syncLabel').textContent = 'Aggiornato ' + new Date().toLocaleTimeString('it-IT');
+      document.getElementById('syncDot').classList.remove('stale');
     } catch(e) {
-      document.getElementById('driverList').innerHTML = '<div class="spin-wrap">⚠️ Impossibile caricare i driver.<br>' + e.message + '</div>';
+      document.getElementById('driverList').innerHTML = '<div class="spin-wrap">⚠️ Impossibile caricare i driver.<br>' + e.message + '<br><button class="btn-small" onclick="caricaTutto()">Riprova</button></div>';
     }
   }
 
@@ -419,12 +425,16 @@
     const el = document.getElementById('driverList');
     if (!arr.length) { el.innerHTML = '<div class="spin-wrap">Nessun driver trovato.</div>'; return; }
     el.innerHTML = arr.map(d => {
-      const badgeStato = d.stato === 'Occupato'
+      const id    = String(d['ID'] || '').trim();
+      const nome  = d['Cognome Nome'] || '';
+      const stato = d['Stato'] || '';
+      const dip   = d['Dipendente'] || '';
+      const badgeStato = stato === 'Occupato'
         ? '<span class="dc-badge occ">Occupato</span>'
         : '<span class="dc-badge lib">Libero</span>';
-      const badgeDip = d.dipendente ? '<span class="dc-badge dip">' + d.dipendente + '</span>' : '';
-      return '<div class="driver-card' + (driverAttivo === d.id ? ' active' : '') + '" onclick="selezionaDriver(\'' + d.id + '\')">' +
-        '<div class="dc-top"><div class="dc-nome">' + d.nome + '</div><div class="dc-id">#' + d.id + '</div></div>' +
+      const badgeDip = dip ? '<span class="dc-badge dip">' + dip + '</span>' : '';
+      return '<div class="driver-card' + (driverAttivo === id ? ' active' : '') + '" onclick="selezionaDriver(\'' + id + '\')">' +
+        '<div class="dc-top"><div class="dc-nome">' + nome + '</div><div class="dc-id">#' + id + '</div></div>' +
         '<div class="dc-badges">' + badgeStato + badgeDip + '</div>' +
       '</div>';
     }).join('');
@@ -432,25 +442,22 @@
 
   function filtraLista(){
     const q = document.getElementById('searchInput').value.trim().toLowerCase();
-    if (!q) { renderListaDriver(listaDriver); return; }
-    renderListaDriver(listaDriver.filter(d =>
-      d.nome.toLowerCase().includes(q) || String(d.id).includes(q)
+    if (!q) { renderListaDriver(cacheDrivers); return; }
+    renderListaDriver(cacheDrivers.filter(d =>
+      String(d['Cognome Nome']||'').toLowerCase().includes(q) || String(d['ID']||'').includes(q)
     ));
   }
 
-  // ── Selezione driver → carica dettaglio ──
-  async function selezionaDriver(id){
+  // ── Selezione driver — ISTANTANEA: legge solo dalla cache, zero rete ──
+  function selezionaDriver(id){
     driverAttivo = id;
-    renderListaDriver(document.getElementById('searchInput').value.trim() ? listaDriver.filter(d => d.nome.toLowerCase().includes(document.getElementById('searchInput').value.trim().toLowerCase())) : listaDriver);
-    document.getElementById('colRight').innerHTML = '<div class="spin-wrap"><div class="spinner"></div>Caricamento dettaglio…</div>';
-    try {
-      const res = await apiCall('action=driver_dettaglio&driver=' + encodeURIComponent(id) + '&key=' + encodeURIComponent(ADMIN_KEY));
-      if (!res.ok) { document.getElementById('colRight').innerHTML = '<div class="empty-state">⚠️ ' + (res.errore||'Errore') + '</div>'; return; }
-      dettaglio = res;
-      renderDettaglio();
-    } catch(e) {
-      document.getElementById('colRight').innerHTML = '<div class="empty-state">⚠️ Impossibile caricare il dettaglio.<br>' + e.message + '</div>';
-    }
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    renderListaDriver(q ? cacheDrivers.filter(d => String(d['Cognome Nome']||'').toLowerCase().includes(q)) : cacheDrivers);
+    renderDettaglio();
+  }
+
+  function driverCorrente(){
+    return cacheDrivers.find(d => String(d['ID']).trim() === String(driverAttivo).trim());
   }
 
   // ── Generatore campi form ──
@@ -486,14 +493,20 @@
     return out;
   }
 
-  // ── Render pannello dettaglio ──
+  // ── Render pannello dettaglio (da cache, istantaneo) ──
   function renderDettaglio(){
-    const d = dettaglio.driver;
+    const d         = driverCorrente() || {};
+    const id        = driverAttivo;
+    const nAssenze  = cacheAssenzeCount[id] || 0;
+    const documento = cacheDocumenti[id] || null;
+    const multe     = cacheMulte[id] || [];
+    const sinistri  = cacheSinistri[id] || [];
+
     const html = `
       <div class="detail-header">
         <div>
           <div class="dh-nome">${d['Cognome Nome'] || ''}</div>
-          <div class="dh-sub">ID ${d['ID']||''} · ${dettaglio.nAssenze} assenze registrate</div>
+          <div class="dh-sub">ID ${d['ID']||''} · ${nAssenze} assenze registrate</div>
         </div>
       </div>
 
@@ -506,14 +519,14 @@
 
       <div class="section">
         <div class="section-head"><div class="section-title">📄 Documenti</div></div>
-        <div class="form-grid" id="formDoc">${buildFormFields(DOC_FIELDS, dettaglio.documento || {}, 'doc')}</div>
+        <div class="form-grid" id="formDoc">${buildFormFields(DOC_FIELDS, documento || {}, 'doc')}</div>
         <button class="btn-save" onclick="salvaDocumento()">💾 Salva Documenti</button>
         <div class="save-msg" id="msgDoc"></div>
       </div>
 
       <div class="section">
         <div class="section-head">
-          <div class="section-title">🚨 Multe <span class="section-count">${dettaglio.multe.length}</span></div>
+          <div class="section-title">🚨 Multe <span class="section-count">${multe.length}</span></div>
           <button class="btn-small" onclick="apriRecordModal('multa')">＋ Aggiungi</button>
         </div>
         <div class="record-list" id="listaMulte"></div>
@@ -521,7 +534,7 @@
 
       <div class="section">
         <div class="section-head">
-          <div class="section-title">💥 Sinistri <span class="section-count">${dettaglio.sinistri.length}</span></div>
+          <div class="section-title">💥 Sinistri <span class="section-count">${sinistri.length}</span></div>
           <button class="btn-small" onclick="apriRecordModal('sinistro')">＋ Aggiungi</button>
         </div>
         <div class="record-list" id="listaSinistri"></div>
@@ -534,8 +547,9 @@
 
   function renderListaMulte(){
     const el = document.getElementById('listaMulte');
-    if (!dettaglio.multe.length) { el.innerHTML = '<div class="record-empty">Nessuna multa registrata.</div>'; return; }
-    el.innerHTML = dettaglio.multe.map((m, i) => `
+    const multe = cacheMulte[driverAttivo] || [];
+    if (!multe.length) { el.innerHTML = '<div class="record-empty">Nessuna multa registrata.</div>'; return; }
+    el.innerHTML = multe.map((m, i) => `
       <div class="record-item">
         <div class="ri-info">
           <div class="ri-title">${m['Motivo']||'—'} — ${m['Importo']?('€ '+m['Importo']):''}</div>
@@ -551,8 +565,9 @@
 
   function renderListaSinistri(){
     const el = document.getElementById('listaSinistri');
-    if (!dettaglio.sinistri.length) { el.innerHTML = '<div class="record-empty">Nessun sinistro registrato.</div>'; return; }
-    el.innerHTML = dettaglio.sinistri.map((s, i) => `
+    const sinistri = cacheSinistri[driverAttivo] || [];
+    if (!sinistri.length) { el.innerHTML = '<div class="record-empty">Nessun sinistro registrato.</div>'; return; }
+    el.innerHTML = sinistri.map((s, i) => `
       <div class="record-item">
         <div class="ri-info">
           <div class="ri-title">${s['Data Sinistro']||'—'} — ${s['Luogo']||''}</div>
@@ -566,7 +581,7 @@
     `).join('');
   }
 
-  // ── Salvataggio Anagrafica ──
+  // ── Salvataggio Anagrafica: scrive sul foglio, poi aggiorna la cache locale ──
   async function salvaDriver(){
     const campi = leggiFormValues('formDriver');
     const msg = document.getElementById('msgDriver');
@@ -576,7 +591,9 @@
         '&campi=' + encodeURIComponent(JSON.stringify(campi)) + '&key=' + encodeURIComponent(ADMIN_KEY));
       if (res.ok) {
         msg.className = 'save-msg ok'; msg.textContent = '✓ Salvato.';
-        caricaListaDriver();
+        const d = driverCorrente();
+        if (d) Object.assign(d, campi);
+        renderListaDriver(cacheDrivers);
       } else {
         msg.className = 'save-msg err'; msg.textContent = '⚠️ ' + (res.errore || 'Errore salvataggio.');
       }
@@ -595,6 +612,7 @@
         '&campi=' + encodeURIComponent(JSON.stringify(campi)) + '&key=' + encodeURIComponent(ADMIN_KEY));
       if (res.ok) {
         msg.className = 'save-msg ok'; msg.textContent = '✓ Salvato.';
+        cacheDocumenti[driverAttivo] = Object.assign({}, cacheDocumenti[driverAttivo] || {}, campi);
       } else {
         msg.className = 'save-msg err'; msg.textContent = '⚠️ ' + (res.errore || 'Errore salvataggio.');
       }
@@ -605,15 +623,14 @@
 
   // ── Modal generico Multa / Sinistro ──
   let recordModalTipo = null;   // 'multa' | 'sinistro'
-  let recordModalIdx  = null;   // indice nell'array (null = nuovo)
+  let recordModalIdx  = null;   // indice nell'array cache (null = nuovo)
 
   function apriRecordModal(tipo, idx){
     recordModalTipo = tipo;
     recordModalIdx  = (idx !== undefined) ? idx : null;
     const fields = tipo === 'multa' ? MULTA_FIELDS : SINISTRO_FIELDS;
-    const values = (recordModalIdx !== null)
-      ? (tipo === 'multa' ? dettaglio.multe[recordModalIdx] : dettaglio.sinistri[recordModalIdx])
-      : {};
+    const arr    = tipo === 'multa' ? (cacheMulte[driverAttivo]||[]) : (cacheSinistri[driverAttivo]||[]);
+    const values = (recordModalIdx !== null) ? arr[recordModalIdx] : {};
     document.getElementById('recordModalTitle').textContent =
       (recordModalIdx !== null ? 'Modifica ' : 'Nuova ') + (tipo === 'multa' ? 'Multa' : 'Sinistro');
     document.getElementById('recordModalFields').innerHTML = buildFormFields(fields, values, 'rec');
@@ -633,20 +650,31 @@
     document.getElementById('recordModalSubmit').disabled = true;
     try {
       let res;
+      const idField = recordModalTipo === 'multa' ? 'ID_Multa' : 'ID Sinistro';
+      const arr     = recordModalTipo === 'multa'
+        ? (cacheMulte[driverAttivo] || (cacheMulte[driverAttivo] = []))
+        : (cacheSinistri[driverAttivo] || (cacheSinistri[driverAttivo] = []));
+
       if (recordModalIdx !== null) {
-        const id = recordModalTipo === 'multa' ? dettaglio.multe[recordModalIdx]['ID_Multa'] : dettaglio.sinistri[recordModalIdx]['ID Sinistro'];
+        const id = arr[recordModalIdx][idField];
         const action = recordModalTipo === 'multa' ? 'multa_update' : 'sinistro_update';
         res = await apiCall('action=' + action + '&id=' + encodeURIComponent(id) +
           '&campi=' + encodeURIComponent(JSON.stringify(campi)) + '&key=' + encodeURIComponent(ADMIN_KEY));
+        if (res.ok) Object.assign(arr[recordModalIdx], campi);
       } else {
         const action = recordModalTipo === 'multa' ? 'multa_add' : 'sinistro_add';
         res = await apiCall('action=' + action + '&driver=' + encodeURIComponent(driverAttivo) +
           '&campi=' + encodeURIComponent(JSON.stringify(campi)) + '&key=' + encodeURIComponent(ADMIN_KEY));
+        if (res.ok) {
+          const nuovoRecord = Object.assign({}, campi);
+          nuovoRecord[idField] = res.id;
+          arr.push(nuovoRecord);
+        }
       }
       document.getElementById('recordModalSubmit').disabled = false;
       if (res.ok) {
         chiudiRecordModal();
-        selezionaDriver(driverAttivo); // ricarica il dettaglio aggiornato
+        renderDettaglio();
       } else {
         errEl.textContent = '⚠️ ' + (res.errore || 'Errore salvataggio.');
         errEl.classList.add('visible');
@@ -663,12 +691,21 @@
     const action = tipo === 'multa' ? 'multa_delete' : 'sinistro_delete';
     try {
       const res = await apiCall('action=' + action + '&id=' + encodeURIComponent(id) + '&key=' + encodeURIComponent(ADMIN_KEY));
-      if (res.ok) { selezionaDriver(driverAttivo); }
-      else { alert(res.errore || 'Errore eliminazione.'); }
+      if (res.ok) {
+        const idField = tipo === 'multa' ? 'ID_Multa' : 'ID Sinistro';
+        const arr = tipo === 'multa' ? cacheMulte[driverAttivo] : cacheSinistri[driverAttivo];
+        if (arr) {
+          const idx = arr.findIndex(r => r[idField] === id);
+          if (idx >= 0) arr.splice(idx, 1);
+        }
+        renderDettaglio();
+      } else {
+        alert(res.errore || 'Errore eliminazione.');
+      }
     } catch(e) { alert('Errore di connessione.'); }
   }
 
-  caricaListaDriver();
+  caricaTutto();
 </script>
 </body>
 </html>
