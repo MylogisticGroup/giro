@@ -524,13 +524,14 @@
   }
 
   function renderStats(){
-    const tot = tutteMulte.length;
-    const daPagare = tutteMulte.filter(m => (m[COL.STATO_PAG]||'') === 'Da Pagare').length;
-    const importoTot = tutteMulte.reduce((s,m) => {
+    const dati = multeFiltrate();
+    const tot = dati.length;
+    const daPagare = dati.filter(m => (m[COL.STATO_PAG]||'') === 'Da Pagare').length;
+    const importoTot = dati.reduce((s,m) => {
       const n = typeof m[COL.IMPORTO] === 'number' ? m[COL.IMPORTO] : parseFloat(String(m[COL.IMPORTO]||'0').replace(',', '.').replace('€','').trim());
       return s + (isNaN(n) ? 0 : n);
     }, 0);
-    const puntiTot = tutteMulte.reduce((s,m) => s + (Number(m[COL.PUNTI]) || 0), 0);
+    const puntiTot = dati.reduce((s,m) => s + (Number(m[COL.PUNTI]) || 0), 0);
 
     document.getElementById('statTotale').textContent   = tot;
     document.getElementById('statDaPagare').textContent = daPagare;
@@ -595,10 +596,14 @@
     }).join('');
   }
 
-  document.getElementById('fSearch').addEventListener('input', renderTabella);
-  document.getElementById('fAnno').addEventListener('change', renderTabella);
-  document.getElementById('fDriver').addEventListener('change', renderTabella);
-  document.getElementById('fStato').addEventListener('change', renderTabella);
+  function aggiornaVista(){
+    renderStats();
+    renderTabella();
+  }
+  document.getElementById('fSearch').addEventListener('input', aggiornaVista);
+  document.getElementById('fAnno').addEventListener('change', aggiornaVista);
+  document.getElementById('fDriver').addEventListener('change', aggiornaVista);
+  document.getElementById('fStato').addEventListener('change', aggiornaVista);
 
   // ── Modal dettaglio ──
   function apriDetModal(id){
