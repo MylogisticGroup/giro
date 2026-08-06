@@ -1,0 +1,968 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Manutenzione — MyLogAdmin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:      #080d18;
+    --panel:   #141d2e;
+    --panel2:  #182238;
+    --line:    #1f2d45;
+    --ink:     #f0f4ff;
+    --muted:   #6b7a99;
+    --yellow:  #facc15;
+    --yellow-dim: rgba(250,204,21,.14);
+
+    --c-urgente:   #ef4444;
+    --c-eseguire:  #f9a825;
+    --c-programma: #3b82f6;
+    --c-eseguito:  #22c55e;
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{
+    font-family:'Syne',sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100dvh;
+    padding:28px clamp(20px, 4vw, 64px) 90px;
+  }
+  .wrap{width:100%; max-width:1800px; margin:0 auto;}
+
+  /* ── Topbar ── */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:8px; gap:16px;
+  }
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:'JetBrains Mono',monospace; font-size:.72rem;
+    color:var(--muted); text-decoration:none;
+    letter-spacing:.05em; text-transform:uppercase;
+    transition:color .15s;
+  }
+  .back-link:hover{ color:var(--yellow); }
+  .topbar-right{
+    font-family:'JetBrains Mono',monospace; font-size:.72rem;
+    color:var(--muted); text-align:right; line-height:1.5;
+  }
+  .topbar-right .clock{color:var(--ink); font-weight:600; font-size:.85rem;}
+
+  /* ── Header modulo ── */
+  .module-head{
+    display:flex; align-items:center; gap:14px;
+    margin:22px 0 24px; flex-wrap:wrap;
+  }
+  .module-icon{
+    width:48px; height:48px; border-radius:12px;
+    background:var(--yellow-dim);
+    display:flex; align-items:center; justify-content:center;
+    color:var(--yellow); flex-shrink:0;
+  }
+  .module-icon svg{ width:26px; height:26px; }
+  .module-head .eyebrow{
+    font-size:.62rem; font-weight:600; letter-spacing:.22em;
+    text-transform:uppercase; color:var(--muted); margin-bottom:3px;
+  }
+  .module-head .title{ font-size:1.4rem; font-weight:700; }
+  .btn-nuova{
+    margin-left:auto; display:inline-flex; align-items:center; gap:8px;
+    background:var(--yellow); color:#161200; border:none; border-radius:10px;
+    padding:11px 18px; font-family:'Syne',sans-serif; font-weight:700; font-size:.85rem;
+    cursor:pointer; transition:filter .15s;
+  }
+  .btn-nuova:hover{ filter:brightness(1.08); }
+
+  /* ── Stat cards ── */
+  .stats{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr));
+    gap:12px; margin-bottom:20px;
+  }
+  .stat{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:16px 18px;
+  }
+  .stat .num{ font-family:'JetBrains Mono',monospace; font-size:1.4rem; font-weight:700; }
+  .stat .lbl{ font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-top:2px; }
+  .stat.urgente .num{ color:var(--c-urgente); }
+  .stat.eseguire .num{ color:var(--c-eseguire); }
+  .stat.programma .num{ color:var(--c-programma); }
+
+  /* ── Schede Lista / Calendario ── */
+  .view-tabs{
+    display:flex; gap:8px; margin-bottom:16px;
+  }
+  .view-tab{
+    padding:9px 18px; border-radius:9px; border:1.5px solid var(--line);
+    background:var(--panel2); color:var(--muted); cursor:pointer;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:.8rem;
+    transition:all .15s;
+  }
+  .view-tab.active{ background:var(--yellow-dim); border-color:rgba(250,204,21,.35); color:var(--yellow); }
+  .view-tab:hover:not(.active){ border-color:var(--muted); color:var(--ink); }
+
+  /* ── Filtri ── */
+  .filters{
+    display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;
+  }
+  .filters input, .filters select{
+    padding:10px 12px; border-radius:9px;
+    border:1.5px solid var(--line); background:var(--panel2);
+    color:var(--ink); font-family:'Syne',sans-serif; font-size:.82rem;
+  }
+  .filters input{ flex:1; min-width:180px; }
+  .filters select{ min-width:150px; }
+
+  /* ── Calendario mensile ── */
+  .cal-panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:22px 26px 26px; position:relative;
+  }
+  .cal-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:18px; flex-wrap:wrap; gap:12px;
+  }
+  .cal-nav{ display:flex; align-items:center; gap:8px; }
+  .cal-nav button{
+    width:34px; height:34px; border-radius:9px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--ink); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:.95rem;
+    transition:border-color .15s, color .15s;
+  }
+  .cal-nav button:hover{ border-color:var(--yellow); color:var(--yellow); }
+  .cal-nav .cal-month-label{
+    font-family:'JetBrains Mono',monospace; font-size:.95rem; color:var(--ink);
+    min-width:150px; text-align:center; text-transform:capitalize;
+  }
+  .cal-today-btn{
+    font-size:.65rem; font-weight:700; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--yellow);
+    background:var(--yellow-dim); border:1px solid rgba(250,204,21,.25);
+    border-radius:8px; padding:8px 12px; cursor:pointer;
+    font-family:'Syne',sans-serif; transition:filter .15s;
+  }
+  .cal-today-btn:hover{ filter:brightness(1.1); }
+  .cal-legend{ display:flex; gap:14px; flex-wrap:wrap; }
+  .cal-legend span{
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:.7rem; color:var(--muted); font-family:'JetBrains Mono',monospace;
+  }
+  .cal-legend i{ width:9px; height:9px; border-radius:3px; display:inline-block; }
+
+  .cal-grid-head{
+    display:grid; grid-template-columns:repeat(7,1fr); gap:8px; margin-bottom:8px;
+  }
+  .cal-dow{
+    text-align:center; font-size:.7rem; font-weight:700; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--muted); padding-bottom:4px;
+  }
+  .cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:8px; }
+  .cal-day{
+    position:relative; background:var(--panel2); border:1px solid var(--line);
+    border-radius:11px; min-height:104px; padding:8px 8px 7px; cursor:pointer;
+    transition:border-color .15s, background .15s; overflow:hidden;
+  }
+  .cal-day:hover{ border-color:var(--yellow); }
+  .cal-day.out{ opacity:.35; }
+  .cal-day.out:hover{ border-color:var(--line); }
+  .cal-day.today{ border-color:var(--yellow); }
+  .cal-day-num{
+    font-family:'JetBrains Mono',monospace; font-size:.8rem; color:var(--muted);
+    margin-bottom:6px; display:block;
+  }
+  .cal-day.today .cal-day-num{ color:var(--yellow); font-weight:800; }
+  .cal-events{ display:flex; flex-direction:column; gap:4px; }
+  .cal-event{
+    border-radius:6px; padding:4px 8px; font-size:.7rem; font-weight:700;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    cursor:pointer; transition:filter .15s, transform .1s;
+  }
+  .cal-event:hover{ filter:brightness(1.12); transform:translateY(-1px); }
+  .cal-event.stato-urgente{ background:var(--c-urgente); color:#fff; }
+  .cal-event.stato-eseguire{ background:var(--c-eseguire); color:#161200; }
+  .cal-event.stato-programma{ background:var(--c-programma); color:#eaf1ff; }
+  .cal-event.stato-eseguito{ background:var(--c-eseguito); color:#0b1f14; }
+  .cal-event.altri{
+    background:rgba(255,255,255,.08); color:var(--muted); font-weight:700; text-align:center;
+  }
+
+  /* ── Popup giorno ── */
+  .day-popup{
+    display:none; position:fixed; z-index:300; background:var(--panel2);
+    border:1px solid var(--line); border-radius:16px; padding:16px;
+    min-width:230px; max-width:300px; box-shadow:0 8px 32px rgba(0,0,0,.6);
+  }
+  .day-popup.open{ display:block; }
+  .day-popup-title{
+    font-size:.7rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--line);
+  }
+  .day-popup-item{
+    display:flex; align-items:center; gap:9px; padding:8px 0;
+    border-bottom:1px solid var(--line); cursor:pointer;
+  }
+  .day-popup-item:hover{ opacity:.8; }
+  .day-popup-item:last-of-type{ border-bottom:none; }
+  .day-popup-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .day-popup-name{ font-size:.82rem; font-weight:700; color:var(--ink); }
+  .day-popup-label{ font-size:.68rem; color:var(--muted); margin-top:1px; }
+  .day-popup-add{
+    margin-top:10px; width:100%; padding:9px; border-radius:8px;
+    background:var(--yellow-dim); border:1px solid rgba(250,204,21,.25);
+    color:var(--yellow); font-family:'Syne',sans-serif; font-weight:700;
+    font-size:.75rem; cursor:pointer;
+  }
+  .day-popup-close{
+    margin-top:8px; width:100%; padding:8px; border-radius:8px;
+    background:var(--panel); border:1px solid var(--line); color:var(--muted);
+    font-family:'Syne',sans-serif; font-weight:700; font-size:.75rem; cursor:pointer;
+  }
+  .day-popup-close:hover{ border-color:var(--muted); color:var(--ink); }
+
+  /* ── Tabella ── */
+  .table-panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:16px;
+    overflow-x:auto;
+  }
+  table{ width:100%; border-collapse:collapse; min-width:880px; }
+  thead th{
+    text-align:left; font-size:.66rem; font-weight:700; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--muted); padding:14px 14px;
+    border-bottom:1px solid var(--line); white-space:nowrap;
+  }
+  tbody td{
+    padding:12px 14px; font-size:.82rem; border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  tbody tr{ cursor:pointer; transition:background .15s; }
+  tbody tr:hover{ background:var(--panel2); }
+  tbody tr:last-child td{ border-bottom:none; }
+  .cell-veicolo{ font-weight:700; }
+  .cell-descr{ white-space:normal; max-width:320px; }
+  .badge{
+    display:inline-flex; align-items:center; gap:5px;
+    font-size:.68rem; font-weight:700; padding:4px 10px; border-radius:20px;
+  }
+  .badge-urgente{ background:rgba(239,68,68,.14); color:#fca5a5; }
+  .badge-eseguire{ background:rgba(249,168,37,.14); color:#fde68a; }
+  .badge-programma{ background:rgba(59,130,246,.14); color:#93c5fd; }
+  .badge-eseguito{ background:rgba(34,197,94,.14); color:#86efac; }
+  .empty-row td{
+    text-align:center; padding:40px 20px; color:var(--muted);
+    font-family:'JetBrains Mono',monospace; font-size:.82rem;
+  }
+  .cal-error{
+    text-align:center; padding:40px 20px; color:#fca5a5;
+    font-family:'JetBrains Mono',monospace; font-size:.82rem;
+  }
+  .cal-error button{
+    margin-top:10px; background:transparent; border:1px solid #fca5a5; color:#fca5a5;
+    border-radius:8px; padding:6px 16px; font-family:'Syne',sans-serif; font-weight:600; cursor:pointer;
+  }
+
+  /* ── FAB ── */
+  .fab{
+    position:fixed; bottom:26px; right:26px; z-index:60;
+    width:56px; height:56px; border-radius:50%; border:none;
+    background:var(--yellow); color:#161200; font-size:1.6rem; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 22px rgba(250,204,21,.4); transition:transform .15s;
+  }
+  .fab:hover{ transform:scale(1.07); }
+  .fab:active{ transform:scale(.94); }
+
+  /* ── Modal ── */
+  .modal-overlay{
+    display:none; position:fixed; inset:0; z-index:200;
+    background:rgba(0,0,0,.6);
+    align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-box{
+    background:var(--panel2); border:1px solid var(--line); border-radius:16px;
+    padding:24px 26px; max-width:480px; width:100%;
+    max-height:88dvh; overflow-y:auto;
+  }
+
+  /* dettaglio */
+  .det-nome{ font-size:1.15rem; font-weight:700; margin-bottom:14px; }
+  .det-row{
+    display:flex; justify-content:space-between; align-items:flex-start; gap:14px;
+    padding:9px 0; border-top:1px solid var(--line);
+    font-size:.83rem;
+  }
+  .det-row .k{ color:var(--muted); flex-shrink:0; }
+  .det-row .v{ font-family:'JetBrains Mono',monospace; text-align:right; }
+  .det-actions{ display:flex; flex-wrap:wrap; gap:8px; margin-top:18px; }
+  .det-actions button{
+    flex:1; min-width:100px; padding:10px; border-radius:10px;
+    font-family:'Syne',sans-serif; font-weight:700; font-size:.78rem; cursor:pointer;
+    border:1px solid var(--line); background:transparent; color:var(--ink);
+    transition:border-color .15s, background .15s;
+  }
+  .btn-modifica{ border-color:var(--yellow); color:var(--yellow); }
+  .btn-modifica:hover{ background:rgba(250,204,21,.1); }
+  .btn-elimina{ border-color:var(--c-urgente); color:#fca5a5; }
+  .btn-elimina:hover{ background:rgba(239,68,68,.12); }
+  .btn-chiudi-modal{
+    margin-top:8px; width:100%; padding:10px; border-radius:10px;
+    border:1px solid var(--line); background:transparent; color:var(--muted);
+    font-family:'Syne',sans-serif; font-weight:600; cursor:pointer;
+  }
+  .btn-chiudi-modal:hover{ border-color:var(--muted); color:var(--ink); }
+
+  /* form */
+  .form-title{ font-size:1.05rem; font-weight:700; margin-bottom:18px; }
+  .form-grid{ display:grid; grid-template-columns:1fr 1fr; gap:12px 12px; }
+  .form-field{ margin-bottom:14px; }
+  .form-field.full{ grid-column:1 / -1; }
+  .form-label{
+    display:block; font-size:.63rem; font-weight:700; color:var(--muted);
+    text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px;
+  }
+  .form-input, .form-select, .form-date, .form-textarea{
+    width:100%; padding:10px 11px; border-radius:9px;
+    border:1.5px solid var(--line); background:var(--panel);
+    color:var(--ink); font-family:'Syne',sans-serif; font-size:.82rem;
+  }
+  .form-textarea{ resize:vertical; min-height:56px; font-family:'Syne',sans-serif; }
+  .form-err{
+    font-size:.78rem; color:#fca5a5; background:rgba(239,68,68,.1);
+    border:1px solid rgba(239,68,68,.3); border-radius:8px; padding:9px 12px;
+    margin-bottom:14px; display:none;
+  }
+  .form-err.visible{ display:block; }
+  .btn-submit-form{
+    width:100%; padding:13px; border-radius:10px; border:none;
+    background:var(--yellow); color:#161200; font-family:'Syne',sans-serif;
+    font-weight:700; font-size:.9rem; cursor:pointer; margin-top:6px;
+  }
+  .btn-submit-form:disabled{ opacity:.5; cursor:not-allowed; }
+
+  @media(max-width:520px){ .form-grid{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <a class="back-link" href="parco-veicoli.html">← Parco Veicoli</a>
+    <div class="topbar-right">
+      <div class="clock" id="clock">--:--:--</div>
+      <div id="dateLabel">—</div>
+    </div>
+  </div>
+
+  <div class="module-head">
+    <div class="module-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14.7 6.3a4 4 0 0 1-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 1 5.4-5.4l-2.5 2.5-2-2z"></path>
+      </svg>
+    </div>
+    <div>
+      <div class="eyebrow">Modulo · PV · Manutenzione</div>
+      <div class="title">Manutenzione</div>
+    </div>
+    <button class="btn-nuova" onclick="apriFormNuova()">＋ Nuovo intervento</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="num" id="statTotale">—</div>
+      <div class="lbl">Interventi aperti</div>
+    </div>
+    <div class="stat urgente">
+      <div class="num" id="statUrgenti">—</div>
+      <div class="lbl">Urgenti</div>
+    </div>
+    <div class="stat eseguire">
+      <div class="num" id="statDaEseguire">—</div>
+      <div class="lbl">Da eseguire</div>
+    </div>
+    <div class="stat programma">
+      <div class="num" id="statDaProgrammare">—</div>
+      <div class="lbl">Da programmare</div>
+    </div>
+  </div>
+
+  <div class="view-tabs">
+    <button class="view-tab active" id="tabLista" onclick="mostraVista('lista')">📋 Lista</button>
+    <button class="view-tab" id="tabCalendario" onclick="mostraVista('calendario')">📅 Calendario</button>
+  </div>
+
+  <div class="filters">
+    <input type="text" id="fSearch" placeholder="Cerca per veicolo, tipo o luogo…">
+    <select id="fVeicolo"><option value="">Tutti i veicoli</option></select>
+    <select id="fStato">
+      <option value="">Tutti gli stati</option>
+      <option value="URGENTE">Urgente</option>
+      <option value="DA ESEGUIRE">Da eseguire</option>
+      <option value="DA PROGRAMMARE">Da programmare</option>
+      <option value="ESEGUITO">Eseguito</option>
+    </select>
+  </div>
+
+  <div class="table-panel" id="vistaLista">
+    <table>
+      <thead>
+        <tr>
+          <th>Veicolo</th>
+          <th>Tipo intervento</th>
+          <th>Data</th>
+          <th>Luogo</th>
+          <th>Descrizione</th>
+          <th>Stato</th>
+        </tr>
+      </thead>
+      <tbody id="tblBody">
+        <tr class="empty-row"><td colspan="6">Caricamento interventi…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="cal-panel" id="vistaCalendario" style="display:none">
+    <div class="cal-head">
+      <div class="cal-nav">
+        <button id="calPrev" aria-label="Mese precedente">←</button>
+        <span class="cal-month-label" id="calMonthLabel">—</span>
+        <button id="calNext" aria-label="Mese successivo">→</button>
+        <button class="cal-today-btn" id="calToday">OGGI</button>
+      </div>
+      <div class="cal-legend">
+        <span><i style="background:#ef4444"></i>Urgente</span>
+        <span><i style="background:#f9a825"></i>Da eseguire</span>
+        <span><i style="background:#3b82f6"></i>Da programmare</span>
+        <span><i style="background:#22c55e"></i>Eseguito</span>
+      </div>
+    </div>
+
+    <div class="cal-grid-head">
+      <div class="cal-dow">Lun</div>
+      <div class="cal-dow">Mar</div>
+      <div class="cal-dow">Mer</div>
+      <div class="cal-dow">Gio</div>
+      <div class="cal-dow">Ven</div>
+      <div class="cal-dow">Sab</div>
+      <div class="cal-dow">Dom</div>
+    </div>
+
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+</div>
+
+<div class="day-popup" id="dayPopup">
+  <div class="day-popup-title" id="dayPopupTitle"></div>
+  <div id="dayPopupList"></div>
+  <button class="day-popup-add" id="dayPopupAdd">＋ Nuovo intervento in questo giorno</button>
+  <button class="day-popup-close" onclick="chiudiDayPopup()">Chiudi</button>
+</div>
+
+<button class="fab" onclick="apriFormNuova()" title="Nuovo intervento">＋</button>
+
+<!-- Modal dettaglio intervento -->
+<div class="modal-overlay" id="detModalOverlay" onclick="if(event.target===this) chiudiDetModal()">
+  <div class="modal-box">
+    <div class="det-nome" id="detNome"></div>
+    <div class="det-row"><span class="k">Tipo intervento</span><span class="v" id="detTipo"></span></div>
+    <div class="det-row"><span class="k">Data</span><span class="v" id="detData"></span></div>
+    <div class="det-row"><span class="k">Luogo</span><span class="v" id="detLuogo"></span></div>
+    <div class="det-row"><span class="k">Descrizione</span><span class="v" id="detDescr"></span></div>
+    <div class="det-row"><span class="k">Stato</span><span class="v" id="detStato"></span></div>
+    <div class="det-actions">
+      <button class="btn-modifica" onclick="apriFormModifica()">✎ Modifica</button>
+      <button class="btn-elimina" onclick="eliminaIntervento()">🗑 Elimina</button>
+    </div>
+    <button class="btn-chiudi-modal" onclick="chiudiDetModal()">Chiudi</button>
+  </div>
+</div>
+
+<!-- Modal form nuovo/modifica intervento -->
+<div class="modal-overlay" id="formOverlay" onclick="if(event.target===this) chiudiForm()">
+  <div class="modal-box">
+    <div class="form-title" id="formTitle">Nuovo intervento</div>
+    <div class="form-err" id="formErr"></div>
+
+    <div class="form-field" id="fieldVeicolo">
+      <label class="form-label">Veicolo</label>
+      <select class="form-select" id="formVeicolo"><option value="">— Seleziona —</option></select>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-field">
+        <label class="form-label">Tipo intervento</label>
+        <input class="form-input" id="formTipo" placeholder="es. Tagliando, Freni, Gomme…">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Data</label>
+        <input type="date" class="form-date" id="formData">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Luogo</label>
+        <input class="form-input" id="formLuogo" placeholder="es. Officina Rossi">
+      </div>
+      <div class="form-field">
+        <label class="form-label">Stato</label>
+        <select class="form-select" id="formStato">
+          <option value="DA PROGRAMMARE">Da programmare</option>
+          <option value="DA ESEGUIRE">Da eseguire</option>
+          <option value="URGENTE">Urgente</option>
+          <option value="ESEGUITO">Eseguito</option>
+        </select>
+      </div>
+      <div class="form-field full">
+        <label class="form-label">Descrizione</label>
+        <textarea class="form-textarea" id="formDescr"></textarea>
+      </div>
+    </div>
+
+    <button class="btn-submit-form" id="btnSubmitForm" onclick="submitForm()" disabled>Salva</button>
+    <button class="btn-chiudi-modal" onclick="chiudiForm()">Annulla</button>
+  </div>
+</div>
+
+<script>
+  function tick(){
+    const d = new Date();
+    document.getElementById('clock').textContent = d.toLocaleTimeString('it-IT');
+    document.getElementById('dateLabel').textContent = d.toLocaleDateString('it-IT', { weekday:'short', day:'2-digit', month:'short' });
+  }
+  tick(); setInterval(tick, 1000);
+
+  // ── Config ────────────────────────────────────────────────
+  const API       = 'https://giro.groupmylogistich.workers.dev';
+  const ADMIN_KEY = 'mlg-admin-8f3k2q';
+
+  function apiCall(qs, _retry) {
+    return new Promise((resolve, reject) => {
+      const cb    = '_cb' + Date.now() + Math.random().toString(36).slice(2);
+      const tag   = document.createElement('script');
+      const timer = setTimeout(() => {
+        delete window[cb]; tag.remove();
+        if (!_retry) { apiCall(qs, true).then(resolve).catch(reject); }
+        else { reject(new Error('Timeout')); }
+      }, 40000);
+      window[cb] = data => { clearTimeout(timer); delete window[cb]; tag.remove(); resolve(data); };
+      tag.onerror = () => {
+        clearTimeout(timer); delete window[cb]; tag.remove();
+        if (!_retry) { apiCall(qs, true).then(resolve).catch(reject); }
+        else { reject(new Error('Errore di rete')); }
+      };
+      tag.src = API + '?' + qs + '&callback=' + cb;
+      document.head.appendChild(tag);
+    });
+  }
+
+  // ── Nomi esatti delle colonne nel foglio "Manutenzione" ──
+  const COL = {
+    ID: 'IDManutenzione', VEICOLO: 'IDVeicolo', TIPO: 'Tipo_Intervento',
+    DATA: 'Data_Ora', LUOGO: 'Luogo', DESCR: 'Descrizione', STATO: 'Stato_Lavoro',
+  };
+
+  let tutteManutenzioni = [];
+  let listaVeicoli = [];
+  let modModifica = null;
+  let interventoCorrente = null;
+  let vistaAttiva = 'lista';
+  let calAnno = new Date().getFullYear();
+  let calMese = new Date().getMonth();
+  const MESI = ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+                'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+
+  function itToISO(s){ // "dd/mm/yyyy" -> "yyyy-mm-dd" (per <input type=date>)
+    if (!s) return '';
+    const [d,m,y] = s.split('/');
+    if (!d || !m || !y) return '';
+    return y + '-' + m + '-' + d;
+  }
+  function dateToISO(d){
+    return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+  }
+  function calParseIt(s){ // "dd/mm/yyyy" -> Date
+    if (!s) return null;
+    const [d,m,y] = s.split('/').map(Number);
+    if (!d || !m || !y) return null;
+    return new Date(y, m-1, d);
+  }
+
+  async function caricaTutto(){
+    document.getElementById('tblBody').innerHTML = '<tr class="empty-row"><td colspan="6">Caricamento interventi…</td></tr>';
+    try {
+      const [resM, resV] = await Promise.all([
+        apiCall('action=manutenzione_tutte'),
+        apiCall('action=veicoli_lista')
+      ]);
+      tutteManutenzioni = (resM && resM.manutenzioni) || [];
+      listaVeicoli      = (resV && resV.veicoli)      || [];
+      popolaDropdownVeicoli();
+      renderStats();
+      renderVistaAttiva();
+    } catch(e) {
+      document.getElementById('tblBody').innerHTML =
+        '<tr><td colspan="6"><div class="cal-error">⚠️ Impossibile caricare gli interventi.<br>' + e.message + '<br>' +
+        '<button onclick="caricaTutto()">Riprova</button></div></td></tr>';
+    }
+  }
+
+  // ── Schede Lista / Calendario ──
+  function mostraVista(v){
+    vistaAttiva = v;
+    document.getElementById('tabLista').classList.toggle('active', v === 'lista');
+    document.getElementById('tabCalendario').classList.toggle('active', v === 'calendario');
+    document.getElementById('vistaLista').style.display      = v === 'lista' ? '' : 'none';
+    document.getElementById('vistaCalendario').style.display = v === 'calendario' ? '' : 'none';
+    renderVistaAttiva();
+  }
+  function renderVistaAttiva(){
+    if (vistaAttiva === 'lista') renderTabella();
+    else renderCalendario();
+  }
+
+  function popolaDropdownVeicoli(){
+    const selForm   = document.getElementById('formVeicolo');
+    const selFiltro = document.getElementById('fVeicolo');
+    selForm.innerHTML   = '<option value="">— Seleziona —</option>';
+    selFiltro.innerHTML = '<option value="">Tutti i veicoli</option>';
+    listaVeicoli.forEach(v => {
+      const label = v.targa || v.id;
+      const o1 = document.createElement('option'); o1.value = v.id; o1.textContent = label;
+      selForm.appendChild(o1);
+      const o2 = document.createElement('option'); o2.value = v.id; o2.textContent = label;
+      selFiltro.appendChild(o2);
+    });
+  }
+
+  function renderStats(){
+    const aperti = tutteManutenzioni.filter(m => (m[COL.STATO]||'') !== 'ESEGUITO');
+    const urgenti    = aperti.filter(m => m[COL.STATO] === 'URGENTE').length;
+    const daEseguire = aperti.filter(m => m[COL.STATO] === 'DA ESEGUIRE').length;
+    const daProgram  = aperti.filter(m => m[COL.STATO] === 'DA PROGRAMMARE').length;
+
+    document.getElementById('statTotale').textContent       = aperti.length;
+    document.getElementById('statUrgenti').textContent      = urgenti;
+    document.getElementById('statDaEseguire').textContent   = daEseguire;
+    document.getElementById('statDaProgrammare').textContent= daProgram;
+  }
+
+  function badgeStato(v){
+    if (v === 'URGENTE')         return '<span class="badge badge-urgente">Urgente</span>';
+    if (v === 'DA ESEGUIRE')     return '<span class="badge badge-eseguire">Da eseguire</span>';
+    if (v === 'DA PROGRAMMARE')  return '<span class="badge badge-programma">Da programmare</span>';
+    if (v === 'ESEGUITO')        return '<span class="badge badge-eseguito">Eseguito</span>';
+    return v ? '<span class="badge">' + v + '</span>' : '—';
+  }
+
+  function classeEvento(m){
+    if (m[COL.STATO] === 'URGENTE')        return 'stato-urgente';
+    if (m[COL.STATO] === 'DA ESEGUIRE')    return 'stato-eseguire';
+    if (m[COL.STATO] === 'DA PROGRAMMARE') return 'stato-programma';
+    if (m[COL.STATO] === 'ESEGUITO')       return 'stato-eseguito';
+    return '';
+  }
+
+  function manutenzioniFiltrate(){
+    const q       = document.getElementById('fSearch').value.trim().toLowerCase();
+    const veicolo = document.getElementById('fVeicolo').value;
+    const stato   = document.getElementById('fStato').value;
+
+    return tutteManutenzioni.filter(m => {
+      if (veicolo && String(m[COL.VEICOLO]).trim() !== veicolo) return false;
+      if (stato && (m[COL.STATO]||'') !== stato) return false;
+      if (q) {
+        const hay = [(m.targaVeicolo||''), (m[COL.TIPO]||''), (m[COL.LUOGO]||'')].join(' ').toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+  }
+
+  function renderTabella(){
+    const rows = manutenzioniFiltrate();
+    const tbody = document.getElementById('tblBody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Nessun intervento trovato.</td></tr>';
+      return;
+    }
+    // Urgenti sempre in cima, poi per data crescente
+    const ordinePriorita = { 'URGENTE':0, 'DA ESEGUIRE':1, 'DA PROGRAMMARE':2, 'ESEGUITO':3 };
+    rows.sort((a,b) => {
+      const pa = ordinePriorita[a[COL.STATO]] ?? 9, pb = ordinePriorita[b[COL.STATO]] ?? 9;
+      if (pa !== pb) return pa - pb;
+      const da = itToISO(a[COL.DATA]), db = itToISO(b[COL.DATA]);
+      return da.localeCompare(db);
+    });
+    tbody.innerHTML = rows.map(m => {
+      const id = m[COL.ID];
+      return '<tr onclick="apriDetModal(\'' + id + '\')">' +
+        '<td class="cell-veicolo">' + (m.targaVeicolo || m[COL.VEICOLO] || '—') + '</td>' +
+        '<td>' + (m[COL.TIPO] || '—') + '</td>' +
+        '<td>' + (m[COL.DATA] || '—') + '</td>' +
+        '<td>' + (m[COL.LUOGO] || '—') + '</td>' +
+        '<td class="cell-descr">' + (m[COL.DESCR] || '—') + '</td>' +
+        '<td>' + badgeStato(m[COL.STATO]) + '</td>' +
+      '</tr>';
+    }).join('');
+  }
+
+  // ── Calendario mensile ──
+  function renderCalendario(){
+    const primoDelMese  = new Date(calAnno, calMese, 1);
+    const ultimoDelMese = new Date(calAnno, calMese + 1, 0);
+
+    const inizioGriglia = new Date(primoDelMese);
+    const offsetInizio = (primoDelMese.getDay() + 6) % 7;
+    inizioGriglia.setDate(primoDelMese.getDate() - offsetInizio);
+
+    const fineGriglia = new Date(ultimoDelMese);
+    const offsetFine = (7 - ((ultimoDelMese.getDay() + 6) % 7) - 1);
+    fineGriglia.setDate(ultimoDelMese.getDate() + offsetFine);
+
+    document.getElementById('calMonthLabel').textContent =
+      primoDelMese.toLocaleDateString('it-IT', { month:'long', year:'numeric' });
+
+    const oggi = new Date(); oggi.setHours(0,0,0,0);
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+
+    const eventiParsati = manutenzioniFiltrate().map(m => ({
+      ...m, dataD: calParseIt(m[COL.DATA])
+    })).filter(m => m.dataD);
+
+    let cursore = new Date(inizioGriglia);
+    while (cursore <= fineGriglia) {
+      const data = new Date(cursore);
+      const el = document.createElement('div');
+      el.className = 'cal-day';
+      if (data.getMonth() !== calMese) el.classList.add('out');
+      if (data.getTime() === oggi.getTime()) el.classList.add('today');
+
+      const numEl = document.createElement('div');
+      numEl.className = 'cal-day-num';
+      numEl.textContent = data.getDate();
+      el.appendChild(numEl);
+
+      const eventiGiorno = eventiParsati.filter(m => m.dataD.getTime() === data.getTime());
+
+      const evWrap = document.createElement('div');
+      evWrap.className = 'cal-events';
+      eventiGiorno.slice(0, 3).forEach(m => {
+        const chip = document.createElement('div');
+        chip.className = 'cal-event ' + classeEvento(m);
+        chip.textContent = (m.targaVeicolo || m[COL.VEICOLO]) + (m[COL.TIPO] ? ' — ' + m[COL.TIPO] : '');
+        chip.onclick = (e) => { e.stopPropagation(); apriDetModal(m[COL.ID]); };
+        evWrap.appendChild(chip);
+      });
+      if (eventiGiorno.length > 3) {
+        const more = document.createElement('div');
+        more.className = 'cal-event altri';
+        more.textContent = '+' + (eventiGiorno.length - 3) + ' altri';
+        evWrap.appendChild(more);
+      }
+      el.appendChild(evWrap);
+
+      el.addEventListener('click', () => apriDayPopup(data, eventiGiorno));
+
+      grid.appendChild(el);
+      cursore.setDate(cursore.getDate() + 1);
+    }
+  }
+
+  function apriDayPopup(data, eventiGiorno){
+    document.getElementById('dayPopupTitle').textContent =
+      data.getDate() + ' ' + MESI[data.getMonth()] + ' ' + data.getFullYear();
+
+    const listEl = document.getElementById('dayPopupList');
+    if (!eventiGiorno.length) {
+      listEl.innerHTML = '<div style="font-size:.78rem;color:var(--muted);padding:6px 0 2px">Nessun intervento in questo giorno.</div>';
+    } else {
+      const coloriDot = { 'URGENTE':'#ef4444', 'DA ESEGUIRE':'#f9a825', 'DA PROGRAMMARE':'#3b82f6', 'ESEGUITO':'#22c55e' };
+      listEl.innerHTML = eventiGiorno.map((m, i) => {
+        const col = coloriDot[m[COL.STATO]] || '#6b7a99';
+        return '<div class="day-popup-item" data-idx="' + i + '">' +
+          '<div class="day-popup-dot" style="background:' + col + '"></div>' +
+          '<div><div class="day-popup-name">' + (m.targaVeicolo || m[COL.VEICOLO]) + ' — ' + (m[COL.TIPO]||'') + '</div>' +
+          '<div class="day-popup-label">' + (m[COL.STATO]||'') + (m[COL.LUOGO] ? ' · ' + m[COL.LUOGO] : '') + '</div></div></div>';
+      }).join('');
+      listEl.querySelectorAll('.day-popup-item').forEach(item => {
+        item.onclick = () => {
+          const idx = Number(item.getAttribute('data-idx'));
+          chiudiDayPopup();
+          apriDetModal(eventiGiorno[idx][COL.ID]);
+        };
+      });
+    }
+
+    document.getElementById('dayPopupAdd').onclick = () => {
+      chiudiDayPopup();
+      apriFormNuova();
+      document.getElementById('formData').value = dateToISO(data);
+      aggiornaSubmitForm();
+    };
+
+    const popup = document.getElementById('dayPopup');
+    popup.classList.add('open');
+    popup.style.left = '50%';
+    popup.style.top = '50%';
+    popup.style.transform = 'translate(-50%, -50%)';
+
+    setTimeout(() => { document.addEventListener('click', chiudiDayPopupOutside); }, 50);
+  }
+  function chiudiDayPopupOutside(e){
+    const popup = document.getElementById('dayPopup');
+    if (!popup.contains(e.target)) chiudiDayPopup();
+  }
+  function chiudiDayPopup(){
+    document.getElementById('dayPopup').classList.remove('open');
+    document.removeEventListener('click', chiudiDayPopupOutside);
+  }
+
+  document.getElementById('calPrev').onclick = () => {
+    calMese--; if (calMese < 0) { calMese = 11; calAnno--; }
+    renderCalendario();
+  };
+  document.getElementById('calNext').onclick = () => {
+    calMese++; if (calMese > 11) { calMese = 0; calAnno++; }
+    renderCalendario();
+  };
+  document.getElementById('calToday').onclick = () => {
+    calAnno = new Date().getFullYear();
+    calMese = new Date().getMonth();
+    renderCalendario();
+  };
+
+  document.getElementById('fSearch').addEventListener('input', renderVistaAttiva);
+  document.getElementById('fVeicolo').addEventListener('change', renderVistaAttiva);
+  document.getElementById('fStato').addEventListener('change', renderVistaAttiva);
+
+  // ── Modal dettaglio ──
+  function apriDetModal(id){
+    interventoCorrente = tutteManutenzioni.find(m => m[COL.ID] === id);
+    if (!interventoCorrente) return;
+    const m = interventoCorrente;
+    document.getElementById('detNome').textContent   = (m.targaVeicolo || m[COL.VEICOLO] || '—');
+    document.getElementById('detTipo').textContent   = m[COL.TIPO] || '—';
+    document.getElementById('detData').textContent   = m[COL.DATA] || '—';
+    document.getElementById('detLuogo').textContent  = m[COL.LUOGO] || '—';
+    document.getElementById('detDescr').textContent  = m[COL.DESCR] || '—';
+    document.getElementById('detStato').innerHTML    = badgeStato(m[COL.STATO]);
+    document.getElementById('detModalOverlay').classList.add('open');
+  }
+  function chiudiDetModal(){
+    document.getElementById('detModalOverlay').classList.remove('open');
+    interventoCorrente = null;
+  }
+
+  async function eliminaIntervento(){
+    if (!interventoCorrente) return;
+    if (!confirm('Eliminare questo intervento su ' + (interventoCorrente.targaVeicolo || interventoCorrente[COL.VEICOLO]) + '?')) return;
+    try {
+      const res = await apiCall('action=manutenzione_delete&id=' + encodeURIComponent(interventoCorrente[COL.ID]) +
+        '&key=' + encodeURIComponent(ADMIN_KEY));
+      if (res.ok) {
+        chiudiDetModal();
+        await caricaTutto();
+      } else {
+        alert(res.errore || 'Errore eliminazione.');
+      }
+    } catch(e) { alert('Errore di connessione.'); }
+  }
+
+  // ── Form nuovo / modifica ──
+  function resetForm(){
+    modModifica = null;
+    document.getElementById('formTitle').textContent = 'Nuovo intervento';
+    document.getElementById('formVeicolo').value = '';
+    document.getElementById('formVeicolo').disabled = false;
+    document.getElementById('formTipo').value = '';
+    document.getElementById('formData').value = '';
+    document.getElementById('formLuogo').value = '';
+    document.getElementById('formStato').value = 'DA PROGRAMMARE';
+    document.getElementById('formDescr').value = '';
+    document.getElementById('formErr').classList.remove('visible');
+    aggiornaSubmitForm();
+  }
+
+  function apriFormNuova(){
+    resetForm();
+    document.getElementById('formOverlay').classList.add('open');
+  }
+
+  function apriFormModifica(){
+    if (!interventoCorrente) return;
+    resetForm();
+    const m = interventoCorrente;
+    modModifica = m[COL.ID];
+    document.getElementById('formTitle').textContent = 'Modifica intervento';
+    document.getElementById('formVeicolo').value = m[COL.VEICOLO] || '';
+    document.getElementById('formTipo').value = m[COL.TIPO] || '';
+    document.getElementById('formData').value = itToISO(m[COL.DATA]);
+    document.getElementById('formLuogo').value = m[COL.LUOGO] || '';
+    document.getElementById('formStato').value = m[COL.STATO] || 'DA PROGRAMMARE';
+    document.getElementById('formDescr').value = m[COL.DESCR] || '';
+    chiudiDetModal();
+    document.getElementById('formOverlay').classList.add('open');
+    aggiornaSubmitForm();
+  }
+
+  function chiudiForm(){
+    document.getElementById('formOverlay').classList.remove('open');
+  }
+
+  document.getElementById('formVeicolo').addEventListener('change', aggiornaSubmitForm);
+  document.getElementById('formTipo').addEventListener('input', aggiornaSubmitForm);
+  document.getElementById('formData').addEventListener('change', aggiornaSubmitForm);
+
+  function aggiornaSubmitForm(){
+    const ok = document.getElementById('formVeicolo').value &&
+               document.getElementById('formTipo').value.trim() &&
+               document.getElementById('formData').value;
+    document.getElementById('btnSubmitForm').disabled = !ok;
+  }
+
+  async function submitForm(){
+    document.getElementById('formErr').classList.remove('visible');
+    document.getElementById('btnSubmitForm').disabled = true;
+
+    const campi = {};
+    campi[COL.TIPO]  = document.getElementById('formTipo').value.trim();
+    campi[COL.DATA]  = document.getElementById('formData').value; // yyyy-mm-dd
+    campi[COL.LUOGO] = document.getElementById('formLuogo').value.trim();
+    campi[COL.STATO] = document.getElementById('formStato').value;
+    campi[COL.DESCR] = document.getElementById('formDescr').value.trim();
+
+    const veicoloId = document.getElementById('formVeicolo').value;
+
+    try {
+      let res;
+      if (modModifica) {
+        res = await apiCall('action=manutenzione_update&id=' + encodeURIComponent(modModifica) +
+          '&campi=' + encodeURIComponent(JSON.stringify(campi)) +
+          '&key=' + encodeURIComponent(ADMIN_KEY));
+      } else {
+        res = await apiCall('action=manutenzione_add&veicolo=' + encodeURIComponent(veicoloId) +
+          '&campi=' + encodeURIComponent(JSON.stringify(campi)) +
+          '&key=' + encodeURIComponent(ADMIN_KEY));
+      }
+      if (res.ok) {
+        chiudiForm();
+        await caricaTutto();
+      } else {
+        document.getElementById('formErr').textContent = res.errore || 'Errore salvataggio.';
+        document.getElementById('formErr').classList.add('visible');
+        document.getElementById('btnSubmitForm').disabled = false;
+      }
+    } catch(e) {
+      document.getElementById('formErr').textContent = 'Errore di connessione. Riprova.';
+      document.getElementById('formErr').classList.add('visible');
+      document.getElementById('btnSubmitForm').disabled = false;
+    }
+  }
+
+  caricaTutto();
+</script>
+</body>
+</html>
