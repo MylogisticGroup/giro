@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pneumatici · Parco Veicoli</title>
+<style>
+  :root{
+    --bg:            #0a0e17;
+    --surface:       #10192b;
+    --surface-2:     #131c30;
+    --border:        #1f2b45;
+    --border-soft:   #182238;
+    --gold:          #f0c419;
+    --gold-dim:      #3a3110;
+    --text:          #f2f4f8;
+    --text-dim:      #8b93a7;
+    --text-faint:    #5b6479;
+    --danger:        #ef5b5b;
+    --danger-bg:     #2a1418;
+    --success:       #3ecf8e;
+    --success-bg:    #10261d;
+    --warn:          #f0a419;
+    --warn-bg:       #2a2010;
+    --radius:        10px;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    padding: 32px 40px 80px;
+  }
+
+  a { color: inherit; text-decoration:none; }
+
+  .back-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    color:var(--text-dim);
+    font-family:var(--mono);
+    font-size:12.5px;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    margin-bottom:28px;
+    transition: color .15s;
+  }
+  .back-link:hover{ color:var(--gold); }
+
+  header.page-head{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-bottom:28px;
+  }
+  .page-icon{
+    width:52px; height:52px;
+    border-radius:12px;
+    background:var(--gold-dim);
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .page-icon svg{ width:26px; height:26px; stroke:var(--gold); }
+  .page-eyebrow{
+    font-family:var(--mono);
+    font-size:11.5px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--text-faint);
+    margin:0 0 2px;
+  }
+  .page-title{
+    font-size:28px;
+    font-weight:700;
+    margin:0;
+    letter-spacing:-.01em;
+  }
+
+  /* ── Stats bar ── */
+  .stats-row{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(150px, 1fr));
+    gap:12px;
+    margin-bottom:24px;
+  }
+  .stat-card{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius);
+    padding:14px 16px;
+  }
+  .stat-card .num{
+    font-size:22px;
+    font-weight:700;
+    font-family:var(--mono);
+    line-height:1.1;
+  }
+  .stat-card .lbl{
+    font-size:11.5px;
+    color:var(--text-dim);
+    margin-top:4px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .stat-card.warn .num{ color:var(--warn); }
+  .stat-card.danger .num{ color:var(--danger); }
+  .stat-card.ok .num{ color:var(--success); }
+
+  /* ── Filters ── */
+  .toolbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-bottom:20px;
+    align-items:center;
+  }
+  select, input[type=text], input[type=date], input[type=number], textarea{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-radius:8px;
+    padding:9px 12px;
+    font-size:13.5px;
+    font-family:var(--sans);
+    outline:none;
+    transition: border-color .15s;
+  }
+  select:focus, input:focus, textarea:focus{ border-color:var(--gold); }
+  select{ min-width:160px; cursor:pointer; }
+  .search-box{ min-width:200px; flex:1 1 200px; }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:9px 16px;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--surface-2);
+    color:var(--text);
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:var(--sans);
+    transition: all .15s;
+  }
+  .btn:hover{ border-color:var(--gold); }
+  .btn-gold{
+    background:var(--gold);
+    color:#1a1508;
+    border-color:var(--gold);
+  }
+  .btn-gold:hover{ filter:brightness(1.08); }
+  .btn-ghost{ background:transparent; }
+  .btn-danger{ color:var(--danger); border-color:var(--danger-bg); }
+  .btn-danger:hover{ background:var(--danger-bg); border-color:var(--danger); }
+  .btn-sm{ padding:6px 12px; font-size:12.5px; }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  .spacer{ flex:1; }
+
+  /* ── List ── */
+  .list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .row-card{
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius);
+    padding:16px 18px;
+    display:grid;
+    grid-template-columns: 110px 1fr auto;
+    gap:18px;
+    align-items:center;
+  }
+  .row-card:hover{ border-color:var(--border); }
+
+  .targa-chip{
+    font-family:var(--mono);
+    font-size:14px;
+    font-weight:700;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:6px 8px;
+    text-align:center;
+    letter-spacing:.03em;
+  }
+
+  .row-main{ min-width:0; }
+  .row-top{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:6px;
+  }
+  .badge{
+    font-family:var(--mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    padding:3px 8px;
+    border-radius:5px;
+    font-weight:700;
+  }
+  .badge-stagione-invernale{ background:#132a3d; color:#5fb9e8; }
+  .badge-stagione-estivo{    background:#2a2010; color:var(--warn); }
+  .badge-stagione-4stagioni{ background:#1c2a12; color:var(--success); }
+  .badge-stato-montaggio{ background:var(--success-bg); color:var(--success); }
+  .badge-stato-smontaggio{ background:var(--surface-2); color:var(--text-dim); }
+  .badge-deposito{ background:var(--surface-2); color:var(--text-dim); }
+
+  .row-detail{
+    font-size:13px;
+    color:var(--text-dim);
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .row-detail b{ color:var(--text); font-weight:600; }
+
+  .condizione-wrap{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    min-width:120px;
+  }
+  .condizione-bar{
+    width:60px; height:6px;
+    background:var(--surface-2);
+    border-radius:3px;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .condizione-bar-fill{ height:100%; border-radius:3px; }
+  .condizione-num{ font-family:var(--mono); font-size:12.5px; font-weight:700; width:34px; }
+
+  .row-actions{
+    display:flex;
+    gap:8px;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--text-faint);
+  }
+  .empty-state svg{ width:40px; height:40px; stroke:var(--text-faint); margin-bottom:12px; }
+
+  /* ── Admin unlock ── */
+  .admin-bar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:20px;
+    padding:12px 16px;
+    background:var(--surface);
+    border:1px solid var(--border-soft);
+    border-radius:var(--radius);
+  }
+  .admin-bar .lbl{ font-size:12.5px; color:var(--text-dim); font-family:var(--mono); }
+  .admin-status{
+    display:flex; align-items:center; gap:6px;
+    font-size:12.5px; font-weight:600;
+  }
+  .dot{ width:7px; height:7px; border-radius:50%; }
+  .dot-off{ background:var(--text-faint); }
+  .dot-on{ background:var(--success); }
+
+  /* ── Modal ── */
+  .modal-overlay{
+    position:fixed; inset:0;
+    background:rgba(5,7,12,.7);
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    padding:40px 20px;
+    overflow-y:auto;
+    z-index:100;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    width:100%;
+    max-width:560px;
+    padding:26px;
+  }
+  .modal h3{
+    margin:0 0 4px;
+    font-size:19px;
+  }
+  .modal .sub{
+    color:var(--text-dim);
+    font-size:13px;
+    margin:0 0 20px;
+  }
+  .form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-bottom:18px;
+  }
+  .form-grid .full{ grid-column:1 / -1; }
+  .field label{
+    display:block;
+    font-size:12px;
+    color:var(--text-dim);
+    margin-bottom:5px;
+    font-family:var(--mono);
+    text-transform:uppercase;
+    letter-spacing:.03em;
+  }
+  .field select, .field input, .field textarea{ width:100%; }
+  textarea{ resize:vertical; min-height:60px; }
+  .modal-actions{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+  }
+  .modal-error{
+    background:var(--danger-bg);
+    color:var(--danger);
+    border:1px solid rgba(239,91,91,.3);
+    border-radius:8px;
+    padding:10px 14px;
+    font-size:13px;
+    margin-bottom:14px;
+    display:none;
+  }
+  .modal-error.show{ display:block; }
+
+  .toast{
+    position:fixed;
+    bottom:24px; right:24px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--success);
+    border-radius:8px;
+    padding:12px 18px;
+    font-size:13.5px;
+    box-shadow:0 8px 24px rgba(0,0,0,.4);
+    z-index:200;
+    transform:translateY(20px);
+    opacity:0;
+    transition:all .25s;
+    pointer-events:none;
+  }
+  .toast.show{ transform:translateY(0); opacity:1; }
+  .toast.error{ border-left-color:var(--danger); }
+
+  @media (max-width: 640px){
+    body{ padding:20px; }
+    .row-card{ grid-template-columns:1fr; }
+    .form-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<a href="parco-veicoli.html" class="back-link">← PARCO VEICOLI</a>
+
+<header class="page-head">
+  <div class="page-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="9"></circle>
+      <circle cx="12" cy="12" r="3.2"></circle>
+      <path d="M12 3v3M12 18v3M21 12h-3M6 12H3M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1M18.4 18.4l-2.1-2.1M7.7 7.7 5.6 5.6"></path>
+    </svg>
+  </div>
+  <div>
+    <p class="page-eyebrow">Modulo · PV · 02</p>
+    <h1 class="page-title">Pneumatici</h1>
+  </div>
+</header>
+
+<div class="stats-row" id="statsRow"></div>
+
+<div class="admin-bar">
+  <span class="lbl">ADMIN</span>
+  <div class="admin-status" id="adminStatus">
+    <span class="dot dot-off"></span><span>Sola lettura</span>
+  </div>
+  <div class="spacer"></div>
+  <input type="text" id="adminKeyInput" placeholder="Chiave amministratore" style="width:220px" />
+  <button class="btn btn-sm" id="adminUnlockBtn">Sblocca</button>
+  <button class="btn btn-sm btn-ghost" id="adminLockBtn" style="display:none">Blocca</button>
+</div>
+
+<div class="toolbar">
+  <select id="filterVeicolo"><option value="">Tutti i veicoli</option></select>
+  <select id="filterStagione">
+    <option value="">Tutte le stagioni</option>
+    <option value="Estivo">Estivo</option>
+    <option value="Invernale">Invernale</option>
+    <option value="4 Stagioni">4 Stagioni</option>
+  </select>
+  <select id="filterStato">
+    <option value="">Tutti gli stati</option>
+    <option value="Montaggio">Montaggio</option>
+    <option value="Smontaggio">Smontaggio</option>
+  </select>
+  <input type="text" id="searchBox" class="search-box" placeholder="Cerca targa, marca, misura…" />
+  <div class="spacer"></div>
+  <button class="btn btn-gold" id="addBtn" style="display:none">+ Nuovo intervento</button>
+</div>
+
+<div class="list" id="list"></div>
+<div class="empty-state" id="emptyState" style="display:none">
+  <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5"><circle cx="12" cy="12" r="9"></circle></svg>
+  <p>Nessun pneumatico trovato con questi filtri.</p>
+</div>
+
+<!-- ── Modal Aggiungi/Modifica ── -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3 id="modalTitle">Nuovo intervento pneumatici</h3>
+    <p class="sub">I campi contrassegnati sono facoltativi: compila solo quello che serve.</p>
+    <div class="modal-error" id="modalError"></div>
+
+    <div class="form-grid">
+      <div class="field full">
+        <label>Veicolo</label>
+        <select id="f_veicolo"></select>
+      </div>
+
+      <div class="field">
+        <label>Data</label>
+        <input type="date" id="f_data" />
+      </div>
+      <div class="field">
+        <label>Km veicolo</label>
+        <input type="number" id="f_km" placeholder="es. 245000" />
+      </div>
+
+      <div class="field">
+        <label>Marca</label>
+        <input type="text" id="f_marca" placeholder="es. Pirelli" />
+      </div>
+      <div class="field">
+        <label>Misura</label>
+        <input type="text" id="f_misura" placeholder="es. 205/55 R16" />
+      </div>
+
+      <div class="field">
+        <label>Stagione</label>
+        <select id="f_stagione">
+          <option value="">—</option>
+          <option value="Estivo">Estivo</option>
+          <option value="Invernale">Invernale</option>
+          <option value="4 Stagioni">4 Stagioni</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Stato</label>
+        <select id="f_stato">
+          <option value="">—</option>
+          <option value="Montaggio">Montaggio</option>
+          <option value="Smontaggio">Smontaggio</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Configurazione</label>
+        <select id="f_configurazione">
+          <option value="">—</option>
+          <option value="1 Singolo">1 Singolo</option>
+          <option value="2 Anteriori">2 Anteriori</option>
+          <option value="2 Posteriori">2 Posteriori</option>
+          <option value="4 Completo">4 Completo</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Condizione (% battistrada)</label>
+        <input type="number" id="f_condizione" min="0" max="100" placeholder="0-100" />
+      </div>
+
+      <div class="field">
+        <label>Deposito</label>
+        <select id="f_deposito">
+          <option value="">—</option>
+          <option value="SI">Sì</option>
+          <option value="NO">No</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Costo</label>
+        <input type="text" id="f_costo" placeholder="es. € 150,00" />
+      </div>
+
+      <div class="field full">
+        <label>Note</label>
+        <textarea id="f_note" placeholder="Note libere…"></textarea>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="deleteBtn" style="display:none">Elimina</button>
+      <div class="spacer"></div>
+      <button class="btn btn-ghost" id="cancelBtn">Annulla</button>
+      <button class="btn btn-gold" id="saveBtn">Salva</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIGURAZIONE
+   Sostituisci con l'URL del tuo Web App Apps Script (.../exec)
+   ============================================================ */
+const API_URL = 'INSERISCI_QUI_URL_WEB_APP_APPS_SCRIPT';
+
+/* ============================================================
+   STATO
+   ============================================================ */
+let pneumatici = [];
+let veicoli = [];
+let adminKey = localStorage.getItem('pv_admin_key') || '';
+let editingId = null; // null = nuovo, altrimenti ID in modifica
+
+/* ============================================================
+   CHIAMATE API — JSONP (stesso meccanismo usato dal Web App:
+   doGet supporta ?callback=... per evitare problemi CORS quando
+   la pagina è ospitata su GitHub Pages, dominio diverso da
+   script.google.com)
+   ============================================================ */
+function callApi(params) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    const script = document.createElement('script');
+    const query = new URLSearchParams(params);
+    query.set('callback', cbName);
+
+    window[cbName] = function(data) {
+      delete window[cbName];
+      script.remove();
+      resolve(data);
+    };
+    script.onerror = function() {
+      delete window[cbName];
+      script.remove();
+      reject(new Error('Errore di rete durante la chiamata API.'));
+    };
+    script.src = API_URL + '?' + query.toString();
+    document.body.appendChild(script);
+  });
+}
+
+/* ============================================================
+   CARICAMENTO DATI
+   ============================================================ */
+async function caricaTutto() {
+  try {
+    const [resPneu, resVei] = await Promise.all([
+      callApi({ action: 'pneumatici_tutte' }),
+      callApi({ action: 'veicoli_lista' }),
+    ]);
+
+    if (!resPneu.ok) throw new Error(resPneu.errore || 'Errore caricamento pneumatici.');
+    if (!resVei.ok)  throw new Error(resVei.errore  || 'Errore caricamento veicoli.');
+
+    pneumatici = resPneu.pneumatici || [];
+    veicoli    = resVei.veicoli || [];
+
+    popolaFiltroVeicoli();
+    popolaSelectVeicoloModal();
+    renderStats();
+    renderList();
+  } catch (err) {
+    mostraToast(err.message, true);
+  }
+}
+
+function popolaFiltroVeicoli() {
+  const sel = document.getElementById('filterVeicolo');
+  sel.innerHTML = '<option value="">Tutti i veicoli</option>';
+  veicoli.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.targa || v.id;
+    opt.textContent = (v.targa || v.id) + (v.modello ? ' — ' + v.modello : '');
+    sel.appendChild(opt);
+  });
+}
+
+function popolaSelectVeicoloModal() {
+  const sel = document.getElementById('f_veicolo');
+  sel.innerHTML = '<option value="">Seleziona veicolo…</option>';
+  veicoli.forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.targa || v.id;
+    opt.textContent = (v.targa || v.id) + (v.marca || v.modello ? ' — ' + [v.marca, v.modello].filter(Boolean).join(' ') : '');
+    sel.appendChild(opt);
+  });
+}
+
+/* ============================================================
+   STATISTICHE
+   ============================================================ */
+function renderStats() {
+  const totale = pneumatici.length;
+  const montati = pneumatici.filter(p => (p['Stato'] || '') === 'Montaggio').length;
+  const inDeposito = pneumatici.filter(p => (p['Deposito'] || '').toUpperCase() === 'SI').length;
+  const daControllare = pneumatici.filter(p => {
+    const c = Number(p['Condizione Pneumatico']);
+    return !isNaN(c) && c > 0 && c <= 30;
+  }).length;
+
+  const stats = [
+    { num: totale,        lbl: 'Totale interventi', cls: '' },
+    { num: montati,       lbl: 'Attualmente montati', cls: 'ok' },
+    { num: inDeposito,    lbl: 'In deposito', cls: '' },
+    { num: daControllare, lbl: 'Da controllare (≤30%)', cls: daControllare > 0 ? 'danger' : 'ok' },
+  ];
+
+  document.getElementById('statsRow').innerHTML = stats.map(s => `
+    <div class="stat-card ${s.cls}">
+      <div class="num">${s.num}</div>
+      <div class="lbl">${s.lbl}</div>
+    </div>
+  `).join('');
+}
+
+/* ============================================================
+   RENDER ELENCO + FILTRI
+   ============================================================ */
+function filtraPneumatici() {
+  const fVeicolo  = document.getElementById('filterVeicolo').value.trim();
+  const fStagione = document.getElementById('filterStagione').value;
+  const fStato    = document.getElementById('filterStato').value;
+  const q         = document.getElementById('searchBox').value.trim().toLowerCase();
+
+  return pneumatici.filter(p => {
+    if (fVeicolo && normalizzaTarga(p['IDVeicolo']) !== normalizzaTarga(fVeicolo)) return false;
+    if (fStagione && (p['Stagione'] || '') !== fStagione) return false;
+    if (fStato && (p['Stato'] || '') !== fStato) return false;
+    if (q) {
+      const haystack = [
+        p['targaVeicolo'], p['IDVeicolo'], p['Marca'], p['Misura'], p['Note']
+      ].join(' ').toLowerCase();
+      if (!haystack.includes(q)) return false;
+    }
+    return true;
+  }).sort((a, b) => {
+    // più recenti prima (parsing dd/mm/yyyy)
+    const da = parseDataIt(a['Data']), db = parseDataIt(b['Data']);
+    return db - da;
+  });
+}
+
+function normalizzaTarga(v) {
+  return String(v || '').toUpperCase().replace(/\s+/g, '').trim();
+}
+
+function parseDataIt(s) {
+  if (!s) return 0;
+  const parts = String(s).split('/');
+  if (parts.length !== 3) return 0;
+  return new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0])).getTime();
+}
+
+function badgeStagioneClass(stagione) {
+  if (stagione === 'Invernale') return 'badge-stagione-invernale';
+  if (stagione === 'Estivo') return 'badge-stagione-estivo';
+  if (stagione === '4 Stagioni') return 'badge-stagione-4stagioni';
+  return '';
+}
+
+function condizioneColor(val) {
+  if (val >= 60) return 'var(--success)';
+  if (val >= 30) return 'var(--warn)';
+  return 'var(--danger)';
+}
+
+function renderList() {
+  const rows = filtraPneumatici();
+  const list = document.getElementById('list');
+  const empty = document.getElementById('emptyState');
+
+  if (!rows.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = rows.map(p => {
+    const targa = p['targaVeicolo'] || p['IDVeicolo'] || '—';
+    const stagioneCls = badgeStagioneClass(p['Stagione']);
+    const statoCls = p['Stato'] === 'Montaggio' ? 'badge-stato-montaggio' : 'badge-stato-smontaggio';
+    const condizioneVal = Number(p['Condizione Pneumatico']) || 0;
+    const isAdmin = !!adminKey;
+
+    return `
+      <div class="row-card" data-id="${escapeHtml(p['IDPneumatici'])}">
+        <div class="targa-chip">${escapeHtml(targa)}</div>
+
+        <div class="row-main">
+          <div class="row-top">
+            ${p['Stagione'] ? `<span class="badge ${stagioneCls}">${escapeHtml(p['Stagione'])}</span>` : ''}
+            ${p['Stato'] ? `<span class="badge ${statoCls}">${escapeHtml(p['Stato'])}</span>` : ''}
+            ${(p['Deposito'] || '').toUpperCase() === 'SI' ? `<span class="badge badge-deposito">Deposito</span>` : ''}
+            <span class="condizione-wrap">
+              <span class="condizione-bar"><span class="condizione-bar-fill" style="width:${condizioneVal}%; background:${condizioneColor(condizioneVal)}"></span></span>
+              <span class="condizione-num">${condizioneVal || '—'}%</span>
+            </span>
+          </div>
+          <div class="row-detail">
+            ${p['Data'] ? `<span><b>${escapeHtml(p['Data'])}</b></span>` : ''}
+            ${p['Marca'] ? `<span>${escapeHtml(p['Marca'])}</span>` : ''}
+            ${p['Misura'] ? `<span>${escapeHtml(p['Misura'])}</span>` : ''}
+            ${p['Configurazione'] ? `<span>${escapeHtml(p['Configurazione'])}</span>` : ''}
+            ${p['Costo'] ? `<span>${escapeHtml(p['Costo'])}</span>` : ''}
+            ${p['Km_Veicolo'] ? `<span>${Number(p['Km_Veicolo']).toLocaleString('it-IT')} km</span>` : ''}
+          </div>
+        </div>
+
+        <div class="row-actions">
+          ${isAdmin ? `<button class="btn btn-sm" onclick="apriModifica('${escapeAttr(p['IDPneumatici'])}')">Modifica</button>` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function escapeHtml(v) {
+  if (v === undefined || v === null) return '';
+  return String(v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function escapeAttr(v) {
+  return String(v || '').replace(/'/g, "\\'");
+}
+
+/* ============================================================
+   ADMIN — sblocco / blocco
+   ============================================================ */
+function aggiornaStatoAdmin() {
+  const statusEl = document.getElementById('adminStatus');
+  const addBtn = document.getElementById('addBtn');
+  const lockBtn = document.getElementById('adminLockBtn');
+  const unlockBtn = document.getElementById('adminUnlockBtn');
+  const keyInput = document.getElementById('adminKeyInput');
+
+  if (adminKey) {
+    statusEl.innerHTML = '<span class="dot dot-on"></span><span>Modalità amministratore</span>';
+    addBtn.style.display = 'inline-flex';
+    lockBtn.style.display = 'inline-flex';
+    unlockBtn.style.display = 'none';
+    keyInput.style.display = 'none';
+  } else {
+    statusEl.innerHTML = '<span class="dot dot-off"></span><span>Sola lettura</span>';
+    addBtn.style.display = 'none';
+    lockBtn.style.display = 'none';
+    unlockBtn.style.display = 'inline-flex';
+    keyInput.style.display = 'inline-block';
+  }
+  renderList();
+}
+
+document.getElementById('adminUnlockBtn').addEventListener('click', () => {
+  const val = document.getElementById('adminKeyInput').value.trim();
+  if (!val) return;
+  adminKey = val;
+  localStorage.setItem('pv_admin_key', adminKey);
+  aggiornaStatoAdmin();
+  mostraToast('Modalità amministratore attivata.');
+});
+
+document.getElementById('adminLockBtn').addEventListener('click', () => {
+  adminKey = '';
+  localStorage.removeItem('pv_admin_key');
+  document.getElementById('adminKeyInput').value = '';
+  aggiornaStatoAdmin();
+});
+
+/* ============================================================
+   MODAL — apertura / chiusura
+   ============================================================ */
+function resetForm() {
+  ['f_veicolo','f_data','f_km','f_marca','f_misura','f_stagione','f_stato',
+   'f_configurazione','f_condizione','f_deposito','f_costo','f_note'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('modalError').classList.remove('show');
+}
+
+function apriNuovo() {
+  editingId = null;
+  resetForm();
+  document.getElementById('modalTitle').textContent = 'Nuovo intervento pneumatici';
+  document.getElementById('deleteBtn').style.display = 'none';
+  document.getElementById('f_data').value = new Date().toISOString().slice(0, 10);
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function apriModifica(id) {
+  const p = pneumatici.find(x => String(x['IDPneumatici']) === String(id));
+  if (!p) return;
+  editingId = id;
+  resetForm();
+  document.getElementById('modalTitle').textContent = 'Modifica intervento';
+  document.getElementById('deleteBtn').style.display = 'inline-flex';
+
+  document.getElementById('f_veicolo').value = p['IDVeicolo'] || '';
+  document.getElementById('f_data').value = isoFromDataIt(p['Data']);
+  document.getElementById('f_km').value = p['Km_Veicolo'] || '';
+  document.getElementById('f_marca').value = p['Marca'] || '';
+  document.getElementById('f_misura').value = p['Misura'] || '';
+  document.getElementById('f_stagione').value = p['Stagione'] || '';
+  document.getElementById('f_stato').value = p['Stato'] || '';
+  document.getElementById('f_configurazione').value = p['Configurazione'] || '';
+  document.getElementById('f_condizione').value = p['Condizione Pneumatico'] || '';
+  document.getElementById('f_deposito').value = (p['Deposito'] || '').toUpperCase();
+  document.getElementById('f_costo').value = p['Costo'] || '';
+  document.getElementById('f_note').value = p['Note'] || '';
+
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function isoFromDataIt(s) {
+  if (!s) return '';
+  const parts = String(s).split('/');
+  if (parts.length !== 3) return '';
+  return parts[2] + '-' + parts[1].padStart(2, '0') + '-' + parts[0].padStart(2, '0');
+}
+
+function chiudiModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+  editingId = null;
+}
+
+document.getElementById('addBtn').addEventListener('click', apriNuovo);
+document.getElementById('cancelBtn').addEventListener('click', chiudiModal);
+document.getElementById('modalOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modalOverlay') chiudiModal();
+});
+
+/* ============================================================
+   SALVATAGGIO / ELIMINAZIONE
+   ============================================================ */
+function mostraErroreModal(msg) {
+  const el = document.getElementById('modalError');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+document.getElementById('saveBtn').addEventListener('click', async () => {
+  const veicolo = document.getElementById('f_veicolo').value.trim();
+  if (!veicolo) {
+    mostraErroreModal('Seleziona un veicolo.');
+    return;
+  }
+
+  const campi = {};
+  const dataVal = document.getElementById('f_data').value;
+  if (dataVal) campi['Data'] = dataVal; // ISO, convertito lato server
+  const km = document.getElementById('f_km').value;
+  if (km !== '') campi['Km_Veicolo'] = Number(km);
+  const marca = document.getElementById('f_marca').value.trim();
+  if (marca) campi['Marca'] = marca;
+  const misura = document.getElementById('f_misura').value.trim();
+  if (misura) campi['Misura'] = misura;
+  const stagione = document.getElementById('f_stagione').value;
+  if (stagione) campi['Stagione'] = stagione;
+  const stato = document.getElementById('f_stato').value;
+  if (stato) campi['Stato'] = stato;
+  const configurazione = document.getElementById('f_configurazione').value;
+  if (configurazione) campi['Configurazione'] = configurazione;
+  const condizione = document.getElementById('f_condizione').value;
+  if (condizione !== '') campi['Condizione Pneumatico'] = Number(condizione);
+  const deposito = document.getElementById('f_deposito').value;
+  if (deposito) campi['Deposito'] = deposito;
+  const costo = document.getElementById('f_costo').value.trim();
+  if (costo) campi['Costo'] = costo;
+  const note = document.getElementById('f_note').value.trim();
+  if (note) campi['Note'] = note;
+
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Salvataggio…';
+
+  try {
+    let res;
+    if (editingId) {
+      res = await callApi({
+        action: 'pneumatico_update',
+        id: editingId,
+        campi: JSON.stringify(campi),
+        key: adminKey,
+      });
+    } else {
+      res = await callApi({
+        action: 'pneumatico_add',
+        veicolo: veicolo,
+        campi: JSON.stringify(campi),
+        key: adminKey,
+      });
+    }
+
+    if (!res.ok) {
+      mostraErroreModal(res.errore || 'Errore durante il salvataggio.');
+      return;
+    }
+
+    chiudiModal();
+    mostraToast(editingId ? 'Intervento aggiornato.' : 'Intervento aggiunto.');
+    await caricaTutto();
+  } catch (err) {
+    mostraErroreModal(err.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = 'Salva';
+  }
+});
+
+document.getElementById('deleteBtn').addEventListener('click', async () => {
+  if (!editingId) return;
+  if (!confirm('Eliminare definitivamente questo intervento?')) return;
+
+  try {
+    const res = await callApi({ action: 'pneumatico_delete', id: editingId, key: adminKey });
+    if (!res.ok) {
+      mostraErroreModal(res.errore || 'Errore durante l\'eliminazione.');
+      return;
+    }
+    chiudiModal();
+    mostraToast('Intervento eliminato.');
+    await caricaTutto();
+  } catch (err) {
+    mostraErroreModal(err.message);
+  }
+});
+
+/* ============================================================
+   TOAST
+   ============================================================ */
+let toastTimeout;
+function mostraToast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.toggle('error', !!isError);
+  el.classList.add('show');
+  clearTimeout(toastTimeout);
+  toastTimeout = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+/* ============================================================
+   FILTRI — eventi
+   ============================================================ */
+['filterVeicolo', 'filterStagione', 'filterStato'].forEach(id => {
+  document.getElementById(id).addEventListener('change', renderList);
+});
+document.getElementById('searchBox').addEventListener('input', renderList);
+
+/* ============================================================
+   AVVIO
+   ============================================================ */
+aggiornaStatoAdmin();
+caricaTutto();
+</script>
+</body>
+</html>
